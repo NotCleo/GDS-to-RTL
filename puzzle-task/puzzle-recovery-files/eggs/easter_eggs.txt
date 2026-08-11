@@ -1,0 +1,86 @@
+EASTER-EGG SWEEP of puzzle-task/puzzle.gds
+============================================================
+
+layers carrying geometry (whole library, cells included):
+    64/16       71 polygons
+    64/20       69 polygons
+    65/20      215 polygons
+    65/44        2 polygons   <-- NOT A SKY130 MASK LAYER
+    66/15        2 polygons   <-- NOT A SKY130 MASK LAYER
+    66/20      358 polygons
+    66/44     2085 polygons   <-- NOT A SKY130 MASK LAYER
+    67/16      568 polygons   <-- NOT A SKY130 MASK LAYER
+    67/20      619 polygons
+    67/44     1251 polygons
+    68/16      140 polygons
+    68/20       49 polygons
+    68/44        8 polygons
+    69/20     1371 polygons
+    69/44        6 polygons
+    70/16       13 polygons
+    70/20       45 polygons
+    70/44        6 polygons
+    71/16       12 polygons
+    71/20       16 polygons
+    71/44        1 polygons
+    72/16       18 polygons
+    72/20       19 polygons
+    78/44       70 polygons   <-- NOT A SKY130 MASK LAYER
+    81/4        69 polygons
+    81/23        1 polygons   <-- NOT A SKY130 MASK LAYER
+    93/44       70 polygons   <-- NOT A SKY130 MASK LAYER
+    94/20       70 polygons   <-- NOT A SKY130 MASK LAYER
+    95/20       76 polygons   <-- NOT A SKY130 MASK LAYER
+   122/16       71 polygons   <-- NOT A SKY130 MASK LAYER
+   200/0         2 polygons   <-- NOT A SKY130 MASK LAYER
+   235/4         1 polygons
+   236/0        68 polygons   <-- NOT A SKY130 MASK LAYER
+
+non-standard-cell, non-via structures: ['INTERNAL_3', 'INTERNAL_7']
+
+layers in puzzle-task/puzzle.gds but not in warmup-task/04_final.gds:
+    66/15        2 polygons   only inside standard cells -> cell-library difference
+    81/23        1 polygons   only inside standard cells -> cell-library difference
+   200/0         2 polygons   hand-added
+layers in warmup-task/04_final.gds but not in puzzle-task/puzzle.gds: none
+
+drawn artwork on layer 69/20: 1366 polygons packed into 17.10 x 17.10 um at (34.90, 35.20) .. (52.00, 52.30)
+                         #################                        
+                     #########################                    
+                 ################################                 
+              #################     #############                 
+           ###########   #################   ###                  
+         ########## ###########################      #####        
+       ######### #################################  ########      
+      ########  ##########               ##########  ########     
+     #######  ########## #################  #########  #######    
+    #######  ####### ######################### #######  #######   
+   ###### ######## #############   ############# ######## ######  
+   #####  ####### #########             ######### #######  #####  
+  ###### ####### #######                    ###### ####### #######
+  #####  ###### ######                       ###### ######  ######
+  ##### ####### #####                         ##### ####### ######
+  ##### ######  #####                         #####  ###### ######
+  ####  ######  ####                           ####  ######  #####
+  ##### ######  #####                         #####  ###### ######
+  ##### ######  #####                         ##### ####### ######
+  #####         ######                        ##### ######  ######
+  ######         #######                        ## ####### #######
+   #####       ## #########             ##        #######  #####  
+   ######    ##### #############   ########      ######## ######  
+    #######  ####### ########################  #######  #######   
+     #######  ########## #################  #########  #######    
+      ########  ##########               ##########  ########     
+       ######### ################################# #########      
+         ########## ########################### ##########        
+           ###########   #################   ###########          
+              #################     #################             
+                 #################################                
+                     #########################                    
+
+bar strip: 36 bars, narrow(unit) = 1.38 um, wide = 4.14 um (3 units)
+  y = -52.72 um  (below the die -> cosmetic, not routed)
+  widths  : . - - . . . - . . - . - . . - . . - - - . - - . . . - . . . - . - . . -
+  gaps    : 1 1 1 3 3 1 1 7 1 3 1 1 3 3 1 3 1 3 1 7 1 3 1 1 7 1 3 1 1 3 3 1 1 3 1   (1 = intra-letter, 3 = letter, 7 = word)
+  MORSE   : PER ARENAM AD ASTRA
+

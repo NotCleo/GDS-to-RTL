@@ -1,0 +1,54 @@
+# Python dependencies for the GDS -> RTL pipeline.
+#
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r requirements.txt
+#
+# run.sh expects the interpreter at .venv/bin/python (see PY= at the top of it).
+#
+# Only three third-party packages are imported anywhere in gds-to-rtl/ --
+# everything else the scripts use is standard library (collections, csv,
+# importlib, json, math, os, re, subprocess, sys, tempfile, tkinter).
+# numpy arrives transitively via gdstk and shapely; it is not imported directly.
+
+# GDSII reading and hierarchy flattening.
+#   used by: 01_gds_inventory, 02_extract_netlist, 03_def_crosscheck,
+#            21_easter_eggs, 22_floorplan
+gdstk>=0.9,<2                   # verified with 1.0.1
+
+# Polygon union and STRtree spatial indexing -- the core of net extraction.
+#   used by: 02_extract_netlist
+#
+# 2.0 IS A HARD FLOOR, not a preference. 02_extract_netlist.py calls
+#   tree.query(geom, predicate="intersects")
+# which in Shapely 2.x returns *integer indices*. Shapely 1.8 has no
+# `predicate` keyword and returns geometry objects instead, so on 1.x the
+# extractor fails or -- worse -- silently builds the wrong netlist.
+shapely>=2.0,<3                 # verified with 2.1.2
+
+# Constraint solving: falsifying the wrong hypothesis, the independent Star
+# Battle solve, and the uniqueness enumeration.
+#   used by: 14_uniqueness, 16_starbattle
+z3-solver>=4.12                 # verified with 5.0.0.0
+
+
+# ---------------------------------------------------------------------------
+# NOT installable with pip -- install these from your package manager.
+# ---------------------------------------------------------------------------
+#
+#   yosys           formal work: BMC on the extracted gates (P8/P9), and the
+#                   warm-up's forward synthesis in 05_resynth.ys.
+#                   verified with 0.33.  apt install yosys
+#
+#   iverilog + vvp  every simulation: the VCD replay, the 121-cell probe, the
+#                   message sweep, the 540-grid equivalence run.
+#                   verified with 12.0.  apt install iverilog
+#
+#   python3-tk      TwoNotTouch-Interactive-Puzzle/play.py imports tkinter.
+#                   tkinter is stdlib but Debian/Ubuntu ship it separately.
+#                   verified with Tk 8.6.  apt install python3-tk
+#
+# Optional, for looking at things by hand -- no script requires them:
+#   surfer          waveform viewer (success_inputs.vcd, O as ASCII)
+#   klayout         layout viewer, for spot-checking a coordinate
+#
+# Verified on Python 3.12.3.

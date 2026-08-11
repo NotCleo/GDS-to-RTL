@@ -1,0 +1,41 @@
+======================================================================
+WHAT EACH 2-BIT COUNTER WATCHES  (single-cell stimulus, from silicon)
+======================================================================
+  pair u597_dfrtp_2    /u625_dfrtp_2     watches  14 cells -> REGION
+  pair u209_dfrtp_2    /u194_dfrtp_2     watches  11 cells -> COL 0
+  pair u190_dfrtp_2    /u118_dfrtp_2     watches  11 cells -> COL 1
+  pair u189_dfrtp_2    /u117_dfrtp_2     watches  11 cells -> COL 2
+  pair u188_dfrtp_2    /u126_dfrtp_2     watches  11 cells -> COL 3
+  pair u179_dfrtp_2    /u107_dfrtp_2     watches  11 cells -> COL 4
+  pair u233_dfrtp_2    /u231_dfrtp_2     watches  21 cells -> REGION
+  pair u178_dfrtp_2    /u106_dfrtp_2     watches  11 cells -> COL 5
+  pair u180_dfrtp_2    /u108_dfrtp_2     watches  11 cells -> COL 6
+  pair u600_dfrtp_2    /u622_dfrtp_2     watches   7 cells -> REGION
+  pair u153_dfrtp_2    /u121_dfrtp_2     watches  11 cells -> COL 7
+  pair u596_dfrtp_2    /u614_dfrtp_2     watches   5 cells -> REGION
+  pair u142_dfrtp_2    /u124_dfrtp_2     watches  11 cells -> COL 8
+  pair u141_dfrtp_2    /u122_dfrtp_2     watches  11 cells -> COL 9
+  pair u215_dfrtp_2    /u197_dfrtp_2     watches  28 cells -> REGION
+  pair u143_dfrtp_2    /u123_dfrtp_2     watches  11 cells -> COL 10
+  pair u661_dfrtp_2    /u595_dfrtp_2     watches   8 cells -> REGION
+  pair u647_dfrtp_2    /u651_dfrtp_2     watches  11 cells -> REGION
+  pair u635_dfrtp_2    /u602_dfrtp_2     watches   9 cells -> REGION
+  pair u226_dfrtp_2    /u198_dfrtp_2     watches   6 cells -> REGION
+  pair u601_dfrtp_2    /u232_dfrtp_2     watches   8 cells -> REGION
+  pair u634_dfrtp_2    /u603_dfrtp_2     watches   4 cells -> REGION
+
+rows found: 0   cols found: 11   irregular groups: 11
+
+REGION MAP (each letter = one group of cells sharing a counter):
+   A A A A A B B C D D E
+   A A F A A B C C D D E
+   A A F B B B B C C D E
+   A A F B G G G E C C E
+   F A F B G E E E E E E
+   F F F B G G G E H H H
+   B B B B B B G E H I I
+   B J J J G G G E H I I
+   B J J K E E E E H I I
+   B B J K K E E E H H H
+   B J J K E E E E E E E
+   region sizes: {'A': 14, 'B': 21, 'C': 7, 'D': 5, 'E': 28, 'F': 8, 'G': 11, 'H': 9, 'I': 6, 'J': 8, 'K': 4}

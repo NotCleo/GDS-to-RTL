@@ -1,0 +1,38 @@
+==============================================================================
+2-BIT SATURATING COUNTERS AND THE SLOT EACH ONE WATCHES
+==============================================================================
+pairs found: 23
+
+counter bits referenced by pair triggers (bit -> how many pairs use it):
+   u350_dfrtp_2: 23
+   u363_dfrtp_2: 12
+   u354_dfrtp_2: 12
+   u352_dfrtp_2: 12
+   u355_dfrtp_2: 12
+
+slot decoding, bit order ['u350_dfrtp_2', 'u352_dfrtp_2', 'u354_dfrtp_2', 'u355_dfrtp_2', 'u363_dfrtp_2']
+
+LSB flop         MSB flop                            slot bits  required count
+u215_dfrtp_2     u197_dfrtp_2                            0----  2
+u226_dfrtp_2     u198_dfrtp_2                            0----  2
+u231_dfrtp_2     u233_dfrtp_2                            0----  2
+u232_dfrtp_2     u601_dfrtp_2                            0----  2
+u661_dfrtp_2     u595_dfrtp_2                            0----  2
+u622_dfrtp_2     u600_dfrtp_2                            0----  2
+u614_dfrtp_2     u596_dfrtp_2                            0----  2
+u625_dfrtp_2     u597_dfrtp_2                            0----  2
+u603_dfrtp_2     u634_dfrtp_2                            0----  2
+u602_dfrtp_2     u635_dfrtp_2                            0----  2
+u651_dfrtp_2     u647_dfrtp_2                            0----  2
+u194_dfrtp_2     u209_dfrtp_2                            00000  2
+u126_dfrtp_2     u188_dfrtp_2                            00011  2
+u123_dfrtp_2     u143_dfrtp_2                            00101  2
+u416_dfrtp_2     u420_dfrtp_2                            00101  not checked
+u122_dfrtp_2     u141_dfrtp_2                            00110  2
+u179_dfrtp_2     u107_dfrtp_2                            00111  2
+u108_dfrtp_2     u180_dfrtp_2                            01001  2
+u106_dfrtp_2     u178_dfrtp_2                            01010  2
+u121_dfrtp_2     u153_dfrtp_2                            01011  2
+u124_dfrtp_2     u142_dfrtp_2                            01011  2
+u118_dfrtp_2     u190_dfrtp_2                            01101  2
+u189_dfrtp_2     u117_dfrtp_2                            01110  2

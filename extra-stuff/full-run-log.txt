@@ -1,0 +1,550 @@
+amrut@Maverick:~/GDS-to-RTL$ bash run.sh 
+
+=== W1  GDS inventory -- what cells exist and where (no connectivity yet) ===
+  $ .venv/bin/python GDS-to-RTL/01_gds_inventory.py warmup-task/04_final.gds results/warmup | tail -25
+-- TEXT labels in top cell (surviving names = your I/O ports):
+   'A'  layer 70/5  at (0.30, 41.14)
+   'B'  layer 70/5  at (0.30, 35.70)
+   'S'  layer 70/5  at (99.70, 16.66)
+   'clk'  layer 70/5  at (0.30, 73.78)
+   'en'  layer 70/5  at (0.30, 30.26)
+   'rst_n'  layer 70/5  at (0.30, 57.46)
+   'VGND'  layer 71/5  at (30.14, 50.32)
+   'VPWR'  layer 71/5  at (26.44, 50.32)
+   'VGND'  layer 72/5  at (49.91, 31.23)
+   'VPWR'  layer 72/5  at (49.91, 27.53)
+
+-- labels inside std-cell definitions: 186 rows -> labels.csv
+   example, pins of VIA_L1M1_PR_MR: []
+
+-- geometry drawn directly in the top cell (this is inter-cell ROUTING + PDN + pins):
+   layer  68/20  :   367 shapes
+   layer  69/20  :  1596 shapes
+   layer  70/16  :     6 shapes
+   layer  70/20  :   125 shapes
+   layer  71/16  :     5 shapes
+   layer  71/20  :    13 shapes
+   layer  72/16  :     5 shapes
+   layer  72/20  :    10 shapes
+   layer 235/4   :     1 shapes
+
+=== W2  Extract a netlist from raw polygons (want: driver-count != 1 -> 0) ===
+  $ .venv/bin/python GDS-to-RTL/02_extract_netlist.py warmup-task/04_final.gds results/warmup
+top cell: adder_demo
+LEF pin geometry: 441 macros
+layer li1  :  1322 shapes ->  664 islands
+layer met1 :  1354 shapes ->  349 islands
+layer met2 :  2104 shapes ->  223 islands
+layer met3 :   331 shapes ->  100 islands
+layer met4 :   111 shapes ->    7 islands
+layer met5 :    28 shapes ->    5 islands
+nets: 84   nets with driver-count != 1: 0
+wrote results/warmup/extracted_netlist.v  (79 logic instances, 5 inputs, 1 outputs)
+
+=== W3  GOLDEN CHECK -- match GDS placements to the DEF, then compare ===
+
+===     connectivity pin-by-pin against warmup-task/01_netlist.v ===
+  $ .venv/bin/python GDS-to-RTL/03_def_crosscheck.py warmup-task/04_final.gds         warmup-task/03_post_place_and_route.def warmup-task/01_netlist.v results/warmup
+DEF components: 230  (incl. decap/tap)   GDS logic instances: 79
+matched 79/79 GDS instances to DEF components (names recovered!)
+net-by-net comparison: 84 exact matches, 0 mismatches, golden has 84 nets
+VERDICT: extracted netlist is EXACTLY the golden netlist (connectivity-identical).
+   example: extracted u0 = clkbuf_16  -> DEF/netlist name 'clkbuf_0_clk'
+   example: extracted u1 = and4bb_2   -> DEF/netlist name 'cmp0/_3_'
+   example: extracted u2 = and3_2     -> DEF/netlist name 'cmp0/_2_'
+   example: extracted u3 = clkbuf_16  -> DEF/netlist name 'clkbuf_1_1__f_clk'
+   example: extracted u4 = mux2_1     -> DEF/netlist name 'sr_a/_11_'
+   example: extracted u5 = mux2_1     -> DEF/netlist name 'sr_a/_12_'
+   example: extracted u6 = mux2_1     -> DEF/netlist name 'sr_a/_14_'
+   example: extracted u7 = mux2_1     -> DEF/netlist name 'sr_a/_08_'
+
+=== W4  Liberty -> simulatable Verilog cell models ===
+  $ .venv/bin/python GDS-to-RTL/04_gen_models.py pdk/sky130_fd_sc_hd__tt_025C_1v80.lib results/warmup/sky130_models.v
+generated 16 cell models -> results/warmup/sky130_models.v
+
+=== W5  Simulate golden and extracted side by side, 3000 random cycles ===
+  $ iverilog -g2012 -o results/warmup/sim.vvp results/warmup/sky130_models.v warmup-task/01_netlist.v         results/warmup/extracted_netlist.v GDS-to-RTL/tb_warmup.v
+  $ vvp results/warmup/sim.vvp | tail -8
+phase 1 (random equivalence, 3000 cycles): 0 mismatches
+phase 2 (200 random byte pairs): done
+A=255 B=241  sum=240  ->  S=1 (expected 1)     OK
+A=248 B=248  sum=240  ->  S=1 (expected 1)     OK
+A=255 B=240  sum=239  ->  S=0 (expected 0)     OK
+A=100 B=100  sum=200  ->  S=0 (expected 0)     OK
+ALL CHECKS PASSED: extracted netlist == golden netlist, and S <=> (A+B==496)
+GDS-to-RTL/tb_warmup.v:81: $finish called at 52520000 (1ps)
+
+=== W6  Solve the warm-up from the EXTRACTED netlist alone (BMC, no hand-tracing) ===
+
+===     Expect A=11110101=245, B=11111011=251, 245+251=496, S=1 at cycle 9. ===
+  $ yosys -p "read_verilog results/warmup/sky130_models.v results/warmup/extracted_netlist.v;         hierarchy -top adder_demo_extracted; proc; flatten; async2sync; opt;         sat -seq 9 -set-init-zero -set rst_n 1 -set en 1 -set-at 9 S 1             -show A -show B -show S" > results/warmup/bmc_solve.log 2>&1 || true
+  $ grep -E '^ +[0-9]+ .(A|B|S) ' results/warmup/bmc_solve.log      | awk '{printf "    cycle %2s  %s = %s\n", $1, substr($2,2), $3}'
+    cycle  1  A = 1
+    cycle  1  B = 1
+    cycle  1  S = 0
+    cycle  2  A = 1
+    cycle  2  B = 1
+    cycle  2  S = 0
+    cycle  3  A = 1
+    cycle  3  B = 1
+    cycle  3  S = 0
+    cycle  4  A = 1
+    cycle  4  B = 1
+    cycle  4  S = 0
+    cycle  5  A = 0
+    cycle  5  B = 1
+    cycle  5  S = 0
+    cycle  6  A = 1
+    cycle  6  B = 0
+    cycle  6  S = 0
+    cycle  7  A = 0
+    cycle  7  B = 1
+    cycle  7  S = 0
+    cycle  8  A = 1
+    cycle  8  B = 1
+    cycle  8  S = 0
+    cycle  9  A = 0
+    cycle  9  B = 0
+    cycle  9  S = 1
+  $ .venv/bin/python -c "
+import re,sys
+b={'A':'','B':''}
+for l in open('results/warmup/bmc_solve.log'):
+    m=re.match(r' +([0-9]+) .([AB]) +.*?([01])\s*$', l)
+    if m and int(m.group(1))<=8: b[m.group(2)]+=m.group(3)
+a,c=int(b['A'],2),int(b['B'],2)
+print(f'    -> A = {b[\"A\"]} = {a},  B = {b[\"B\"]} = {c},  A+B = {a+c}')"
+    -> A = 11110101 = 245,  B = 11111011 = 251,  A+B = 496
+
+=== W7  For contrast: run the FORWARD flow, 00_source.v -> gates ===
+
+===     Same library in, same shape of cell mix out -- 01_netlist.v is just ===
+
+===     yosys output, and the reverse direction is undoing exactly this. ===
+  $ yosys -s GDS-to-RTL/05_resynth.ys > results/warmup/resynth.log 2>&1 || true
+  $ sed -n '/^6. Printing statistics/,/^7\./p' results/warmup/resynth.log | head -32
+6. Printing statistics.
+
+=== adder_demo ===
+
+   Number of wires:                 48
+   Number of wire bits:             62
+   Number of public wires:           8
+   Number of public wire bits:      22
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 57
+     sky130_fd_sc_hd__a2111oi_0      1
+     sky130_fd_sc_hd__a21oi_1        2
+     sky130_fd_sc_hd__a31oi_1        1
+     sky130_fd_sc_hd__and2_0         1
+     sky130_fd_sc_hd__and3_1         1
+     sky130_fd_sc_hd__dfrtp_1       16
+     sky130_fd_sc_hd__mux2_1        16
+     sky130_fd_sc_hd__nand2_1        3
+     sky130_fd_sc_hd__nand4_1        1
+     sky130_fd_sc_hd__nor2_1         1
+     sky130_fd_sc_hd__nor3_1         1
+     sky130_fd_sc_hd__o211ai_1       1
+     sky130_fd_sc_hd__o21ai_0        2
+     sky130_fd_sc_hd__o2bb2ai_1      1
+     sky130_fd_sc_hd__o311ai_0       1
+     sky130_fd_sc_hd__or4_1          1
+     sky130_fd_sc_hd__xnor2_1        2
+     sky130_fd_sc_hd__xor2_1         5
+
+   Chip area for module '\adder_demo': 748.217600
+
+=== P1  GDS inventory -- die size, cell histogram, surviving port labels ===
+  $ .venv/bin/python GDS-to-RTL/01_gds_inventory.py puzzle-task/puzzle.gds results/puzzle | tail -25
+   'O[5]'  layer 70/5  at (199.70, 68.34)
+   'O[6]'  layer 70/5  at (199.70, 41.14)
+   'O[7]'  layer 70/5  at (199.70, 13.94)
+   'clk'  layer 70/5  at (0.30, 238.34)
+   'enable'  layer 70/5  at (0.30, 132.26)
+   'rst_n'  layer 70/5  at (0.30, 185.30)
+   'success'  layer 70/5  at (199.70, 285.94)
+   'VGND'  layer 71/5  at (30.14, 149.60)
+   'VPWR'  layer 71/5  at (26.44, 149.60)
+   'VGND'  layer 72/5  at (100.05, 31.23)
+   'VPWR'  layer 72/5  at (100.05, 27.53)
+
+-- labels inside std-cell definitions: 876 rows -> labels.csv
+   example, pins of INTERNAL_3: []
+
+-- geometry drawn directly in the top cell (this is inter-cell ROUTING + PDN + pins):
+   layer  68/20  :  3724 shapes
+   layer  69/20  :  3787 shapes
+   layer  70/16  :    13 shapes
+   layer  70/20  :   909 shapes
+   layer  71/16  :    12 shapes
+   layer  71/20  :    60 shapes
+   layer  72/16  :    18 shapes
+   layer  72/20  :    36 shapes
+   layer 235/4   :     1 shapes
+
+=== P2  Extract the netlist (want: 738 nets, driver-count != 1 -> 0) ===
+
+===     Two silent traps live here: LEF pin geometry, and antenna diodes. ===
+  $ .venv/bin/python GDS-to-RTL/02_extract_netlist.py puzzle-task/puzzle.gds results/puzzle
+top cell: puzzle
+LEF pin geometry: 441 macros
+layer li1  : 10819 shapes -> 5495 islands
+layer met1 : 12606 shapes -> 3001 islands
+layer met2 :  8517 shapes -> 2060 islands
+layer met3 :  2560 shapes ->  811 islands
+layer met4 :   867 shapes ->   45 islands
+layer met5 :   162 shapes ->   18 islands
+stitched 23 same-layer island pairs (gap<= 60nm)
+nets: 738   nets with driver-count != 1: 0
+wrote results/puzzle/extracted_netlist.v  (728 logic instances + 10 bridge/diode omitted, 4 inputs, 9 outputs)
+
+=== P3  Cell models for exactly this design's cell set ===
+
+===     Reset-bearing flops carry their own init value (dfrtp->0, dfstp->1), ===
+
+===     which is why P11 must NOT be given -set-init-zero. ===
+  $ .venv/bin/python GDS-to-RTL/04_gen_models.py pdk/sky130_fd_sc_hd__tt_025C_1v80.lib results/puzzle/models/puzzle_models.v         $(grep -oE 'sky130_fd_sc_hd__[a-z0-9_]+' results/puzzle/extracted_netlist.v | sort -u)
+generated 66 cell models -> results/puzzle/models/puzzle_models.v
+
+=== P4  GROUND TRUTH -- replay puzzle-task/example_inputs.vcd (want: 0 mismatches) ===
+
+===     The recorded waveform holds the real chip's outputs. Matching them ===
+
+===     bit-for-bit is what proves the polygons were read correctly. ===
+  $ .venv/bin/python GDS-to-RTL/06_vcd_replay.py puzzle-task/example_inputs.vcd puzzle_extracted results/puzzle/verify/tb_replay.v
+VCD signal map: {'clk': ('!', 'clk'), 'rst_n': ('"', 'rst_n'), 'enable': ('#', 'enable'), 'I': ('$', 'I'), 'O': ('%', 'O'), 'success': ('&', 'success')}
+wrote results/puzzle/verify/tb_replay.v: 625 timestamps, checks generated
+  $ iverilog -g2012 -o results/puzzle/verify/replay.vvp results/puzzle/models/puzzle_models.v         results/puzzle/extracted_netlist.v results/puzzle/verify/tb_replay.v
+  $ vvp results/puzzle/verify/replay.vvp | tail -3
+REPLAY: 22 checks, 0 mismatches
+EXTRACTION VALIDATED vs recorded silicon outputs
+results/puzzle/verify/tb_replay.v:1445: $finish called at 3120000 (1ps)
+
+=== P5  Register graph + Tarjan SCC -- recover the blocks synthesis flattened ===
+  $ .venv/bin/python GDS-to-RTL/07_structure.py results/puzzle/extracted_netlist.v results/puzzle/structure | head -30
+========================================================================
+REGISTER-LEVEL STRUCTURE
+========================================================================
+flip-flops: 92   (Counter({'dfrtp_2': 84, 'dfxtp_2': 4, 'dfstp_2': 4}))
+
+-- shift-register chains found: 0
+
+-- feedback groups (SCCs, i.e. counters/FSMs/accumulators): 26
+   size   9  external inputs: ['PORT:enable']
+            members: u350_dfrtp_2 u352_dfrtp_2 u354_dfrtp_2 u355_dfrtp_2 u363_dfrtp_2 u467_dfrtp_2 u468_dfrtp_2 u471_dfrtp_2 u475_dfrtp_2
+   size   8  external inputs: ['PORT:I', 'PORT:enable']
+            members: u252_dfrtp_2 u253_dfrtp_2 u254_dfrtp_2 u255_dfrtp_2 u263_dfstp_2 u264_dfstp_2 u265_dfstp_2 u266_dfstp_2
+   size   4  external inputs: none
+            members: u34_dfxtp_2 u35_dfxtp_2 u36_dfxtp_2 u37_dfxtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u106_dfrtp_2 u178_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u107_dfrtp_2 u179_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u108_dfrtp_2 u180_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u117_dfrtp_2 u189_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u118_dfrtp_2 u190_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u121_dfrtp_2 u153_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u122_dfrtp_2 u141_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u123_dfrtp_2 u143_dfrtp_2
+
+=== P6  Decompile the control logic into boolean equations (Liberty-driven) ===
+
+===     Only the control flops: the 22 counter cones expand to megabytes of ===
+
+===     repeated subexpression and say nothing that step P9 does not say better. ===
+  $ .venv/bin/python GDS-to-RTL/08_decompile.py results/puzzle/extracted_netlist.v pdk/sky130_fd_sc_hd__tt_025C_1v80.lib success         > results/puzzle/structure/decompile.txt 2>&1 || true
+  $ .venv/bin/python GDS-to-RTL/08_decompile.py results/puzzle/extracted_netlist.v pdk/sky130_fd_sc_hd__tt_025C_1v80.lib --flop $F           >> results/puzzle/structure/decompile.txt 2>&1 || true
+  $ .venv/bin/python GDS-to-RTL/08_decompile.py results/puzzle/extracted_netlist.v pdk/sky130_fd_sc_hd__tt_025C_1v80.lib --flop $F           >> results/puzzle/structure/decompile.txt 2>&1 || true
+  $ .venv/bin/python GDS-to-RTL/08_decompile.py results/puzzle/extracted_netlist.v pdk/sky130_fd_sc_hd__tt_025C_1v80.lib --flop $F           >> results/puzzle/structure/decompile.txt 2>&1 || true
+  $ .venv/bin/python GDS-to-RTL/08_decompile.py results/puzzle/extracted_netlist.v pdk/sky130_fd_sc_hd__tt_025C_1v80.lib --flop $F           >> results/puzzle/structure/decompile.txt 2>&1 || true
+  $ .venv/bin/python GDS-to-RTL/08_decompile.py results/puzzle/extracted_netlist.v pdk/sky130_fd_sc_hd__tt_025C_1v80.lib --flop $F           >> results/puzzle/structure/decompile.txt 2>&1 || true
+  $ cat results/puzzle/structure/decompile.txt
+
+### net success
+  = u28_dfrtp_2.Q
+
+### u28_dfrtp_2  (dfrtp_2)
+  D = ((!u390_dfrtp_2.Q)&(((!u419_dfrtp_2.Q)&((u451_dfrtp_2.Q&u449_dfrtp_2.Q&u460_dfrtp_2.Q&((!u459_dfrtp_2.Q&!u461_dfrtp_2.Q&!(u453_dfrtp_2.Q | u447_dfrtp_2.Q | u454_dfrtp_2.Q)))))))&((!u26_dfrtp_2.Q&u350_dfrtp_2.Q&(((((!u622_dfrtp_2.Q&u600_dfrtp_2.Q)&((u596_dfrtp_2.Q&(!u614_dfrtp_2.Q)))&(!u232_dfrtp_2.Q&u601_dfrtp_2.Q)&(!u625_dfrtp_2.Q&u597_dfrtp_2.Q)))&((((u647_dfrtp_2.Q&(!u651_dfrtp_2.Q)))&(!u661_dfrtp_2.Q&u595_dfrtp_2.Q)&(!u603_dfrtp_2.Q&u634_dfrtp_2.Q)&((u635_dfrtp_2.Q&(!u602_dfrtp_2.Q)))))&(((!u215_dfrtp_2.Q&u197_dfrtp_2.Q)&((u233_dfrtp_2.Q&(!u231_dfrtp_2.Q)))&(!u226_dfrtp_2.Q&u198_dfrtp_2.Q)))))&(((((!u106_dfrtp_2.Q&u178_dfrtp_2.Q)&((u107_dfrtp_2.Q&(!u179_dfrtp_2.Q)))&(!u121_dfrtp_2.Q&u153_dfrtp_2.Q)&(!u108_dfrtp_2.Q&u180_dfrtp_2.Q)))&((((u190_dfrtp_2.Q&(!u118_dfrtp_2.Q)))&(!u194_dfrtp_2.Q&u209_dfrtp_2.Q)&(!u126_dfrtp_2.Q&u188_dfrtp_2.Q)&((u117_dfrtp_2.Q&(!u189_dfrtp_2.Q)))))&(((!u122_dfrtp_2.Q&u141_dfrtp_2.Q)&((u142_dfrtp_2.Q&(!u124_dfrtp_2.Q)))&(!u123_dfrtp_2.Q&u143_dfrtp_2.Q)))))))) | (u28_dfrtp_2.Q&(u26_dfrtp_2.Q | (!u350_dfrtp_2.Q)))
+  RESET_B = rst_n
+
+### u26_dfrtp_2  (dfrtp_2)
+  D = u350_dfrtp_2.Q | u26_dfrtp_2.Q
+  RESET_B = rst_n
+
+### u350_dfrtp_2  (dfrtp_2)
+  D = ((!u355_dfrtp_2.Q&!u352_dfrtp_2.Q&u354_dfrtp_2.Q&u363_dfrtp_2.Q)&((!u471_dfrtp_2.Q&!(u468_dfrtp_2.Q | (!u467_dfrtp_2.Q) | (!u475_dfrtp_2.Q))))&(!u350_dfrtp_2.Q&enable)) | u350_dfrtp_2.Q
+  RESET_B = rst_n
+
+### u390_dfrtp_2  (dfrtp_2)
+  D = (I&(!u350_dfrtp_2.Q&enable)&(((1'b1)&u391_dfrtp_2.Q) | ((u355_dfrtp_2.Q | u352_dfrtp_2.Q | (!u354_dfrtp_2.Q) | (!u363_dfrtp_2.Q))&u395_dfrtp_2.Q) | ((((u355_dfrtp_2.Q | u363_dfrtp_2.Q | u352_dfrtp_2.Q | u354_dfrtp_2.Q)&u389_dfrtp_2.Q) | ((u355_dfrtp_2.Q | u363_dfrtp_2.Q | u352_dfrtp_2.Q | u354_dfrtp_2.Q)&u370_dfrtp_2.Q))))) | u390_dfrtp_2.Q
+  RESET_B = rst_n
+
+### u419_dfrtp_2  (dfrtp_2)
+  D = ((!u355_dfrtp_2.Q&!u352_dfrtp_2.Q&u354_dfrtp_2.Q&u363_dfrtp_2.Q)&(!u350_dfrtp_2.Q&enable)&((((!u420_dfrtp_2.Q) | (!I))&!u416_dfrtp_2.Q) | ((u420_dfrtp_2.Q | I)&u416_dfrtp_2.Q))) | u419_dfrtp_2.Q
+  RESET_B = rst_n
+
+=== P7  Which counter value gates each flop pair (11 on a column index, 11 not) ===
+  $ .venv/bin/python GDS-to-RTL/09_slots.py results/puzzle/extracted_netlist.v pdk/sky130_fd_sc_hd__tt_025C_1v80.lib         results/puzzle/structure/structure.json results/puzzle/structure | tail -12
+u123_dfrtp_2     u143_dfrtp_2                            00101  2
+u416_dfrtp_2     u420_dfrtp_2                            00101  not checked
+u122_dfrtp_2     u141_dfrtp_2                            00110  2
+u179_dfrtp_2     u107_dfrtp_2                            00111  2
+u108_dfrtp_2     u180_dfrtp_2                            01001  2
+u106_dfrtp_2     u178_dfrtp_2                            01010  2
+u121_dfrtp_2     u153_dfrtp_2                            01011  2
+u124_dfrtp_2     u142_dfrtp_2                            01011  2
+u118_dfrtp_2     u190_dfrtp_2                            01101  2
+u189_dfrtp_2     u117_dfrtp_2                            01110  2
+
+wrote results/puzzle/structure/slots.json, results/puzzle/structure/slots.txt
+
+=== P8  FALSIFY the first hypothesis: feed 25 'rows+cols+no-touch' grids to the ===
+
+===     netlist. All 25 rejected => extra constraints exist. The netlist is the ===
+
+===     oracle; a reading of the gates is not. ===
+  $ .venv/bin/python GDS-to-RTL/10_uniqueness.py results/puzzle/extracted_netlist.v results/puzzle/models/puzzle_models.v         puzzle_extracted 25 results/puzzle/probe | tail -6
+  candidate  22: success=0  msg='RY AGAIN'
+  candidate  23: success=0  msg='RY AGAIN'
+  candidate  24: success=0  msg='RY AGAIN'
+
+0 of 25 row/col/no-touch grids are ACCEPTED by the netlist
+wrote results/puzzle/probe/uniqueness.json
+
+=== P9  Read the region map straight out of the silicon: 121 single-cell trials ===
+
+===     -- drive I=1 at exactly one position, see which counters increment. ===
+  $ .venv/bin/python GDS-to-RTL/11_probe_cells.py results/puzzle/extracted_netlist.v results/puzzle/models/puzzle_models.v         puzzle_extracted results/puzzle/structure/structure.json results/puzzle/probe
+======================================================================
+WHAT EACH 2-BIT COUNTER WATCHES  (single-cell stimulus, from silicon)
+======================================================================
+  pair u597_dfrtp_2    /u625_dfrtp_2     watches  14 cells -> REGION
+  pair u209_dfrtp_2    /u194_dfrtp_2     watches  11 cells -> COL 0
+  pair u190_dfrtp_2    /u118_dfrtp_2     watches  11 cells -> COL 1
+  pair u189_dfrtp_2    /u117_dfrtp_2     watches  11 cells -> COL 2
+  pair u188_dfrtp_2    /u126_dfrtp_2     watches  11 cells -> COL 3
+  pair u179_dfrtp_2    /u107_dfrtp_2     watches  11 cells -> COL 4
+  pair u233_dfrtp_2    /u231_dfrtp_2     watches  21 cells -> REGION
+  pair u178_dfrtp_2    /u106_dfrtp_2     watches  11 cells -> COL 5
+  pair u180_dfrtp_2    /u108_dfrtp_2     watches  11 cells -> COL 6
+  pair u600_dfrtp_2    /u622_dfrtp_2     watches   7 cells -> REGION
+  pair u153_dfrtp_2    /u121_dfrtp_2     watches  11 cells -> COL 7
+  pair u614_dfrtp_2    /u596_dfrtp_2     watches   5 cells -> REGION
+  pair u142_dfrtp_2    /u124_dfrtp_2     watches  11 cells -> COL 8
+  pair u141_dfrtp_2    /u122_dfrtp_2     watches  11 cells -> COL 9
+  pair u215_dfrtp_2    /u197_dfrtp_2     watches  28 cells -> REGION
+  pair u143_dfrtp_2    /u123_dfrtp_2     watches  11 cells -> COL 10
+  pair u661_dfrtp_2    /u595_dfrtp_2     watches   8 cells -> REGION
+  pair u647_dfrtp_2    /u651_dfrtp_2     watches  11 cells -> REGION
+  pair u602_dfrtp_2    /u635_dfrtp_2     watches   9 cells -> REGION
+  pair u226_dfrtp_2    /u198_dfrtp_2     watches   6 cells -> REGION
+  pair u601_dfrtp_2    /u232_dfrtp_2     watches   8 cells -> REGION
+  pair u634_dfrtp_2    /u603_dfrtp_2     watches   4 cells -> REGION
+
+rows found: 0   cols found: 11   irregular groups: 11
+
+REGION MAP (each letter = one group of cells sharing a counter):
+   A A A A A B B C D D E
+   A A F A A B C C D D E
+   A A F B B B B C C D E
+   A A F B G G G E C C E
+   F A F B G E E E E E E
+   F F F B G G G E H H H
+   B B B B B B G E H I I
+   B J J J G G G E H I I
+   B J J K E E E E H I I
+   B B J K K E E E H H H
+   B J J K E E E E E E E
+   region sizes: {'A': 14, 'B': 21, 'C': 7, 'D': 5, 'E': 28, 'F': 8, 'G': 11, 'H': 9, 'I': 6, 'J': 8, 'K': 4}
+
+wrote results/puzzle/probe/regions.json, results/puzzle/probe/regions.txt
+
+=== P10 Identify the 8-flop register success compares against (star-count sweep), ===
+
+===     and recover the full message catalogue by deliberately failing. ===
+  $ .venv/bin/python GDS-to-RTL/12_misc_probe.py results/puzzle/extracted_netlist.v results/puzzle/models/puzzle_models.v         puzzle_extracted results/puzzle/probe 0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000 | tail -8
+    23 stars -> 01110010   as-is=114  reversed= 78
+    24 stars -> 10000010   as-is=130  reversed= 65
+
+MESSAGE CATALOGUE (drive a grid, read the ASCII on O[7:0]):
+   0 stars (empty grid)             success=0  -> 'EMPTY SKY'
+   121 stars (every cell)           success=0  -> 'BIG BANG'
+   31 stars, structurally wrong     success=0  -> 'TRY AGAIN'
+   the recovered solution           success=1  -> '(* TWO STARS *)'
+
+=== P11 Bounded model checking on the gates: shortest unlock is provably 122 ===
+
+===     clock edges (yosys -seq K counts K-1 edges: K=122 UNSAT, K=123 SAT). ===
+  $ yosys -p "read_verilog results/puzzle/models/puzzle_models.v results/puzzle/extracted_netlist.v;         hierarchy -top puzzle_extracted; proc; flatten; async2sync; dffunmap; opt;         sat -seq 122 -set enable 1 -set-at 122 success 1 -show I"         > results/puzzle/solve/en1_122.log 2>&1 || true
+    K=122: SAT solving finished - no model found
+  $ yosys -p "read_verilog results/puzzle/models/puzzle_models.v results/puzzle/extracted_netlist.v;         hierarchy -top puzzle_extracted; proc; flatten; async2sync; dffunmap; opt;         sat -seq 123 -set enable 1 -set-at 123 success 1 -show I"         > results/puzzle/solve/en1_123.log 2>&1 || true
+    K=123: SAT solving finished - model found
+
+=== P12 Independent solve: z3 on the RECOVERED constraints + uniqueness proof ===
+
+===     Different tool, different encoding. Must land on the same 121 bits. ===
+  $ .venv/bin/python GDS-to-RTL/13_starbattle.py results/puzzle/probe/regions.json 0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000
+regions: 11  sizes: {'A': 14, 'B': 21, 'C': 7, 'D': 5, 'E': 28, 'F': 8, 'G': 11, 'H': 9, 'I': 6, 'J': 8, 'K': 4}
+
+SOLUTIONS FOUND: 1  <-- UNIQUE, the puzzle is well posed
+
+solution 0:  bitstream (row-major) = 0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000
+     0 1 2 3 4 5 6 7 8 9 10
+   0 . . . . . . . * . * .    AAAAABBCDDE
+   1 * . . . . * . . . . .    AAFAABCCDDE
+   2 . . . . . . . * . * .    AAFBBBBCCDE
+   3 * . * . . . . . . . .    AAFBGGGECCE
+   4 . . . . * . * . . . .    FAFBGEEEEEE
+   5 . . * . . . . . * . .    FFFBGGGEHHH
+   6 . . . . * . . . . . *    BBBBBBGEHII
+   7 . * . . . . * . . . .    BJJJGGGEHII
+   8 . . . * . . . . . . *    BJJKEEEEHII
+   9 . . . . . * . . * . .    BBJKKEEEHHH
+  10 . * . * . . . . . . .    BJJKEEEEEEE
+  matches BMC answer: True
+
+=== P13 Recovered behavioural RTL, proved cycle-equivalent over 540 grids ===
+  $ .venv/bin/python GDS-to-RTL/14_gen_rtl.py results/puzzle/probe/regions.json 0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000 results/puzzle/rtl
+wrote results/puzzle/rtl/puzzle_recovered.v and results/puzzle/rtl/tb_equiv.v
+  $ iverilog -g2012 -o results/puzzle/solve/eq.vvp results/puzzle/models/puzzle_models.v         results/puzzle/extracted_netlist.v results/puzzle/rtl/puzzle_recovered.v results/puzzle/rtl/tb_equiv.v
+  $ vvp results/puzzle/solve/eq.vvp | tail -3
+EQUIVALENCE: 0 success mismatches, 0 O mismatches over 540 grids
+RESULT: recovered RTL is cycle-equivalent to the extracted netlist
+results/puzzle/rtl/tb_equiv.v:100: $finish called at 766800000 (1ps)
+
+=== P14 Drive the answer in and read O[7:0] -- the final string ===
+  $ .venv/bin/python GDS-to-RTL/15_dump_output.py results/puzzle/extracted_netlist.v results/puzzle/models/puzzle_models.v         puzzle_extracted 000000010101000010000000000001010101000000000000101000000100000100000010000010100001000000010000001000001001000101000000000 40 results/puzzle/solve | tail -22
+
+raw O[7:0] per cycle (only cycles where O changes shown, with run length):
+   cycles    1- 122 (122) = 0x00 '.'
+   cycles  123- 123 (  1) = 0x28 '('
+   cycles  124- 124 (  1) = 0x2a '*'
+   cycles  125- 125 (  1) = 0x20 ' '
+   cycles  126- 126 (  1) = 0x54 'T'
+   cycles  127- 127 (  1) = 0x57 'W'
+   cycles  128- 128 (  1) = 0x4f 'O'
+   cycles  129- 129 (  1) = 0x20 ' '
+   cycles  130- 130 (  1) = 0x53 'S'
+   cycles  131- 131 (  1) = 0x54 'T'
+   cycles  132- 132 (  1) = 0x41 'A'
+   cycles  133- 133 (  1) = 0x52 'R'
+   cycles  134- 134 (  1) = 0x53 'S'
+   cycles  135- 135 (  1) = 0x20 ' '
+   cycles  136- 136 (  1) = 0x2a '*'
+   cycles  137- 137 (  1) = 0x29 ')'
+   cycles  138- 163 ( 26) = 0x00 '.'
+
+MESSAGE (one char per run): '(* TWO STARS *)'
+wrote results/puzzle/solve/dump.log, results/puzzle/solve/message.txt, results/puzzle/solve/dump.vcd
+
+=== P15 The waveform Jane Street did NOT give us: success actually high ===
+  $ .venv/bin/python GDS-to-RTL/16_make_vcd.py results/puzzle/extracted_netlist.v results/puzzle/models/puzzle_models.v         puzzle_extracted 0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000 success_inputs.vcd
+wrote /home/amrut/GDS-to-RTL/success_inputs.vcd  (4632 bytes)
+  signals   : ['I', 'O', 'clk', 'enable', 'rst_n', 'success']
+  success   : first high at t=1255000 ps  (rising edge 126)
+  O[7:0]    : '(* TWO STARS *)'
+
+=== P16 Render the human-readable answer files ===
+  $ .venv/bin/python GDS-to-RTL/17_write_answer.py results/puzzle/probe/regions.json 0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000 results/puzzle/answer
+wrote results/puzzle/answer/solution_grid.txt and results/puzzle/answer/input_sequence.txt
+
+=== E1  Easter-egg sweep: diff the puzzle's layer set against the warm-up's ===
+  $ .venv/bin/python GDS-to-RTL/18_easter_eggs.py puzzle-task/puzzle.gds results/puzzle/eggs warmup-task/04_final.gds | tail -22
+    94/20       70 polygons   <-- NOT A SKY130 MASK LAYER
+    95/20       76 polygons   <-- NOT A SKY130 MASK LAYER
+   122/16       71 polygons   <-- NOT A SKY130 MASK LAYER
+   200/0         2 polygons   <-- NOT A SKY130 MASK LAYER
+   235/4         1 polygons
+   236/0        68 polygons   <-- NOT A SKY130 MASK LAYER
+
+non-standard-cell, non-via structures: ['INTERNAL_3', 'INTERNAL_7']
+
+layers in puzzle-task/puzzle.gds but NOT in warmup-task/04_final.gds (same flow => hand-added):
+    66/15        2 polygons
+    81/23        1 polygons
+   200/0         2 polygons
+layers in warmup-task/04_final.gds but not in puzzle-task/puzzle.gds: none
+
+bar strip: 36 bars, narrow(unit) = 1.38 um, wide = 4.14 um (3 units)
+  y = -52.72 um  (below the die -> cosmetic, not routed)
+  widths  : . - - . . . - . . - . - . . - . . - - - . - - . . . - . . . - . - . . -
+  gaps    : 1 1 1 3 3 1 1 7 1 3 1 1 3 3 1 3 1 3 1 7 1 3 1 1 7 1 3 1 1 3 3 1 1 3 1   (1 = intra-letter, 3 = letter, 7 = word)
+  MORSE   : PER ARENAM AD ASTRA
+
+wrote results/puzzle/eggs/easter_eggs.txt
+
+=== E2  Put the recovered blocks back on the die -- the physical hint, measured ===
+  $ .venv/bin/python GDS-to-RTL/19_floorplan.py puzzle-task/puzzle.gds results/puzzle/probe/regions.json results/puzzle/eggs | head -34
+FLOORPLAN OF THE RECOVERED BLOCKS
+================================================================
+
+die: ((0.0, -52.72), (200.0, 300.0))
+
+counter pairs, sorted bottom-to-top:
+    x (um)   y (um)  kind  cells  instances
+    116.61    48.96  REG       8  u661_dfrtp_2+u595_dfrtp_2
+    119.37    68.00  REG      11  u647_dfrtp_2+u651_dfrtp_2
+    115.00    78.88  REG       4  u634_dfrtp_2+u603_dfrtp_2
+    119.60    78.88  REG       9  u602_dfrtp_2+u635_dfrtp_2
+    119.60    95.20  REG       5  u614_dfrtp_2+u596_dfrtp_2
+    119.14    97.92  REG       7  u600_dfrtp_2+u622_dfrtp_2
+     80.50   103.36  ROW       0  u420_dfrtp_2+u416_dfrtp_2
+    126.27   108.80  REG      14  u597_dfrtp_2+u625_dfrtp_2
+    115.00   119.68  REG       8  u601_dfrtp_2+u232_dfrtp_2
+    124.20   133.28  REG      21  u233_dfrtp_2+u231_dfrtp_2
+    126.27   138.72  REG      28  u215_dfrtp_2+u197_dfrtp_2
+    121.44   146.88  REG       6  u226_dfrtp_2+u198_dfrtp_2
+    115.23   184.96  COL      11  u209_dfrtp_2+u194_dfrtp_2
+    119.60   206.72  COL      11  u190_dfrtp_2+u118_dfrtp_2
+    119.37   212.16  COL      11  u189_dfrtp_2+u117_dfrtp_2
+    115.23   217.60  COL      11  u188_dfrtp_2+u126_dfrtp_2
+    114.77   231.20  COL      11  u179_dfrtp_2+u107_dfrtp_2
+    119.60   239.36  COL      11  u178_dfrtp_2+u106_dfrtp_2
+    120.06   244.80  COL      11  u180_dfrtp_2+u108_dfrtp_2
+    114.77   258.40  COL      11  u153_dfrtp_2+u121_dfrtp_2
+    115.23   274.72  COL      11  u141_dfrtp_2+u122_dfrtp_2
+    119.60   280.16  COL      11  u142_dfrtp_2+u124_dfrtp_2
+    119.60   285.60  COL      11  u143_dfrtp_2+u123_dfrtp_2
+
+counter column occupies x = 114.8 .. 126.3 um of a 200 um wide die
+  11 COL slices at y = 185.0 .. 285.6
+  11 REG slices at y = 49.0 .. 146.9
+
+=== E3  The sample inputs are not a failed solve -- they are a message ===
+  $ .venv/bin/python GDS-to-RTL/20_vcd_message.py puzzle-task/example_inputs.vcd results/puzzle/eggs | tail -6
+   . . . . . * . . . . .   0000010 ->  32 -> ' '
+
+MESSAGE: 'The night sky awaits  '
+         'The night sky awaits'
+
+wrote results/puzzle/eggs/vcd_message.txt
+
+=== Collecting deliverables into solution/ ===
+answer.txt
+easter_eggs.txt
+floorplan.txt
+input_sequence.txt
+puzzle_recovered.v
+solution_grid.txt
+vcd_message.txt
+
+--------------------------------------------------------------------------
+DONE.
+  the answer string      solution/answer.txt
+  the grid + region map  solution/solution_grid.txt
+  how to drive the chip  solution/input_sequence.txt
+  recovered RTL          solution/puzzle_recovered.v
+  easter eggs            solution/easter_eggs.txt, solution/vcd_message.txt
+  winning waveform       success_inputs.vcd      (open in Surfer)
+  what every step did    RUN.md, GDS-to-RTL/README.md
+  how it was worked out  WRITEUP.md
+--------------------------------------------------------------------------
+

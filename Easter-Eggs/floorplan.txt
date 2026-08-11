@@ -1,0 +1,85 @@
+FLOORPLAN OF THE RECOVERED BLOCKS
+================================================================
+
+die: ((0.0, -52.72), (200.0, 300.0))
+
+counter pairs, sorted bottom-to-top:
+    x (um)   y (um)  kind  cells  instances
+    116.61    48.96  REG       8  u661_dfrtp_2+u595_dfrtp_2
+    119.37    68.00  REG      11  u647_dfrtp_2+u651_dfrtp_2
+    115.00    78.88  REG       4  u634_dfrtp_2+u603_dfrtp_2
+    119.60    78.88  REG       9  u635_dfrtp_2+u602_dfrtp_2
+    119.60    95.20  REG       5  u596_dfrtp_2+u614_dfrtp_2
+    119.14    97.92  REG       7  u600_dfrtp_2+u622_dfrtp_2
+     80.50   103.36  ROW       0  u416_dfrtp_2+u420_dfrtp_2
+    126.27   108.80  REG      14  u597_dfrtp_2+u625_dfrtp_2
+    115.00   119.68  REG       8  u601_dfrtp_2+u232_dfrtp_2
+    124.20   133.28  REG      21  u233_dfrtp_2+u231_dfrtp_2
+    126.27   138.72  REG      28  u215_dfrtp_2+u197_dfrtp_2
+    121.44   146.88  REG       6  u226_dfrtp_2+u198_dfrtp_2
+    115.23   184.96  COL      11  u209_dfrtp_2+u194_dfrtp_2
+    119.60   206.72  COL      11  u190_dfrtp_2+u118_dfrtp_2
+    119.37   212.16  COL      11  u189_dfrtp_2+u117_dfrtp_2
+    115.23   217.60  COL      11  u188_dfrtp_2+u126_dfrtp_2
+    114.77   231.20  COL      11  u179_dfrtp_2+u107_dfrtp_2
+    119.60   239.36  COL      11  u178_dfrtp_2+u106_dfrtp_2
+    120.06   244.80  COL      11  u180_dfrtp_2+u108_dfrtp_2
+    114.77   258.40  COL      11  u153_dfrtp_2+u121_dfrtp_2
+    115.23   274.72  COL      11  u141_dfrtp_2+u122_dfrtp_2
+    119.60   280.16  COL      11  u142_dfrtp_2+u124_dfrtp_2
+    119.60   285.60  COL      11  u143_dfrtp_2+u123_dfrtp_2
+
+counter column occupies x = 114.8 .. 126.3 um of a 200 um wide die
+  11 COL slices at y = 185.0 .. 285.6
+  11 REG slices at y = 49.0 .. 146.9
+   1 ROW slice  off to the side at x = 80.5
+
+The checker is one vertical stack of identical 2-bit slices, split into
+a column-checking half and a region-checking half with a visible gap
+between them (y 147 -> 185). Counting slices gives
+11 + 11 + 1 -- the whole architecture, before a single gate is read.
+
+region-counter watch-set sizes (bottom to top) = the region sizes:
+  8 11 4 9 5 7 14 8 21 28 6   sum = 121
+
+logic-cell density (C = a recovered counter slice sits here):
+                                                    
+                            .:*C.-         :.:      
+                             -CC..         .-..     
+                              =:           .+       
+                              C:             .      
+                             .-:--.       :=:::-    
+                              +CC.         ---:.    
+                             -C::.          :       
+                              - =     .  : :-+-     
+                             :CC:.        .--#=:    
+         .                   :-C.          -..:.    
+         ...               :  +..        ::*-..-.   
+                               ::       = --  . :.  
+                              C:       :-#:::-: #   
+                                      .  :.%::=..   
+         .           - .    .               ..      
+       .:::.       :+- =..     :           .=-.     
+        ::.     . . =.:+     .=.C=         ..=:     
+                      ...    .: :C         :..-     
+                              # .:         :::.     
+                              C-.           ..      
+        ..:        ..-.: .    :- C          -+-     
+        :=..-       .-C:.    :=C+           =.:.    
+         .  .         :      :-C :         - .-:    
+                             .=:-          -:-      
+                      . .  . -CC .                  
+                          .  -=C-.                  
+                   ..-:-.     - +          ::.-     
+                   .+ :  -    :C           :-:.-    
+                   :--....      .       -++-+ -==:  
+                     .:.               -%====.===   
+                      .                .:=:: -.:-   
+                                        -+-+:-==+   
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    

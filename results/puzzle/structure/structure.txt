@@ -1,0 +1,76 @@
+========================================================================
+REGISTER-LEVEL STRUCTURE
+========================================================================
+flip-flops: 92   (Counter({'dfrtp_2': 84, 'dfxtp_2': 4, 'dfstp_2': 4}))
+
+-- shift-register chains found: 0
+
+-- feedback groups (SCCs, i.e. counters/FSMs/accumulators): 26
+   size   9  external inputs: ['PORT:enable']
+            members: u350_dfrtp_2 u352_dfrtp_2 u354_dfrtp_2 u355_dfrtp_2 u363_dfrtp_2 u467_dfrtp_2 u468_dfrtp_2 u471_dfrtp_2 u475_dfrtp_2
+   size   8  external inputs: ['PORT:I', 'PORT:enable']
+            members: u252_dfrtp_2 u253_dfrtp_2 u254_dfrtp_2 u255_dfrtp_2 u263_dfstp_2 u264_dfstp_2 u265_dfstp_2 u266_dfstp_2
+   size   4  external inputs: none
+            members: u34_dfxtp_2 u35_dfxtp_2 u36_dfxtp_2 u37_dfxtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u106_dfrtp_2 u178_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u107_dfrtp_2 u179_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u108_dfrtp_2 u180_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u117_dfrtp_2 u189_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u118_dfrtp_2 u190_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u121_dfrtp_2 u153_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u122_dfrtp_2 u141_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u123_dfrtp_2 u143_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u124_dfrtp_2 u142_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u126_dfrtp_2 u188_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u194_dfrtp_2 u209_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u197_dfrtp_2 u215_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u198_dfrtp_2 u226_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u231_dfrtp_2 u233_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u232_dfrtp_2 u601_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u595_dfrtp_2 u661_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u600_dfrtp_2 u622_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u596_dfrtp_2 u614_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u597_dfrtp_2 u625_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u603_dfrtp_2 u634_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u602_dfrtp_2 u635_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u647_dfrtp_2 u651_dfrtp_2
+   size   2  external inputs: ['PORT:I', 'PORT:enable']
+            members: u416_dfrtp_2 u420_dfrtp_2
+-- self-looping flops (hold/toggle): 25
+
+-- unchained, non-SCC flops: 25
+
+-- `success` combinationally depends on:
+   1 flops, ports []
+
+-- output bus O[7:0] depends on:
+   O[0]   : 16 flops, ports []
+   O[1]   : 16 flops, ports []
+   O[2]   : 16 flops, ports []
+   O[3]   : 16 flops, ports []
+   O[4]   : 16 flops, ports []
+   O[5]   : 16 flops, ports []
+   O[6]   : 16 flops, ports []
+   O[7]   : 16 flops, ports []

@@ -1,0 +1,2852 @@
+{
+ "instances": [
+  {
+   "idx": 0,
+   "cell": "sky130_fd_sc_hd__clkbuf_16",
+   "bridge": false,
+   "x": 31.74,
+   "y": 48.96,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 1,
+   "cell": "sky130_fd_sc_hd__and4bb_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 48.96,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 2,
+   "cell": "sky130_fd_sc_hd__and3_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 54.4,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 3,
+   "cell": "sky130_fd_sc_hd__clkbuf_16",
+   "bridge": false,
+   "x": 35.88,
+   "y": 65.28,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 4,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 25.76,
+   "y": 65.28,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 5,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 25.76,
+   "y": 76.16,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 6,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 26.22,
+   "y": 70.72,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 7,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 29.9,
+   "y": 70.72,
+   "rot": 180,
+   "mirror": true
+  },
+  {
+   "idx": 8,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 36.34,
+   "y": 70.72,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 9,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 26.22,
+   "y": 76.16,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 10,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 26.22,
+   "y": 70.72,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 11,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 29.9,
+   "y": 76.16,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 12,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 29.9,
+   "y": 70.72,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 13,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 36.34,
+   "y": 76.16,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 14,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 39.56,
+   "y": 70.72,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 15,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 29.9,
+   "y": 81.6,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 16,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 26.22,
+   "y": 76.16,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 17,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 29.9,
+   "y": 59.84,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 18,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 29.9,
+   "y": 59.84,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 19,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 29.9,
+   "y": 65.28,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 20,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 26.22,
+   "y": 32.64,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 21,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 29.9,
+   "y": 32.64,
+   "rot": 180,
+   "mirror": true
+  },
+  {
+   "idx": 22,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 29.9,
+   "y": 27.2,
+   "rot": 180,
+   "mirror": true
+  },
+  {
+   "idx": 23,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 35.88,
+   "y": 27.2,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 24,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 36.34,
+   "y": 32.64,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 25,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 26.22,
+   "y": 38.08,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 26,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 26.22,
+   "y": 32.64,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 27,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 22.08,
+   "y": 32.64,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 28,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 29.9,
+   "y": 43.52,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 29,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 36.34,
+   "y": 38.08,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 30,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 29.9,
+   "y": 32.64,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 31,
+   "cell": "sky130_fd_sc_hd__clkbuf_16",
+   "bridge": false,
+   "x": 30.82,
+   "y": 43.52,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 32,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 29.9,
+   "y": 38.08,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 33,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 29.9,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 34,
+   "cell": "sky130_fd_sc_hd__dfrtp_2",
+   "bridge": false,
+   "x": 29.9,
+   "y": 21.76,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 35,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 36.34,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 36,
+   "cell": "sky130_fd_sc_hd__mux2_1",
+   "bridge": false,
+   "x": 34.04,
+   "y": 21.76,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 37,
+   "cell": "sky130_fd_sc_hd__a31o_2",
+   "bridge": false,
+   "x": 75.9,
+   "y": 32.64,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 38,
+   "cell": "sky130_fd_sc_hd__nor2_2",
+   "bridge": false,
+   "x": 59.34,
+   "y": 32.64,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 39,
+   "cell": "sky130_fd_sc_hd__nor2_2",
+   "bridge": false,
+   "x": 79.12,
+   "y": 32.64,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 40,
+   "cell": "sky130_fd_sc_hd__nor2_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 38.08,
+   "rot": 180,
+   "mirror": true
+  },
+  {
+   "idx": 41,
+   "cell": "sky130_fd_sc_hd__nor2_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 16.32,
+   "rot": 180,
+   "mirror": true
+  },
+  {
+   "idx": 42,
+   "cell": "sky130_fd_sc_hd__a21boi_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 27.2,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 43,
+   "cell": "sky130_fd_sc_hd__o21bai_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 32.64,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 44,
+   "cell": "sky130_fd_sc_hd__and2_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 38.08,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 45,
+   "cell": "sky130_fd_sc_hd__and2_2",
+   "bridge": false,
+   "x": 67.16,
+   "y": 21.76,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 46,
+   "cell": "sky130_fd_sc_hd__xor2_2",
+   "bridge": false,
+   "x": 68.54,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 47,
+   "cell": "sky130_fd_sc_hd__xor2_2",
+   "bridge": false,
+   "x": 68.54,
+   "y": 32.64,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 48,
+   "cell": "sky130_fd_sc_hd__xor2_2",
+   "bridge": false,
+   "x": 68.54,
+   "y": 21.76,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 49,
+   "cell": "sky130_fd_sc_hd__xor2_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 32.64,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 50,
+   "cell": "sky130_fd_sc_hd__a31o_2",
+   "bridge": false,
+   "x": 65.78,
+   "y": 32.64,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 51,
+   "cell": "sky130_fd_sc_hd__or2_2",
+   "bridge": false,
+   "x": 77.74,
+   "y": 32.64,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 52,
+   "cell": "sky130_fd_sc_hd__and2_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 38.08,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 53,
+   "cell": "sky130_fd_sc_hd__and4bb_2",
+   "bridge": false,
+   "x": 74.52,
+   "y": 48.96,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 54,
+   "cell": "sky130_fd_sc_hd__or2_2",
+   "bridge": false,
+   "x": 73.6,
+   "y": 38.08,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 55,
+   "cell": "sky130_fd_sc_hd__a21bo_2",
+   "bridge": false,
+   "x": 73.6,
+   "y": 38.08,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 56,
+   "cell": "sky130_fd_sc_hd__and2_2",
+   "bridge": false,
+   "x": 77.74,
+   "y": 32.64,
+   "rot": 180,
+   "mirror": true
+  },
+  {
+   "idx": 57,
+   "cell": "sky130_fd_sc_hd__nor2_2",
+   "bridge": false,
+   "x": 67.16,
+   "y": 38.08,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 58,
+   "cell": "sky130_fd_sc_hd__nor2_2",
+   "bridge": false,
+   "x": 65.32,
+   "y": 32.64,
+   "rot": 180,
+   "mirror": true
+  },
+  {
+   "idx": 59,
+   "cell": "sky130_fd_sc_hd__a21o_2",
+   "bridge": false,
+   "x": 68.54,
+   "y": 32.64,
+   "rot": 180,
+   "mirror": true
+  },
+  {
+   "idx": 60,
+   "cell": "sky130_fd_sc_hd__or2_2",
+   "bridge": false,
+   "x": 67.16,
+   "y": 21.76,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 61,
+   "cell": "sky130_fd_sc_hd__nor2_2",
+   "bridge": false,
+   "x": 57.5,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 62,
+   "cell": "sky130_fd_sc_hd__nand2_2",
+   "bridge": false,
+   "x": 61.64,
+   "y": 27.2,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 63,
+   "cell": "sky130_fd_sc_hd__and2_2",
+   "bridge": false,
+   "x": 59.8,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 64,
+   "cell": "sky130_fd_sc_hd__a31o_2",
+   "bridge": false,
+   "x": 62.56,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 65,
+   "cell": "sky130_fd_sc_hd__or2_2",
+   "bridge": false,
+   "x": 63.02,
+   "y": 21.76,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 66,
+   "cell": "sky130_fd_sc_hd__xnor2_2",
+   "bridge": false,
+   "x": 62.56,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 67,
+   "cell": "sky130_fd_sc_hd__a31o_2",
+   "bridge": false,
+   "x": 65.32,
+   "y": 21.76,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 68,
+   "cell": "sky130_fd_sc_hd__xor2_2",
+   "bridge": false,
+   "x": 74.98,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 69,
+   "cell": "sky130_fd_sc_hd__xnor2_2",
+   "bridge": false,
+   "x": 75.9,
+   "y": 21.76,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 70,
+   "cell": "sky130_fd_sc_hd__nand2_2",
+   "bridge": false,
+   "x": 77.74,
+   "y": 21.76,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 71,
+   "cell": "sky130_fd_sc_hd__nand2_2",
+   "bridge": false,
+   "x": 79.12,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 72,
+   "cell": "sky130_fd_sc_hd__nor2_2",
+   "bridge": false,
+   "x": 83.26,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 73,
+   "cell": "sky130_fd_sc_hd__nand2_2",
+   "bridge": false,
+   "x": 80.96,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 74,
+   "cell": "sky130_fd_sc_hd__and2_2",
+   "bridge": false,
+   "x": 74.98,
+   "y": 21.76,
+   "rot": 0,
+   "mirror": false
+  },
+  {
+   "idx": 75,
+   "cell": "sky130_fd_sc_hd__a31o_2",
+   "bridge": false,
+   "x": 75.9,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 76,
+   "cell": "sky130_fd_sc_hd__xnor2_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 27.2,
+   "rot": 0,
+   "mirror": true
+  },
+  {
+   "idx": 77,
+   "cell": "sky130_fd_sc_hd__or2_2",
+   "bridge": false,
+   "x": 72.22,
+   "y": 16.32,
+   "rot": 180,
+   "mirror": false
+  },
+  {
+   "idx": 78,
+   "cell": "sky130_fd_sc_hd__and2_2",
+   "bridge": false,
+   "x": 69.92,
+   "y": 16.32,
+   "rot": 0,
+   "mirror": false
+  }
+ ],
+ "nets": [
+  {
+   "name": "net_000",
+   "ports": [],
+   "pins": [
+    [
+     20,
+     "X"
+    ],
+    [
+     26,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     20,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_001",
+   "ports": [],
+   "pins": [
+    [
+     47,
+     "B"
+    ],
+    [
+     59,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     59,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_002",
+   "ports": [],
+   "pins": [
+    [
+     22,
+     "X"
+    ],
+    [
+     33,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     22,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_003",
+   "ports": [],
+   "pins": [
+    [
+     21,
+     "X"
+    ],
+    [
+     30,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     21,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_004",
+   "ports": [],
+   "pins": [
+    [
+     7,
+     "X"
+    ],
+    [
+     12,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     7,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_005",
+   "ports": [],
+   "pins": [
+    [
+     0,
+     "X"
+    ],
+    [
+     3,
+     "A"
+    ],
+    [
+     31,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     0,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_006",
+   "ports": [],
+   "pins": [
+    [
+     8,
+     "D"
+    ],
+    [
+     14,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     14,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_007",
+   "ports": [],
+   "pins": [
+    [
+     41,
+     "B"
+    ],
+    [
+     61,
+     "Y"
+    ]
+   ],
+   "drivers": [
+    [
+     61,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_008",
+   "ports": [],
+   "pins": [
+    [
+     60,
+     "X"
+    ],
+    [
+     64,
+     "A3"
+    ]
+   ],
+   "drivers": [
+    [
+     60,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_009",
+   "ports": [],
+   "pins": [
+    [
+     41,
+     "Y"
+    ],
+    [
+     48,
+     "A"
+    ],
+    [
+     50,
+     "A1"
+    ],
+    [
+     59,
+     "A1"
+    ]
+   ],
+   "drivers": [
+    [
+     41,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_010",
+   "ports": [],
+   "pins": [
+    [
+     62,
+     "Y"
+    ],
+    [
+     66,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     62,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_011",
+   "ports": [],
+   "pins": [
+    [
+     42,
+     "A2"
+    ],
+    [
+     50,
+     "X"
+    ],
+    [
+     66,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     50,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_012",
+   "ports": [],
+   "pins": [
+    [
+     50,
+     "B1"
+    ],
+    [
+     64,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     64,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_013",
+   "ports": [],
+   "pins": [
+    [
+     52,
+     "X"
+    ],
+    [
+     57,
+     "B"
+    ],
+    [
+     64,
+     "B1"
+    ]
+   ],
+   "drivers": [
+    [
+     52,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_014",
+   "ports": [],
+   "pins": [
+    [
+     39,
+     "Y"
+    ],
+    [
+     58,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     39,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_015",
+   "ports": [],
+   "pins": [
+    [
+     47,
+     "A"
+    ],
+    [
+     50,
+     "A3"
+    ],
+    [
+     57,
+     "Y"
+    ]
+   ],
+   "drivers": [
+    [
+     57,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_016",
+   "ports": [],
+   "pins": [
+    [
+     20,
+     "A1"
+    ],
+    [
+     21,
+     "A0"
+    ],
+    [
+     30,
+     "Q"
+    ],
+    [
+     46,
+     "A"
+    ],
+    [
+     63,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     30,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_017",
+   "ports": [],
+   "pins": [
+    [
+     2,
+     "A"
+    ],
+    [
+     66,
+     "Y"
+    ]
+   ],
+   "drivers": [
+    [
+     66,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_018",
+   "ports": [],
+   "pins": [
+    [
+     38,
+     "Y"
+    ],
+    [
+     43,
+     "A1"
+    ],
+    [
+     72,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     38,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_019",
+   "ports": [],
+   "pins": [
+    [
+     40,
+     "Y"
+    ],
+    [
+     57,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     40,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_020",
+   "ports": [],
+   "pins": [
+    [
+     25,
+     "D"
+    ],
+    [
+     27,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     27,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_021",
+   "ports": [],
+   "pins": [
+    [
+     44,
+     "B"
+    ],
+    [
+     77,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     77,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_022",
+   "ports": [],
+   "pins": [
+    [
+     41,
+     "A"
+    ],
+    [
+     59,
+     "B1"
+    ],
+    [
+     78,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     78,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_023",
+   "ports": [],
+   "pins": [
+    [
+     42,
+     "Y"
+    ],
+    [
+     43,
+     "A2"
+    ],
+    [
+     69,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     42,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_024",
+   "ports": [],
+   "pins": [
+    [
+     2,
+     "C"
+    ],
+    [
+     43,
+     "Y"
+    ]
+   ],
+   "drivers": [
+    [
+     43,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_025",
+   "ports": [],
+   "pins": [
+    [
+     44,
+     "X"
+    ],
+    [
+     53,
+     "B_N"
+    ]
+   ],
+   "drivers": [
+    [
+     44,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_026",
+   "ports": [],
+   "pins": [
+    [
+     43,
+     "B1_N"
+    ],
+    [
+     45,
+     "X"
+    ],
+    [
+     72,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     45,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_027",
+   "ports": [],
+   "pins": [
+    [
+     2,
+     "B"
+    ],
+    [
+     69,
+     "Y"
+    ]
+   ],
+   "drivers": [
+    [
+     69,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_028",
+   "ports": [],
+   "pins": [
+    [
+     1,
+     "X"
+    ],
+    [
+     53,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     1,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_029",
+   "ports": [],
+   "pins": [
+    [
+     49,
+     "A"
+    ],
+    [
+     55,
+     "A1"
+    ],
+    [
+     67,
+     "A1"
+    ],
+    [
+     75,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     75,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_030",
+   "ports": [],
+   "pins": [
+    [
+     2,
+     "X"
+    ],
+    [
+     53,
+     "C"
+    ]
+   ],
+   "drivers": [
+    [
+     2,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_031",
+   "ports": [],
+   "pins": [
+    [
+     1,
+     "C"
+    ],
+    [
+     48,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     48,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_032",
+   "ports": [],
+   "pins": [
+    [
+     46,
+     "X"
+    ],
+    [
+     75,
+     "A3"
+    ],
+    [
+     76,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     46,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_033",
+   "ports": [],
+   "pins": [
+    [
+     58,
+     "Y"
+    ],
+    [
+     67,
+     "A3"
+    ],
+    [
+     68,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     58,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_034",
+   "ports": [],
+   "pins": [
+    [
+     1,
+     "B_N"
+    ],
+    [
+     49,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     49,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_035",
+   "ports": [],
+   "pins": [
+    [
+     1,
+     "D"
+    ],
+    [
+     47,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     47,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_036",
+   "ports": [],
+   "pins": [
+    [
+     54,
+     "X"
+    ],
+    [
+     74,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     54,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_037",
+   "ports": [],
+   "pins": [
+    [
+     53,
+     "A_N"
+    ],
+    [
+     76,
+     "Y"
+    ]
+   ],
+   "drivers": [
+    [
+     76,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_038",
+   "ports": [],
+   "pins": [
+    [
+     49,
+     "B"
+    ],
+    [
+     55,
+     "A2"
+    ],
+    [
+     67,
+     "A2"
+    ],
+    [
+     74,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     74,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_039",
+   "ports": [],
+   "pins": [
+    [
+     37,
+     "B1"
+    ],
+    [
+     56,
+     "X"
+    ],
+    [
+     58,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     56,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_040",
+   "ports": [],
+   "pins": [
+    [
+     55,
+     "B1_N"
+    ],
+    [
+     71,
+     "Y"
+    ],
+    [
+     74,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     71,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_041",
+   "ports": [],
+   "pins": [
+    [
+     42,
+     "B1_N"
+    ],
+    [
+     62,
+     "A"
+    ],
+    [
+     70,
+     "Y"
+    ]
+   ],
+   "drivers": [
+    [
+     70,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_042",
+   "ports": [],
+   "pins": [
+    [
+     42,
+     "A1"
+    ],
+    [
+     51,
+     "X"
+    ],
+    [
+     62,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     51,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_043",
+   "ports": [],
+   "pins": [
+    [
+     7,
+     "A0"
+    ],
+    [
+     12,
+     "Q"
+    ],
+    [
+     17,
+     "A1"
+    ],
+    [
+     73,
+     "B"
+    ],
+    [
+     75,
+     "A2"
+    ],
+    [
+     77,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     12,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_044",
+   "ports": [],
+   "pins": [
+    [
+     63,
+     "X"
+    ],
+    [
+     75,
+     "B1"
+    ]
+   ],
+   "drivers": [
+    [
+     63,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_045",
+   "ports": [],
+   "pins": [
+    [
+     1,
+     "A_N"
+    ],
+    [
+     68,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     68,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_046",
+   "ports": [],
+   "pins": [
+    [
+     4,
+     "A1"
+    ],
+    [
+     11,
+     "Q"
+    ],
+    [
+     15,
+     "A0"
+    ],
+    [
+     37,
+     "A2"
+    ],
+    [
+     54,
+     "B"
+    ],
+    [
+     71,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     11,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_047",
+   "ports": [],
+   "pins": [
+    [
+     44,
+     "A"
+    ],
+    [
+     73,
+     "Y"
+    ],
+    [
+     76,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     73,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_048",
+   "ports": [],
+   "pins": [
+    [
+     20,
+     "A0"
+    ],
+    [
+     26,
+     "Q"
+    ],
+    [
+     36,
+     "A1"
+    ],
+    [
+     37,
+     "A1"
+    ],
+    [
+     54,
+     "A"
+    ],
+    [
+     71,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     26,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_050",
+   "ports": [],
+   "pins": [
+    [
+     69,
+     "A"
+    ],
+    [
+     72,
+     "Y"
+    ]
+   ],
+   "drivers": [
+    [
+     72,
+     "Y"
+    ]
+   ]
+  },
+  {
+   "name": "net_051",
+   "ports": [],
+   "pins": [
+    [
+     55,
+     "X"
+    ],
+    [
+     68,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     55,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_052",
+   "ports": [],
+   "pins": [
+    [
+     17,
+     "X"
+    ],
+    [
+     19,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     17,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_053",
+   "ports": [],
+   "pins": [
+    [
+     3,
+     "X"
+    ],
+    [
+     8,
+     "CLK"
+    ],
+    [
+     9,
+     "CLK"
+    ],
+    [
+     10,
+     "CLK"
+    ],
+    [
+     11,
+     "CLK"
+    ],
+    [
+     12,
+     "CLK"
+    ],
+    [
+     13,
+     "CLK"
+    ],
+    [
+     18,
+     "CLK"
+    ],
+    [
+     19,
+     "CLK"
+    ]
+   ],
+   "drivers": [
+    [
+     3,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "en",
+   "ports": [
+    "en"
+   ],
+   "pins": [
+    [
+     4,
+     "S"
+    ],
+    [
+     5,
+     "S"
+    ],
+    [
+     6,
+     "S"
+    ],
+    [
+     7,
+     "S"
+    ],
+    [
+     14,
+     "S"
+    ],
+    [
+     15,
+     "S"
+    ],
+    [
+     16,
+     "S"
+    ],
+    [
+     17,
+     "S"
+    ],
+    [
+     20,
+     "S"
+    ],
+    [
+     21,
+     "S"
+    ],
+    [
+     22,
+     "S"
+    ],
+    [
+     27,
+     "S"
+    ],
+    [
+     28,
+     "S"
+    ],
+    [
+     29,
+     "S"
+    ],
+    [
+     35,
+     "S"
+    ],
+    [
+     36,
+     "S"
+    ]
+   ],
+   "drivers": []
+  },
+  {
+   "name": "net_055",
+   "ports": [],
+   "pins": [
+    [
+     4,
+     "X"
+    ],
+    [
+     10,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     4,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_056",
+   "ports": [],
+   "pins": [
+    [
+     5,
+     "X"
+    ],
+    [
+     9,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     5,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_057",
+   "ports": [],
+   "pins": [
+    [
+     28,
+     "X"
+    ],
+    [
+     34,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     28,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_058",
+   "ports": [],
+   "pins": [
+    [
+     23,
+     "CLK"
+    ],
+    [
+     24,
+     "CLK"
+    ],
+    [
+     25,
+     "CLK"
+    ],
+    [
+     26,
+     "CLK"
+    ],
+    [
+     30,
+     "CLK"
+    ],
+    [
+     31,
+     "X"
+    ],
+    [
+     32,
+     "CLK"
+    ],
+    [
+     33,
+     "CLK"
+    ],
+    [
+     34,
+     "CLK"
+    ]
+   ],
+   "drivers": [
+    [
+     31,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_059",
+   "ports": [],
+   "pins": [
+    [
+     23,
+     "D"
+    ],
+    [
+     29,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     29,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_060",
+   "ports": [],
+   "pins": [
+    [
+     32,
+     "D"
+    ],
+    [
+     35,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     35,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_061",
+   "ports": [],
+   "pins": [
+    [
+     16,
+     "X"
+    ],
+    [
+     18,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     16,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "rst_n",
+   "ports": [
+    "rst_n"
+   ],
+   "pins": [
+    [
+     8,
+     "RESET_B"
+    ],
+    [
+     9,
+     "RESET_B"
+    ],
+    [
+     10,
+     "RESET_B"
+    ],
+    [
+     11,
+     "RESET_B"
+    ],
+    [
+     12,
+     "RESET_B"
+    ],
+    [
+     13,
+     "RESET_B"
+    ],
+    [
+     18,
+     "RESET_B"
+    ],
+    [
+     19,
+     "RESET_B"
+    ],
+    [
+     23,
+     "RESET_B"
+    ],
+    [
+     24,
+     "RESET_B"
+    ],
+    [
+     25,
+     "RESET_B"
+    ],
+    [
+     26,
+     "RESET_B"
+    ],
+    [
+     30,
+     "RESET_B"
+    ],
+    [
+     32,
+     "RESET_B"
+    ],
+    [
+     33,
+     "RESET_B"
+    ],
+    [
+     34,
+     "RESET_B"
+    ]
+   ],
+   "drivers": []
+  },
+  {
+   "name": "net_063",
+   "ports": [],
+   "pins": [
+    [
+     6,
+     "X"
+    ],
+    [
+     13,
+     "D"
+    ]
+   ],
+   "drivers": [
+    [
+     6,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_064",
+   "ports": [],
+   "pins": [
+    [
+     11,
+     "D"
+    ],
+    [
+     15,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     15,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_065",
+   "ports": [],
+   "pins": [
+    [
+     24,
+     "D"
+    ],
+    [
+     36,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     36,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_066",
+   "ports": [],
+   "pins": [
+    [
+     29,
+     "A1"
+    ],
+    [
+     32,
+     "Q"
+    ],
+    [
+     35,
+     "A0"
+    ],
+    [
+     40,
+     "A"
+    ],
+    [
+     52,
+     "A"
+    ],
+    [
+     60,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     32,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_068",
+   "ports": [],
+   "pins": [
+    [
+     28,
+     "A0"
+    ],
+    [
+     34,
+     "Q"
+    ],
+    [
+     35,
+     "A1"
+    ],
+    [
+     61,
+     "A"
+    ],
+    [
+     64,
+     "A1"
+    ],
+    [
+     78,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     34,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_069",
+   "ports": [],
+   "pins": [
+    [
+     5,
+     "A0"
+    ],
+    [
+     9,
+     "Q"
+    ],
+    [
+     14,
+     "A1"
+    ],
+    [
+     61,
+     "B"
+    ],
+    [
+     64,
+     "A2"
+    ],
+    [
+     78,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     9,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_070",
+   "ports": [],
+   "pins": [
+    [
+     15,
+     "A1"
+    ],
+    [
+     17,
+     "A0"
+    ],
+    [
+     19,
+     "Q"
+    ],
+    [
+     46,
+     "B"
+    ],
+    [
+     63,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     19,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "clk",
+   "ports": [
+    "clk"
+   ],
+   "pins": [
+    [
+     0,
+     "A"
+    ]
+   ],
+   "drivers": []
+  },
+  {
+   "name": "net_072",
+   "ports": [],
+   "pins": [
+    [
+     21,
+     "A1"
+    ],
+    [
+     22,
+     "A0"
+    ],
+    [
+     33,
+     "Q"
+    ],
+    [
+     73,
+     "A"
+    ],
+    [
+     75,
+     "A1"
+    ],
+    [
+     77,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     33,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_073",
+   "ports": [],
+   "pins": [
+    [
+     25,
+     "Q"
+    ],
+    [
+     27,
+     "A0"
+    ],
+    [
+     38,
+     "A"
+    ],
+    [
+     45,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     25,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_074",
+   "ports": [],
+   "pins": [
+    [
+     23,
+     "Q"
+    ],
+    [
+     27,
+     "A1"
+    ],
+    [
+     29,
+     "A0"
+    ],
+    [
+     51,
+     "A"
+    ],
+    [
+     70,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     23,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_075",
+   "ports": [],
+   "pins": [
+    [
+     24,
+     "Q"
+    ],
+    [
+     28,
+     "A1"
+    ],
+    [
+     36,
+     "A0"
+    ],
+    [
+     39,
+     "A"
+    ],
+    [
+     56,
+     "A"
+    ],
+    [
+     65,
+     "A"
+    ]
+   ],
+   "drivers": [
+    [
+     24,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_076",
+   "ports": [],
+   "pins": [
+    [
+     16,
+     "A0"
+    ],
+    [
+     18,
+     "Q"
+    ],
+    [
+     38,
+     "B"
+    ],
+    [
+     45,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     18,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_077",
+   "ports": [],
+   "pins": [
+    [
+     6,
+     "A0"
+    ],
+    [
+     13,
+     "Q"
+    ],
+    [
+     16,
+     "A1"
+    ],
+    [
+     51,
+     "B"
+    ],
+    [
+     70,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     13,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "B",
+   "ports": [
+    "B"
+   ],
+   "pins": [
+    [
+     22,
+     "A1"
+    ]
+   ],
+   "drivers": []
+  },
+  {
+   "name": "net_079",
+   "ports": [],
+   "pins": [
+    [
+     48,
+     "B"
+    ],
+    [
+     50,
+     "A2"
+    ],
+    [
+     59,
+     "A2"
+    ],
+    [
+     67,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     67,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_080",
+   "ports": [],
+   "pins": [
+    [
+     37,
+     "A3"
+    ],
+    [
+     65,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     65,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_081",
+   "ports": [],
+   "pins": [
+    [
+     37,
+     "X"
+    ],
+    [
+     67,
+     "B1"
+    ]
+   ],
+   "drivers": [
+    [
+     37,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "A",
+   "ports": [
+    "A"
+   ],
+   "pins": [
+    [
+     7,
+     "A1"
+    ]
+   ],
+   "drivers": []
+  },
+  {
+   "name": "S",
+   "ports": [
+    "S"
+   ],
+   "pins": [
+    [
+     53,
+     "X"
+    ]
+   ],
+   "drivers": [
+    [
+     53,
+     "X"
+    ]
+   ]
+  },
+  {
+   "name": "net_084",
+   "ports": [],
+   "pins": [
+    [
+     4,
+     "A0"
+    ],
+    [
+     5,
+     "A1"
+    ],
+    [
+     10,
+     "Q"
+    ],
+    [
+     39,
+     "B"
+    ],
+    [
+     56,
+     "B"
+    ],
+    [
+     65,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     10,
+     "Q"
+    ]
+   ]
+  },
+  {
+   "name": "net_085",
+   "ports": [],
+   "pins": [
+    [
+     6,
+     "A1"
+    ],
+    [
+     8,
+     "Q"
+    ],
+    [
+     14,
+     "A0"
+    ],
+    [
+     40,
+     "B"
+    ],
+    [
+     52,
+     "B"
+    ],
+    [
+     60,
+     "B"
+    ]
+   ],
+   "drivers": [
+    [
+     8,
+     "Q"
+    ]
+   ]
+  }
+ ]
+}

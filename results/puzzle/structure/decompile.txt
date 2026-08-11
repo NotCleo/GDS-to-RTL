@@ -1,0 +1,23 @@
+
+### net success
+  = u28_dfrtp_2.Q
+
+### u28_dfrtp_2  (dfrtp_2)
+  D = ((!u390_dfrtp_2.Q)&(((!u419_dfrtp_2.Q)&((u451_dfrtp_2.Q&u449_dfrtp_2.Q&u460_dfrtp_2.Q&((!u459_dfrtp_2.Q&!u461_dfrtp_2.Q&!(u453_dfrtp_2.Q | u447_dfrtp_2.Q | u454_dfrtp_2.Q)))))))&((!u26_dfrtp_2.Q&u350_dfrtp_2.Q&(((((!u622_dfrtp_2.Q&u600_dfrtp_2.Q)&((u596_dfrtp_2.Q&(!u614_dfrtp_2.Q)))&(!u232_dfrtp_2.Q&u601_dfrtp_2.Q)&(!u625_dfrtp_2.Q&u597_dfrtp_2.Q)))&((((u647_dfrtp_2.Q&(!u651_dfrtp_2.Q)))&(!u661_dfrtp_2.Q&u595_dfrtp_2.Q)&(!u603_dfrtp_2.Q&u634_dfrtp_2.Q)&((u635_dfrtp_2.Q&(!u602_dfrtp_2.Q)))))&(((!u215_dfrtp_2.Q&u197_dfrtp_2.Q)&((u233_dfrtp_2.Q&(!u231_dfrtp_2.Q)))&(!u226_dfrtp_2.Q&u198_dfrtp_2.Q)))))&(((((!u106_dfrtp_2.Q&u178_dfrtp_2.Q)&((u107_dfrtp_2.Q&(!u179_dfrtp_2.Q)))&(!u121_dfrtp_2.Q&u153_dfrtp_2.Q)&(!u108_dfrtp_2.Q&u180_dfrtp_2.Q)))&((((u190_dfrtp_2.Q&(!u118_dfrtp_2.Q)))&(!u194_dfrtp_2.Q&u209_dfrtp_2.Q)&(!u126_dfrtp_2.Q&u188_dfrtp_2.Q)&((u117_dfrtp_2.Q&(!u189_dfrtp_2.Q)))))&(((!u122_dfrtp_2.Q&u141_dfrtp_2.Q)&((u142_dfrtp_2.Q&(!u124_dfrtp_2.Q)))&(!u123_dfrtp_2.Q&u143_dfrtp_2.Q)))))))) | (u28_dfrtp_2.Q&(u26_dfrtp_2.Q | (!u350_dfrtp_2.Q)))
+  RESET_B = rst_n
+
+### u26_dfrtp_2  (dfrtp_2)
+  D = u350_dfrtp_2.Q | u26_dfrtp_2.Q
+  RESET_B = rst_n
+
+### u350_dfrtp_2  (dfrtp_2)
+  D = ((!u355_dfrtp_2.Q&!u352_dfrtp_2.Q&u354_dfrtp_2.Q&u363_dfrtp_2.Q)&((!u471_dfrtp_2.Q&!(u468_dfrtp_2.Q | (!u467_dfrtp_2.Q) | (!u475_dfrtp_2.Q))))&(!u350_dfrtp_2.Q&enable)) | u350_dfrtp_2.Q
+  RESET_B = rst_n
+
+### u390_dfrtp_2  (dfrtp_2)
+  D = (I&(!u350_dfrtp_2.Q&enable)&(((1'b1)&u391_dfrtp_2.Q) | ((u355_dfrtp_2.Q | u352_dfrtp_2.Q | (!u354_dfrtp_2.Q) | (!u363_dfrtp_2.Q))&u395_dfrtp_2.Q) | ((((u355_dfrtp_2.Q | u363_dfrtp_2.Q | u352_dfrtp_2.Q | u354_dfrtp_2.Q)&u389_dfrtp_2.Q) | ((u355_dfrtp_2.Q | u363_dfrtp_2.Q | u352_dfrtp_2.Q | u354_dfrtp_2.Q)&u370_dfrtp_2.Q))))) | u390_dfrtp_2.Q
+  RESET_B = rst_n
+
+### u419_dfrtp_2  (dfrtp_2)
+  D = ((!u355_dfrtp_2.Q&!u352_dfrtp_2.Q&u354_dfrtp_2.Q&u363_dfrtp_2.Q)&(!u350_dfrtp_2.Q&enable)&((((!u420_dfrtp_2.Q) | (!I))&!u416_dfrtp_2.Q) | ((u420_dfrtp_2.Q | I)&u416_dfrtp_2.Q))) | u419_dfrtp_2.Q
+  RESET_B = rst_n

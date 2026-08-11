@@ -1,0 +1,28 @@
+# Reproduce the forward flow 00_source.v -> 01_netlist.v with Yosys.
+# This is (essentially) what OpenLane's synthesis step runs for you.
+#
+#   yosys -s GDS-to-RTL/05_resynth.ys        (run from the repo root)
+#
+# A yosys script cannot read a shell variable, so unlike everything else that
+# run.sh calls, this input path is hardcoded. It is the one line to edit by
+# hand if warmup-task/ ever gets renamed.
+read_verilog warmup-task/00_source.v
+
+# `synth` = the standard elaboration pipeline:
+#   hierarchy; proc; opt; fsm; memory; techmap; opt ...
+# It turns behavioral Verilog into a soup of generic gate-level cells
+# ($_AND_, $_XOR_, $_DFFE_...), flattening sr_a/sr_b/add0/cmp0 into the top
+# but keeping their names as `sr_a/...` prefixes.
+synth -top adder_demo -flatten
+
+# map generic flip-flops onto FFs that exist in sky130
+# ($adffe -> async-reset DFF dfrtp + a recirculation mux2, since the library
+#  has no enable-FF -- THIS is where the 16 mux2_1 cells come from!)
+dfflibmap -liberty pdk/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+# technology-map combinational logic onto sky130 gates (ABC optimizes + picks gates)
+abc -liberty pdk/sky130_fd_sc_hd__tt_025C_1v80.lib
+opt_clean -purge
+
+stat -liberty pdk/sky130_fd_sc_hd__tt_025C_1v80.lib
+write_verilog -noattr results/warmup/resynth_netlist.v
