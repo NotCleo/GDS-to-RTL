@@ -4,6 +4,22 @@ Reverse-engineering the [Jane Street ASIC puzzle](https://blog.janestreet.com/ca
 recovering a circuit from a layout file, working out what it checks, and then
 solving it.
 
+    I dearly thank authors of "ReGDS: A Reverse Engineering Framework from GDSII to Gate-level Netlist" (https://ieeexplore.ieee.org/document/9300272/)!
+
+## Team
+
+Amruth Ayaan Gulawani 
+
+## Timeline
+
+| Event | Action |
+|---|---|
+| Puzzle Announcement (Aug 6) | spent reading the blog and puzzle repo |
+| Warmup Task (Aug 7-9) | spent performing the downstream run from provided RTL till GDS (OpenROAD) to understand downstream information gain/loss |
+| Warmup Reverse Engineering (Aug 8-9) | Crafted the pipeline for netlist recovery |
+| Main Puzzle (Aug 10) | Recovered the netlist and the circuit, and the correct puzzle solution |
+| Submission (Aug 12) | Submitted the solution |
+
 ## What we had
 
 One GDS file. Polygons on numbered layers, with the cell names, net names and
