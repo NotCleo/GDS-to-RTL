@@ -47,9 +47,16 @@ touching. Exactly one grid works. Drive it in and the chip prints:
 
 ![Surfer showing success high and O[7:0] spelling the verdict](Images/success-waveform.png)
 
-## Go here for more
+## "Hey How did you figure out that you needed to switch to ASCII to see the message?"
 
-| you want | go to |
+Funny story while I was on the blog screen, my eyes fell on : 
+
+<img width="1136" height="655" alt="image" src="https://github.com/user-attachments/assets/1b4f7408-20ad-40e5-9dbc-080f8aad250a" />
+
+
+## Go here to read more
+
+| you want | go here |
 |---|---|
 | The story of how it was worked out, start to finish | [`WRITEUP.md`](WRITEUP.md) |
 | Just the answer | [`solution/`](solution/) |
