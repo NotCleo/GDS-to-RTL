@@ -43,12 +43,11 @@ yet.
 
 ---
 
-## Day 1: I did the warm-up properly
+## Day 1: I spent 80% of my time on the warmup
 
-The warm-up looks like a tutorial you can skip. It is not. It is the only place
-in the whole puzzle where you can check your own work.
+It is the only place in the whole puzzle where you can check your own work.
 
-Here is the thing that made me take it seriously. Suppose I write an extractor,
+Suppose I write an extractor,
 point it at `puzzle.gds`, and it produces a netlist. How do I know that netlist
 is right? There is no answer key. A subtly wrong extraction does not crash. It
 produces a circuit that is plausible, simulates cleanly, and means something
