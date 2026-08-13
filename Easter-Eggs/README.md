@@ -202,7 +202,7 @@ someone who got it wrong.
 `(* ... *)` is Verilog attribute syntax. Inside it is the rule of the puzzle:
 two stars. So the final answer is a piece of hardware-description-language
 punctuation wrapped around the constraint the hardware spends 728 gates
-checking. I laughed out loud at this one.
+checking. 
 
 ---
 
