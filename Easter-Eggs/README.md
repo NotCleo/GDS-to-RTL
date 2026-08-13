@@ -236,6 +236,19 @@ third constraint family I had not accounted for.
 
 ---
 
+## 9. To read the waveform VCD in ASCII
+
+| | |
+|---|---|
+| where | the blog |
+| what | To switch to ASCII to progress further |
+| found | day 1, and this one actually helped me solve it |
+
+<img width="1136" height="655" alt="image" src="https://github.com/user-attachments/assets/0c4deb00-08c9-4b3f-af7e-aa89199f6288" />
+
+
+---
+
 ## The files here
 
 | file | what is in it |
