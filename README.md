@@ -27,16 +27,18 @@ Below table lists all final deliverable files / outputs for the Puzzle :
 
 | Easter Egg | Context |
 |---|---|
-| |  |
-| |  |
-| |  |
-| |  |
-| |  |
-| |  |
-| |  |
+| (I) "PER ARENAM AD ASTRA" (Latin for "through the sand, to the stars") | Found in [puzzle.gds](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/puzzle.gds)|
+| (II) "Leave no stone unturned!" (Human inserted entry in the log) | Found in [example_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/example_inputs.vcd)|
+| (III) "Sat Dec 31 23:59:60 2016" (A Leap Second)| Found in [example_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/example_inputs.vcd)|
+| (IV) "EMPTY SKY, BIG BANG, TRY AGAIN" (Error message for driving incorrect input sequences) | Found in [sucesss_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/success_inputs.vcd)|
+| (V) "(* TWO STARS *)" (Success message for driving correct input sequence) | Found in [sucesss_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/success_inputs.vcd)|
+| (V) "(* *)" (Commenting syntax used by OCaml/HardCaml) | Found in [sucesss_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/success_inputs.vcd)|
+| (VI) "Switch to ASCII" (Reading Waveforms in ASCII) | Found in [sucesss_inputs.vcd](https://blog.janestreet.com/using-ascii-waveforms-to-test-hardware-designs/)|
+
 | |  |
 | |  |
 
+https://blog.janestreet.com/using-ascii-waveforms-to-test-hardware-designs/
 ----
 
 ## Summary of README
