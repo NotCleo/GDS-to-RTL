@@ -6,7 +6,7 @@ I decided to call my submission "GDS-to-RTL", contrary to "RTL-to-GDS" :)
 
 The "ASIC Reverse-engineering" involves recovering a circuit from a layout file, working out what the circuit perorms, and then solving it.
 
-Grateful to authors of [ReGDS: A Reverse Engineering Framework from GDSII to Gate-level Netlist](https://ieeexplore.ieee.org/document/9300272/) for being a good starting point in this puzzle. 
+Check out [ReGDS: A Reverse Engineering Framework from GDSII to Gate-level Netlist](https://ieeexplore.ieee.org/document/9300272/), was a good starting point to get a glimpse of the netlist recovery procedure.
 
 ----
 
