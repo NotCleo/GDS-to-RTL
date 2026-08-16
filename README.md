@@ -42,7 +42,9 @@ You will notice the "success" flag remains low throughout.
 
 ----
 
-It was here, when I decided to switch to viewing the VCD file in ASCII at this point, which reveals the following message "TRY AGAIN" (at 1255000 ps marker): 
+It was at this point while viewing the waveform when I decided to switch to viewing the VCD file in ASCII.
+
+Which revealed the following message "TRY AGAIN" (at 1255000 ps marker): 
 
 ![Surfer showing waveform displaying "TRY AGAIN"](https://github.com/NotCleo/GDS-to-RTL/blob/main/Images/try_again_message.png)
 
@@ -82,9 +84,9 @@ touching. Exactly one grid works. Drive in a solved 11x11 Two Not Touch Puzzle g
 
 - One can read about how the puzzle works [here](https://krazydad.com/twonottouch/intro_tutorial/)
 
-#### Want to try the puzzle?
+##### Want to try the puzzle?
 
-- Check out this [interactive Two Not Touch Puzzle](https://krazydad.com/play/starbattle/?kind=10x10&volumeNumber=2&bookNumber=1&puzzleNumber=24)
+- Check out this sample [interactive Two Not Touch Puzzle](https://krazydad.com/play/starbattle/?kind=10x10&volumeNumber=2&bookNumber=1&puzzleNumber=24)
 
 ----
 
