@@ -1,58 +1,70 @@
-# GDS to RTL
+# ASIC Reverse-Engineering Puzzle 2026 
 
-Reverse-engineering the [Jane Street ASIC puzzle](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/):
-recovering a circuit from a layout file, working out what it checks, and then
-solving it.
+This repo contains my solution at solving [ASIC Reverse-Engineering Puzzle 2026](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/) hosted by Jane Street. 
 
-    I dearly thank authors of "ReGDS: A Reverse Engineering Framework from GDSII to Gate-level Netlist" (https://ieeexplore.ieee.org/document/9300272/)!
+I decided to call my submission "GDS-to-RTL", contrary to "RTL-to-GDS" :)
 
-## Team
+## GDS to RTL
 
-Amruth Ayaan Gulawani 
+The "Reverse-engineering" involves recovering a circuit from a layout file, working out what it checks, and then solving it.
+
+Grateful to authors of [ReGDS: A Reverse Engineering Framework from GDSII to Gate-level Netlist](https://ieeexplore.ieee.org/document/9300272/) for being a good starting point in this puzzle. 
 
 ## Timeline
 
+Below table briefly summarizes the sequence of what I tried : 
+
 | Event | Action |
 |---|---|
-| Puzzle Announcement (Aug 6) | spent reading the blog and puzzle repo |
-| Warmup Task (Aug 7-9) | spent performing the downstream run from provided RTL till GDS (OpenROAD) to understand downstream information gain/loss |
-| Warmup Reverse Engineering (Aug 8-9) | Crafted the pipeline for netlist recovery |
-| Main Puzzle (Aug 10) | Recovered the netlist and the circuit, and the correct puzzle solution |
+| Puzzle Announcement (Aug 5) | spent my evening reading the blog and puzzle repository |
+| Warmup Task (Aug 6-8) | spent performing the downstream run (RTL-to-GDS) using provided warmup RTL using OpenROAD to understand downstream information gain/loss |
+| Warmup Reverse Engineering (Aug 8-9) | Crafted and tested the netlist recovery pipeline using provided warmup GDS layout file |
+| Main Puzzle (Aug 9-12) | Recovered the netlist and the circuit, and the correct puzzle solution |
 | Submission (Aug 12) | Submitted the solution |
 
-## What we had
+## Provided files for the puzzle
 
-One GDS file. Polygons on numbered layers, with the cell names, net names and
-hierarchy stripped out. A sample waveform where the chip says no. A hint image.
-That is it.
+The puzzle provided the following files : 
 
-![puzzle.gds, all layers on](Images/puzzlegdsview.png)
+- [GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds). 
+  Polygons on numbered layers, with the cell names, net names and hierarchy stripped out.
+- [Sample Waveform VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd) where the chip says no and reveals the I/O
+- [hint image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png)
 
-## What we did
+### What did I do?
 
-Extracted a netlist from the raw geometry, proved the extractor exact against
-the warm-up's golden files, then validated it against the real chip's recorded
-outputs. Recovered the register structure, read the design's hidden data out of
-the silicon by probing it 121 times, solved the resulting puzzle two independent
+- Extracted a netlist from the raw geometry present in the puzzle GDS file.
+- Proved the extractor pipeline exact against the warm-up's golden files, then validated it against the real chip's recorded outputs. 
+- Recovered the register structure, read the design's hidden data out of the silicon by probing it 121 times, solved the resulting puzzle two independent
 ways, and proved a behavioural model cycle-equivalent to the gates.
 
-## What it turned out to be
+### What the puzzle turned out to be?
 
-An 11x11 Star Battle. Two stars per row, per column and per region, no two
-touching. Exactly one grid works. Drive it in and the chip prints:
+- An "11x11 Star Battle (Two Not Touch) Validator". Two stars per row, per column and per region, no two
+touching. Exactly one grid works. Drive in a solved 11x11 Two Not Touch Puzzle grid serially and the chip prints:
 
 ```
 (* TWO STARS *)
 ```
 
+#### Success Waveform 
+
 ![Surfer showing success high and O[7:0] spelling the verdict](Images/success-waveform.png)
+
+
+##### Note : Star Battle is also referred to as Two Not Touch
+
+- One can read about how the puzzle works [here](https://krazydad.com/twonottouch/intro_tutorial/)
+
+#### Want to try the puzzle?
+
+Check out this [interactive Two Not Touch Puzzle](https://krazydad.com/play/starbattle/?kind=10x10&volumeNumber=2&bookNumber=1&puzzleNumber=24)
 
 ## "Hey How did you figure out that you needed to switch to ASCII to see the message?"
 
 Funny story while I was on the blog screen, my eyes fell on : 
 
 <img width="1136" height="655" alt="image" src="https://github.com/user-attachments/assets/1b4f7408-20ad-40e5-9dbc-080f8aad250a" />
-
 
 ## Go here to read more
 
