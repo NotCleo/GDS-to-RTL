@@ -12,15 +12,30 @@ Check out [ReGDS: A Reverse Engineering Framework from GDSII to Gate-level Netli
 
 ## Summary of Results
 
-Below table briefly summarizes the sequence of what I tried : 
+Below table lists all final deliverable files / outputs for the Puzzle :  
 
-| Event | Action |
+| Task | Output |
 |---|---|
-| Puzzle Announcement (Aug 5) | spent my evening reading the blog and puzzle repository |
-| Warmup Task (Aug 6-8) | spent performing the downstream run (RTL-to-GDS) using provided warmup RTL using OpenROAD to understand downstream information gain/loss |
-| Warmup Reverse Engineering (Aug 8-9) | Crafted and tested the netlist recovery pipeline using provided warmup GDS layout file |
-| Main Puzzle (Aug 9-12) | Recovered the netlist and the circuit, and the correct puzzle solution |
-| Submission (Aug 12) | Submitted the solution |
+| String value recovered from the chip after driving in a valid input sequence | (* TWO STARS *) (see [answer.txt](https://github.com/NotCleo/GDS-to-RTL/blob/main/solution/answer.txt)) |
+| Valid input sequence | 0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000 (see [input_sequence.txt](https://github.com/NotCleo/GDS-to-RTL/blob/main/solution/input_sequence.txt)) |
+| The puzzle's region map, the unique solution grid | (see [solution_grid.txt](https://github.com/NotCleo/GDS-to-RTL/blob/main/solution/solution_grid.txt)) |
+| The recovered behavioural RTL for the whole design | (see [puzzle_recovered.v](https://github.com/NotCleo/GDS-to-RTL/blob/main/solution/puzzle_recovered.v) |
+
+----
+
+## Summary of all Easter Eggs found
+
+| Easter Egg | Context |
+|---|---|
+| |  |
+| |  |
+| |  |
+| |  |
+| |  |
+| |  |
+| |  |
+| |  |
+| |  |
 
 ----
 
