@@ -158,15 +158,41 @@ The following table summarizes what was utilized
 | **sky130_fd_sc_hd merged LEF** | PDK data | Cell pin geometry and obstructions that matched against polygons |
 
 
-```bash
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-bash run.sh
-```
+### Complete Installation (Ubuntu/Debian)
+    
+    git clone https://github.com/NotCleo/GDS-to-RTL.git
+    cd GDS-to-RTL
+    python3 -m venv .venv
+    .venv/bin/pip install -r requirements.txt
+    sudo apt install yosys iverilog python3-tk
+    mkdir -p ~/Downloads/surfer_install && cd ~/Downloads/surfer_install
+    wget "https://gitlab.com/api/v4/projects/42073614/jobs/artifacts/main/raw/surfer_linux.zip?job=linux_build" -O surfer_linux.zip
+    unzip surfer_linux.zip
+    chmod +x surfer
+    mkdir -p ~/.local/bin
+    mv surfer ~/.local/bin/
+    export PATH="$HOME/.local/bin:$PATH"
+    bash run.sh
 
-Needs `yosys`, `iverilog` and `python3-tk` from your package manager. About four
-minutes end to end. Full detail, including what each of the fourteen checkpoints
-should print, is in [`RUN.md`](RUN.md).
+#### To view the run results (for puzzle): 
+
+    cd results/puzzle
+    sudo apt install tree -y
+    tree
+
+#### To view the run results (for warmup): 
+
+    cd results/warmup
+    sudo apt install tree -y
+    tree
+
+In either directories, you will find all deliverable files, but the main list of output files have been listed in a dedicated section below.
+
+#### Note : OpenROAD is not necessary, unless you want to perform any downstream runs yourself.
+
+If you want to attempt complete OpenROAD run, please watch this [short video](https://www.youtube.com/watch?v=QnJzoJjC7RQ)
+
+#### Note : You can see the complete run log [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/run.log) and for more details about the files produced by the pipeline, see [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/RUN.md).
 
 ## Layout
 
