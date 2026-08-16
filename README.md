@@ -28,9 +28,7 @@ Below table briefly summarizes the sequence of what I tried :
 
 The puzzle provided the following files : 
 
-- [A GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds).
-  Contains metal, routing, and active transistor layers, along with some sample inputs and outputs.
-  Polygons on numbered layers, with the cell names, net names and hierarchy stripped out.
+- [A GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds), which contain metal, routing, and active transistor layers, along with some sample inputs and outputs and Polygons on numbered layers, with the cell names, net names and hierarchy stripped out.
 - [A Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png), an image of the GDS file with the I/O's labelled for reference
 - [An Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd), driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs).
 
