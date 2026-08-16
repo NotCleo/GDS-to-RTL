@@ -35,7 +35,7 @@ I have documented my entire solution's implementation is this readme file, below
 | What I did  | A summary of what I did |
 | What the puzzle turned out to be  | A summary of what the solution of this puzzle is |
 | Success Waveform  | The puzzle's main solution/deliverable component |
-| Quick start/Installations  | Complete Installation and tool usage guide |
+| How to run | Quick start / Insllations |
 | Directory Layout  | Solution's File layout |
 | Read More  | Break out links for further descriptions |
 
@@ -124,7 +124,39 @@ touching. Exactly one grid works. Drive in a solved 11x11 Two Not Touch Puzzle g
 | Viewer setup, tooling notes, dead ends | [`extra-stuff/tips-and-personal-notes.txt`](extra-stuff/tips-and-personal-notes.txt) |
 | Jane Street's original brief | [`Challenge-README.md`](Challenge-README.md) |
 
-## Quick start
+## How to run 
+
+The following table summarizes what was utilized
+
+| Name | Type | Why it was used |
+|---|---|---|
+| **yosys** | CLI tool | RTL synthesis for the warm-up forward flow (`synth` → `dfflibmap` → `abc`), and the inline `sat` / BMC (which is Bounded Model Checking) invocations to discharge the formal proofs on the extracted gate netlist. |
+| **iverilog** | CLI tool | Compiles the generated testbenches against the PDK cell models. Every simulation in the flow shells out to it. |
+| **OpenROAD** | CLI tool | Downstream (RTL to GDS) run on the warm-up source, to measure what information the downstream flow destroys before attempting to reverse it. |
+| **KLayout** | GUI tool | Layout viewer|
+| **Surfer** | GUI tool | Waveform viewer |
+| **GDS3D** | GUI tool | Better 3D rendering of the layer stack, separating power grid and routing from the logic, and isolating poly-over-diff to see the transistors. |
+| **Tiny Tapeout GDS Viewer** | Web tool | Zero-install browser view of the layout for quick inspection. |
+| **Magic** | CLI/GUI tool | sky130 layout and extraction; explored as an extraction route |
+| **gdstk** | Python package (pip) | GDSII parsing and hierarchy flattening : the front end of the extractor |
+| **shapely** | Python package (pip) | Polygon union and STRtree spatial indexing : the core of net extraction (Requires ≥2.0: 1.x has no `predicate=` keyword and returns geometries instead of integer indices, which silently builds the wrong netlist) |
+| **z3-solver** | Python package (pip) | SMT (Satisfiability Modulo Theories) constraint solving |
+| **numpy** | Transitive dependency | Pulled in by gdstk and shapely; never imported directly by any script. |
+| **collections** | Stdlib module | Grouping and counting during island/net construction and register-graph analysis. |
+| **csv** | Stdlib module | Writes `instances.csv` and `labels.csv` — the bill of materials from provided puzzle GDS file |
+| **json** | Stdlib module | Interchange between pipeline stages: `extracted.json`, `name_map.json`, `structure.json`, `slots.json`, `regions.json`, `uniqueness.json`. |
+| **math** | Stdlib module | Coordinate arithmetic in the extractor : island gap thresholds, geometric distances. |
+| **os** | Stdlib module | Path handling and environment overrides (`LEF=`, `GAP=`, `PROBE=`). |
+| **re** | Stdlib module | Parsing Liberty `function:` strings into Verilog models, plus Verilog and VCD tokenising. |
+| **subprocess** | Stdlib module | Shelling out to `iverilog`/`vvp` for simulation and `yosys` for formal. |
+| **sys** | Stdlib module | Argument handling, exit codes, diagnostics. |
+| **tempfile** | Stdlib module | Scratch files for the shelled-out simulation and formal runs. |
+| **importlib.util** | Stdlib module | Loads a sibling script by file path |
+| **tkinter** | Stdlib module | The interactive Two Not Touch board  |
+| **python3-tk** | System package (apt) | Debian/Ubuntu ship tkinter separately from the interpreter|
+| **sky130_fd_sc_hd Liberty (`.lib`)** | PDK data | Ccontain the standard cell timing, power, and functional data for the SkyWater 130nm High-Density digital library |
+| **sky130_fd_sc_hd merged LEF** | PDK data | Cell pin geometry and obstructions that matched against polygons |
+
 
 ```bash
 python3 -m venv .venv
