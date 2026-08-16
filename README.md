@@ -24,6 +24,24 @@ Below table briefly summarizes the sequence of what I tried :
 
 ----
 
+## Summary of README
+
+I have documented my entire solution's implementation is this readme file, below table is a glimpse of what follows;
+
+| Title | What it is about |
+|---|---|
+| What were the files provided for the puzzle | You can have a look into the puzzle's provided input files |
+| The first breakthrough moment  | Discusses my first breakthrough while inspecting the puzzle's waveform file |
+| What I did  | A summary of what I did |
+| What the puzzle turned out to be  | A summary of what the solution of this puzzle is |
+| Success Waveform  | The puzzle's main solution/deliverable component |
+| Quick start/Installations  | Complete Installation and tool usage guide |
+| Directory Layout  | Solution's File layout |
+| Read More  | Break out links for further descriptions |
+
+----
+
+
 ## What were the files provided for the puzzle
 
 The puzzle provided the following files : 
@@ -40,7 +58,7 @@ You will notice the "success" flag remains low throughout.
 
 ----
 
-### My first breakthrough moment 
+## My first breakthrough moment 
 
 Switching to ASCII (I rarely use ASCII and prefer staying in Decimal/Hexadecimal/unsigned Integer) was the first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on : 
 
@@ -75,7 +93,7 @@ touching. Exactly one grid works. Drive in a solved 11x11 Two Not Touch Puzzle g
 (* TWO STARS *)
 ```
 
-### Success Waveform 
+## Success Waveform 
 
 ![Surfer showing success high and O[7:0] spelling the verdict](Images/success-waveform.png)
 
