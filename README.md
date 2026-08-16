@@ -24,7 +24,7 @@ Below table briefly summarizes the sequence of what I tried :
 
 ----
 
-## Provided files for the puzzle
+## What were the files provided for the puzzle
 
 The puzzle provided the following files : 
 
