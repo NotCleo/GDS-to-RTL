@@ -1,6 +1,6 @@
 # ASIC Reverse-Engineering Puzzle 2026 
 
-This repo contains my solution at solving [ASIC Reverse-Engineering Puzzle 2026](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/) hosted by Jane Street. 
+This repository contains my solution at solving [ASIC Reverse-Engineering Puzzle 2026](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/) hosted by Jane Street. 
 
 I decided to call my submission "GDS-to-RTL", contrary to "RTL-to-GDS" :)
 
