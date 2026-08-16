@@ -17,7 +17,7 @@ Below table lists all final deliverable files / outputs for the Puzzle :
 | Task | Output |
 |---|---|
 | String value recovered from the chip after driving in a valid input sequence | (* TWO STARS *) (see [answer.txt](https://github.com/NotCleo/GDS-to-RTL/blob/main/solution/answer.txt)) |
-| Valid input sequence | 0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000 (see [input_sequence.txt](https://github.com/NotCleo/GDS-to-RTL/blob/main/solution/input_sequence.txt)) |
+| Valid input sequence | (see [input_sequence.txt](https://github.com/NotCleo/GDS-to-RTL/blob/main/solution/input_sequence.txt)) |
 | The puzzle's region map, the unique solution grid | (see [solution_grid.txt](https://github.com/NotCleo/GDS-to-RTL/blob/main/solution/solution_grid.txt)) |
 | The recovered behavioural RTL for the whole design | (see [puzzle_recovered.v](https://github.com/NotCleo/GDS-to-RTL/blob/main/solution/puzzle_recovered.v) |
 
@@ -109,6 +109,10 @@ touching. Exactly one grid works. Drive in a solved 11x11 Two Not Touch Puzzle g
 ```
 
 ## (V) Success Waveform 
+
+It was found that to drive "success" flag high, the following input sequence was needed : 
+
+    0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000
 
 ![Surfer showing success high and O[7:0] spelling the verdict](Images/success-waveform.png)
 
