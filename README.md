@@ -42,7 +42,7 @@ You will notice the "success" flag remains low throughout.
 
 ----
 
-#### My first breakthrough moment 
+### My first breakthrough moment 
 
 Switching to ASCII (I rarely use ASCII and prefer staying in Decimal/Hexadecimal/unsigned Integer) was the first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on : 
 
