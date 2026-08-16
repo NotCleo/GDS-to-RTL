@@ -12,25 +12,6 @@ Grateful to authors of [ReGDS: A Reverse Engineering Framework from GDSII to Gat
 
 ## Summary of Results
 
-The table below summarises which problems have been successfully solved, the HDL used (Verilog/Hardcaml), and the number of clock cycles used to solve my personal puzzle's input for each day. The 'size' of each puzzle's input has been noted for each day (using my personal puzzle input file). The discussions below often test with various size inputs, not just my personal puzzle inputs. As per [the Advent of Code Rules](https://adventofcode.com/2025/about#faq_copying), sharing of actual inputs is not permitted, so feel free to provide your own input text files (these should be formatted in the exact same format as the Advent of Code site provides). However, in my own investigation and benchmarking of my designs, I wrote my own scripts to generate sample inputs of varying sizes. These functions can be found in [`generate_input.py`](/verilog/scripts/generate_input.py).
-
-| Day               | Solved (Verilog/Hardcaml/Both) | Clock Cycles | Input Size                                           |
-| ----------------- | ------------------------------ | ------------ | ---------------------------------------------------- |
-| [Day 1](#day-1)   | Both                           | 19,691       | 4780 rotations                                       |
-| [Day 2](#day-2)   | Both                           | 1,729        | 38 ranges                                            |
-| [Day 3](#day-3)   | Verilog                        | 20,217       | 200 lines (100 chars per line)                       |
-| [Day 4](#day-4)   | Verilog                        | 37,108       | 137 x 137 grid                                       |
-| [Day 5](#day-5)   | Verilog                        | 66,649       | 177 ranges, 1000 query IDs                           |
-| [Day 6](#day-6)   | Verilog                        | 35,139       | 4 numeric rows, 1000 operators, ~3709 chars per line |
-| [Day 7](#day-7)   | Verilog                        | 121,496      | 142 x 142 grid                                       |
-| [Day 8](#day-8)   | Verilog                        | 1,744,510\*  | 1000 x,y,z coordinates                               |
-| [Day 9](#day-9)   | Verilog                        | 1,341,548    | 496 coordinates                                      |
-| [Day 10](#day-10) | Verilog                        | 58,319,971\* | 177 machines (up to 13 x 10)                         |
-| [Day 11](#day-11) | Verilog                        | 66,542       | 583 device names                                     |
-| [Day 12](#day-12) | Hardcaml                       | 25,098       | 6 shapes, 1000 region queries                        |
-
-## Timeline
-
 Below table briefly summarizes the sequence of what I tried : 
 
 | Event | Action |
@@ -50,13 +31,22 @@ The puzzle provided the following files :
 - [A GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds).
   Contains metal, routing, and active transistor layers, along with some sample inputs and outputs.
   Polygons on numbered layers, with the cell names, net names and hierarchy stripped out.
+- [A Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png), an image of the GDS file with the I/O's labelled for reference
 - [An Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd), driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs).
 
 Here's how the waveform (of the provided VCD file) looks like : 
 
+You will notice the "success" flag remains low throughout.
+
 ![Surfer showing waveform of example inputs VCD file](https://github.com/NotCleo/GDS-to-RTL/blob/main/Images/example_inputs_waveform.png)
 
-- [A Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png), an image of the GDS file with the I/O's labelled for reference
+I decided to switch to viewing the VCD file in ASCII at this point, which reveals the following message (at 1255000 ps marker): 
+
+![Surfer showing waveform displaying "TRY AGAIN"](https://github.com/NotCleo/GDS-to-RTL/blob/main/Images/try_again_message.png)
+
+Switching to ASCII (and not staying in Decimal/Hexadecimal) was my first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on : 
+
+![Blog Site highlighted](https://github.com/NotCleo/GDS-to-RTL/blob/main/Images/switching-to-ascii-moment.png)
 
 ----
 
@@ -93,13 +83,6 @@ touching. Exactly one grid works. Drive in a solved 11x11 Two Not Touch Puzzle g
 
 ----
 
-## "Hey How did you figure out that you needed to switch to ASCII to see the message?"
-
-Funny story while I was on the blog screen, my eyes fell on : 
-
-<img width="1136" height="655" alt="image" src="https://github.com/user-attachments/assets/1b4f7408-20ad-40e5-9dbc-080f8aad250a" />
-
-----
 
 ## Go here to read more
 
