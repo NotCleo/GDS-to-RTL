@@ -30,19 +30,19 @@ I have documented my entire solution's implementation is this readme file, below
 
 | Title | What it is about |
 |---|---|
-| What were the files provided for the puzzle | You can have a look into the puzzle's provided input files |
-| The first breakthrough moment  | Discusses my first breakthrough while inspecting the puzzle's waveform file |
-| What I did  | A summary of what I did |
-| What the puzzle turned out to be  | A summary of what the solution of this puzzle is |
-| Success Waveform  | The puzzle's main solution/deliverable component |
-| How to run | Quick start / Insllations |
-| Directory Layout  | Solution's File layout |
-| Read More  | Break out links for further descriptions |
+| (I) What were the files provided for the puzzle | You can have a look into the puzzle's provided input files |
+| (II) The first breakthrough moment  | Discusses my first breakthrough while inspecting the puzzle's waveform file |
+| (III) What I did  | A summary of what I did |
+| (IV) What the puzzle turned out to be  | A summary of what the solution of this puzzle is |
+| (V) Success Waveform  | The puzzle's main solution/deliverable component |
+| (VI) How to run | Quick start / Installations |
+| (VII) Directory Layout  | Solution's File layout |
+| (VIII) Read More  | Break out links for further descriptions |
 
 ----
 
 
-## What were the files provided for the puzzle
+## (I) What were the files provided for the puzzle
 
 The puzzle provided the following files : 
 
@@ -58,7 +58,7 @@ You will notice the "success" flag remains low throughout.
 
 ----
 
-## My first breakthrough moment 
+## (II) My first breakthrough moment 
 
 Switching to ASCII (I rarely use ASCII and prefer staying in Decimal/Hexadecimal/unsigned Integer) was the first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on : 
 
@@ -75,7 +75,7 @@ Which revealed the following message "TRY AGAIN" (at 1255000 ps marker):
 
 ----
 
-## What I did
+## (III) What I did
 
 - Extracted a netlist from the raw geometry present in the puzzle GDS file.
 - Proved the extractor pipeline exact against the warm-up's golden files, then validated it against the real chip's recorded outputs. 
@@ -84,7 +84,7 @@ ways, and proved a behavioural model cycle-equivalent to the gates.
 
 ----
 
-## What the puzzle turned out to be
+## (IV) What the puzzle turned out to be
 
 - An "11x11 Star Battle (Two Not Touch) Validator". Two stars per row, per column and per region, no two
 touching. Exactly one grid works. Drive in a solved 11x11 Two Not Touch Puzzle grid serially and the chip prints:
@@ -93,7 +93,7 @@ touching. Exactly one grid works. Drive in a solved 11x11 Two Not Touch Puzzle g
 (* TWO STARS *)
 ```
 
-## Success Waveform 
+## (V) Success Waveform 
 
 ![Surfer showing success high and O[7:0] spelling the verdict](Images/success-waveform.png)
 
@@ -108,23 +108,7 @@ touching. Exactly one grid works. Drive in a solved 11x11 Two Not Touch Puzzle g
 
 ----
 
-
-## Go here to read more
-
-| you want | go here |
-|---|---|
-| The story of how it was worked out, start to finish | [`WRITEUP.md`](WRITEUP.md) |
-| Just the answer | [`solution/`](solution/) |
-| To run the whole thing yourself | [`RUN.md`](RUN.md) |
-| What each of the 20 scripts does | [`GDS-to-RTL/README.md`](GDS-to-RTL/README.md) |
-| The puzzle, the answer and the recovery outputs | [`puzzle-task/README.md`](puzzle-task/README.md) |
-| The warm-up, and the full teardown of it | [`warmup-task/README.md`](warmup-task/README.md) |
-| All eight easter eggs, and how each turned up | [`Easter-Eggs/README.md`](Easter-Eggs/README.md) |
-| To play the puzzle yourself | [`TwoNotTouch-Interactive-Puzzle/README.md`](TwoNotTouch-Interactive-Puzzle/README.md) |
-| Viewer setup, tooling notes, dead ends | [`extra-stuff/tips-and-personal-notes.txt`](extra-stuff/tips-and-personal-notes.txt) |
-| Jane Street's original brief | [`Challenge-README.md`](Challenge-README.md) |
-
-## How to run 
+## (VI) How to run 
 
 The following table summarizes what was utilized
 
@@ -194,7 +178,9 @@ If you want to attempt complete OpenROAD run, please watch this [short video](ht
 
 #### Note : You can see the complete run log [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/run.log) and for more details about the files produced by the pipeline, see [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/RUN.md).
 
-## Layout
+----
+
+## (VII) Layout
 
 | directory | what is in it |
 |---|---|
@@ -211,3 +197,20 @@ If you want to attempt complete OpenROAD run, please watch this [short video](ht
 `run.sh` also writes `results/`, which is 7 MB of intermediates and is
 gitignored. Every file in it is filed permanently under `puzzle-task/` and
 `warmup-task/`, so nothing is lost by not committing it.
+
+----
+
+## (VIII) Read more
+
+| you want | go here |
+|---|---|
+| The story of how it was worked out, start to finish | [`WRITEUP.md`](WRITEUP.md) |
+| Just the answer | [`solution/`](solution/) |
+| To run the whole thing yourself | [`RUN.md`](RUN.md) |
+| What each of the 20 scripts does | [`GDS-to-RTL/README.md`](GDS-to-RTL/README.md) |
+| The puzzle, the answer and the recovery outputs | [`puzzle-task/README.md`](puzzle-task/README.md) |
+| The warm-up, and the full teardown of it | [`warmup-task/README.md`](warmup-task/README.md) |
+| All eight easter eggs, and how each turned up | [`Easter-Eggs/README.md`](Easter-Eggs/README.md) |
+| To play the puzzle yourself | [`TwoNotTouch-Interactive-Puzzle/README.md`](TwoNotTouch-Interactive-Puzzle/README.md) |
+| Viewer setup, tooling notes, dead ends | [`extra-stuff/tips-and-personal-notes.txt`](extra-stuff/tips-and-personal-notes.txt) |
+| Jane Street's original brief | [`Challenge-README.md`](Challenge-README.md) |
