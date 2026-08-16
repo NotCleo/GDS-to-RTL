@@ -40,9 +40,14 @@ You will notice the "success" flag remains low throughout.
 
 ![Surfer showing waveform of example inputs VCD file](https://github.com/NotCleo/GDS-to-RTL/blob/main/Images/example_inputs_waveform.png)
 
-I decided to switch to viewing the VCD file in ASCII at this point, which reveals the following message (at 1255000 ps marker): 
+----
+
+It was here, when I decided to switch to viewing the VCD file in ASCII at this point, which reveals the following message "TRY AGAIN" (at 1255000 ps marker): 
 
 ![Surfer showing waveform displaying "TRY AGAIN"](https://github.com/NotCleo/GDS-to-RTL/blob/main/Images/try_again_message.png)
+
+
+----
 
 Switching to ASCII (and not staying in Decimal/Hexadecimal) was my first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on : 
 
