@@ -42,18 +42,20 @@ You will notice the "success" flag remains low throughout.
 
 ----
 
+#### My first breakthrough moment 
+
+Switching to ASCII (I rarely use ASCII and prefer staying in Decimal/Hexadecimal/unsigned Integer) was the first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on : 
+
+![Blog Site highlighted](https://github.com/NotCleo/GDS-to-RTL/blob/main/Images/switching-to-ascii-moment.png)
+
+----
+
 It was at this point while viewing the waveform when I decided to switch to viewing the VCD file in ASCII.
 
 Which revealed the following message "TRY AGAIN" (at 1255000 ps marker): 
 
 ![Surfer showing waveform displaying "TRY AGAIN"](https://github.com/NotCleo/GDS-to-RTL/blob/main/Images/try_again_message.png)
 
-
-----
-
-Switching to ASCII (and not staying in Decimal/Hexadecimal) was my first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on : 
-
-![Blog Site highlighted](https://github.com/NotCleo/GDS-to-RTL/blob/main/Images/switching-to-ascii-moment.png)
 
 ----
 
