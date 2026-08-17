@@ -63,9 +63,20 @@ I have documented my entire solution's implementation is this readme file, below
 
 The puzzle provided the following files : 
 
-- [A GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds), which contain metal, routing, and active transistor layers, along with some sample inputs and outputs and Polygons on numbered layers, with the cell names, net names and hierarchy stripped out.
-- [A Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png), an image of the GDS file with the I/O's labelled for reference
-- [An Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd), driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs).
+| File | What it is about | 
+|---|---|
+| (I) [A GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds) (1.4MB) | contains metal, routing, and active transistor layers, with the cell names, net names and hierarchy stripped out |
+| (II) [A Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png) (136KB)| an image of the GDS file with the I/O's labelled for reference |
+| (III)  [An Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd) (8.4KB)|  driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs). |
+
+##### Note : I ran the three files through exiftool for a preliminary check and found nothing interesting and when I ran the warmup files (listed below); we notice the file size going from 1.2 KB -> 19 KB -> 30 KB -> 112 KB -> 306KB. see [exiftool logs](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/exiftool.log).
+
+- warmup/00_source.v: The original Verilog source code of the example design
+- warmup/01_netlist.v: Synthesized netlist comprising of a list of standard cells and connections
+- warmup/02_netlist_with_power_rails.v: Netlist with VDD and GND rails added
+- warmup/03_post_place_and_route.def: Physical layout of cells and routing connections, corresponding to cell and net names.
+- warmup/04_final.gds: The final manufacturable layout file, with many internal names removed
+
 
 Here's how the waveform (of the provided VCD file) looks like : 
 
