@@ -34,7 +34,6 @@ Below table lists all final deliverable files / outputs for the Puzzle :
 | (V) "(* TWO STARS *)" (Success message for driving correct input sequence) | Found in [sucesss_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/success_inputs.vcd)|
 | (V) "(* *)" (Commenting syntax used by OCaml/HardCaml) | Found in [sucesss_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/success_inputs.vcd)|
 | (VI) "Switch to ASCII" (Reading Waveforms in ASCII) | Found in [sucesss_inputs.vcd](https://blog.janestreet.com/using-ascii-waveforms-to-test-hardware-designs/)|
-
 | (VII) "Jane Street logo, etched in metal 2" | Found in [puzzle.gds](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/puzzle.gds) |
 | (VIII) "The night sky awaits" | Found in [example_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/example_inputs.vcd) |
 
