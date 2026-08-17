@@ -38,7 +38,7 @@ Below table lists all final deliverable files / outputs for the Puzzle :
 | (VII) "Jane Street logo, etched in metal 2" | Found in [puzzle.gds](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/puzzle.gds) |
 | (VIII) "The night sky awaits" | Found in [example_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/example_inputs.vcd) |
 
-https://blog.janestreet.com/using-ascii-waveforms-to-test-hardware-designs/
+
 ----
 
 ## Summary of README
