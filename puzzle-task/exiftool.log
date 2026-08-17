@@ -59,3 +59,81 @@ Image Size                      : 880x1000
 Megapixels                      : 0.880
 amrut@Maverick:~/Documents/GDS-to-RTL/puzzle-task$ 
 
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+amrut@Maverick:~/Documents/GDS-to-RTL/warmup-task$ exiftool 00_source.v 
+ExifTool Version Number         : 12.76
+File Name                       : 00_source.v
+Directory                       : .
+File Size                       : 1205 bytes
+File Modification Date/Time     : 2026:08:16 17:50:40+05:30
+File Access Date/Time           : 2026:08:16 21:50:35+05:30
+File Inode Change Date/Time     : 2026:08:16 17:50:40+05:30
+File Permissions                : -rw-rw-r--
+File Type                       : TXT
+File Type Extension             : txt
+MIME Type                       : text/plain
+MIME Encoding                   : us-ascii
+Newlines                        : Unix LF
+Line Count                      : 59
+Word Count                      : 143
+amrut@Maverick:~/Documents/GDS-to-RTL/warmup-task$ exiftool 01_netlist.v 
+ExifTool Version Number         : 12.76
+File Name                       : 01_netlist.v
+Directory                       : .
+File Size                       : 19 kB
+File Modification Date/Time     : 2026:08:16 17:50:40+05:30
+File Access Date/Time           : 2026:08:16 21:50:34+05:30
+File Inode Change Date/Time     : 2026:08:16 17:50:40+05:30
+File Permissions                : -rw-rw-r--
+File Type                       : TXT
+File Type Extension             : txt
+MIME Type                       : text/plain
+MIME Encoding                   : us-ascii
+Newlines                        : Unix LF
+Line Count                      : 529
+Word Count                      : 1376
+amrut@Maverick:~/Documents/GDS-to-RTL/warmup-task$ exiftool 02_netlist_with_power_rails.v 
+ExifTool Version Number         : 12.76
+File Name                       : 02_netlist_with_power_rails.v
+Directory                       : .
+File Size                       : 30 kB
+File Modification Date/Time     : 2026:08:16 17:50:40+05:30
+File Access Date/Time           : 2026:08:16 22:14:55+05:30
+File Inode Change Date/Time     : 2026:08:16 17:50:40+05:30
+File Permissions                : -rw-rw-r--
+File Type                       : TXT
+File Type Extension             : txt
+MIME Type                       : text/plain
+MIME Encoding                   : us-ascii
+Newlines                        : Unix LF
+Line Count                      : 1116
+Word Count                      : 1965
+amrut@Maverick:~/Documents/GDS-to-RTL/warmup-task$ exiftool 03_post_place_and_route.def 
+ExifTool Version Number         : 12.76
+File Name                       : 03_post_place_and_route.def
+Directory                       : .
+File Size                       : 112 kB
+File Modification Date/Time     : 2026:08:16 17:50:40+05:30
+File Access Date/Time           : 2026:08:16 21:50:34+05:30
+File Inode Change Date/Time     : 2026:08:16 17:50:40+05:30
+File Permissions                : -rw-rw-r--
+File Type                       : TXT
+File Type Extension             : txt
+MIME Type                       : text/plain
+MIME Encoding                   : us-ascii
+Newlines                        : Unix LF
+Line Count                      : 2038
+Word Count                      : 20751
+amrut@Maverick:~/Documents/GDS-to-RTL/warmup-task$ exiftool 04_final.gds 
+ExifTool Version Number         : 12.76
+File Name                       : 04_final.gds
+Directory                       : .
+File Size                       : 306 kB
+File Modification Date/Time     : 2026:08:16 17:50:40+05:30
+File Access Date/Time           : 2026:08:16 21:50:33+05:30
+File Inode Change Date/Time     : 2026:08:16 17:50:40+05:30
+File Permissions                : -rw-rw-r--
+Error                           : Unknown file type
+
