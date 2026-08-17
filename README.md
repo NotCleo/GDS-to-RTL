@@ -272,33 +272,21 @@ You can see the complete run log [here](https://github.com/NotCleo/GDS-to-RTL/bl
 
 ## (VII) Layout
 
-| directory | what is in it |
-|---|---|
-| `solution/` | The seven deliverables. The answer, the grid, how to drive the chip, the recovered RTL. |
-| `GDS-to-RTL/` | The 20 pipeline scripts, numbered in run order. |
-| `puzzle-task/` | `puzzle.gds` as supplied, plus everything recovered from it. |
-| `warmup-task/` | The practice design and its golden files, plus the teardown. |
-| `Easter-Eggs/` | The eight things hidden in the chip and the repo. |
-| `TwoNotTouch-Interactive-Puzzle/` | A tkinter board so you can play it by hand. |
-| `pdk/` | The sky130 Liberty and merged LEF the extractor reads. |
-| `Images/` | Screenshots used by the READMEs. |
-| `extra-stuff/` | Working notes and a full run log. |
-
-## Read more
-
-| you want | go here |
-|---|---|
-| The story of how it was worked out, start to finish | [`WRITEUP.md`](WRITEUP.md) |
-| Just the answer | [`solution/`](solution/) |
-| To run the whole thing yourself | [`RUN.md`](RUN.md) |
-| What each of the 20 scripts does | [`GDS-to-RTL/README.md`](GDS-to-RTL/README.md) |
-| The puzzle, the answer and the recovery outputs | [`puzzle-task/README.md`](puzzle-task/README.md) |
-| The warm-up, and the full teardown of it | [`warmup-task/README.md`](warmup-task/README.md) |
-| All eight easter eggs, and how each turned up | [`Easter-Eggs/README.md`](Easter-Eggs/README.md) |
-| To play the puzzle yourself | [`TwoNotTouch-Interactive-Puzzle/README.md`](TwoNotTouch-Interactive-Puzzle/README.md) |
-| Viewer setup, tooling notes, dead ends | [`extra-stuff/tips-and-personal-notes.txt`](extra-stuff/tips-and-personal-notes.txt) |
-| Jane Street's original brief | [`Challenge-README.md`](Challenge-README.md) |
-
+├── CHALLENGE.md         # The main challenge 
+├── RUN.log              # The complete run log
+├── RUN.sh               # Main Orchestrating bash
+├── README.md            # This file
+├── requirements.txt     # Python dependencies 
+├── GDS-to-RTL           # Reverse Recovery scripts
+├── puzzle               # Provided Puzzle files
+├── warmup               # Provided warmup files
+├── puzzle-solution      # Puzzle solution files
+├── warmup-solution      # warmup solution files
+├── TwoNotTouch-Interactive-Puzzle    # Interactive Two Not Touch Puzzle (TRY THIS!)
+├── Easter-Eggs          # List of easter eggs
+├── Images               # Images of waveforms, layouts, schematics
+├── pdk                  # SKY130 PDK
+└── Personal-Notes       # Ignore this
 
 ----
 
