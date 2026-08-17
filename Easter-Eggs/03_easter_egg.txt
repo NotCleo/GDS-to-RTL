@@ -9,9 +9,9 @@ WHAT
       in a waveform viewer instead.
 
   No simulator writes a $version field like that. iverilog writes
-  "Icarus Verilog", Verilator writes its own banner. This is a person
-  talking to you, and it is telling you two things: that there is more in
-  this file than the obvious, and where to go and look for it.
+  "Icarus Verilog", Verilator writes its own banner, so this line was
+  added by hand. It says two things: that there is more in this file than
+  the waveform, and where to look for it.
 
 WHERE
   puzzle/example_inputs.vcd, lines 4 to 6, the $version block:
@@ -30,15 +30,13 @@ WHERE
 HOW
   By opening the file in a text editor.
 
-  That sounds too obvious to write down, so here is the honest version. A
-  VCD is a waveform, so my instinct was to treat it as one: drag it into
-  Surfer, or feed it to a parser. I did both. What I did not do at first
-  was read it as text, which is what it actually is, and the line is inside
+  A VCD is a waveform, so my first instinct was to treat it as one: drag it
+  into Surfer, or feed it to a parser. I did both. What I did not do at
+  first was read it as text, which is what it is, and the line is within
   the first ten lines of the file.
 
-  I got there by deciding to be systematic rather than clever. There are
-  only three puzzle files, so I gave each one a first pass that assumed
-  nothing:
+  There are only three puzzle files, so each one got a first pass that
+  assumed nothing:
 
       puzzle.gds            open in a viewer, then inventory it
       layout.png            read the labels, note the ports
@@ -51,8 +49,8 @@ HOW
   layout.png is a plain 880 x 1000 RGBA PNG with no comment, author or
   custom chunk, and the other two are not formats exiftool has anything to
   say about. That negative result is worth recording because it is the
-  obvious first thing to try, and it is a dead end. The interesting metadata
-  in this puzzle is inside the file formats, not attached to them.
+  obvious first thing to try and it is a dead end. The metadata that matters
+  here is inside the file formats, not attached to them.
 
 WHEN
   Day 1, during the first pass over the three provided files, a few minutes

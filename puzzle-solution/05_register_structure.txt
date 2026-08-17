@@ -82,9 +82,9 @@ WHAT O[7:0] DEPENDS ON
 THE SET CONDITION OF u28_dfrtp_2, DECOMPILED
 ----------------------------------------------------------------------
 Expanded through the combinational logic and stopped at flip-flop
-outputs and ports. Read the shape rather than the detail: a wide AND
-tree that decomposes into two groups of eleven near-identical two-bit
-comparisons, every one of them against the value two.
+outputs and ports. The structure is a wide AND tree that decomposes
+into two groups of eleven near-identical two-bit comparisons, every
+one of them against the value two.
 
   D = (((!u390.Q & (!u419.Q & (((u451.Q & u449.Q) & u460.Q) & ((!u459.Q & !u461.Q)
     & !(((u453.Q | u447.Q) | u454.Q)))))) & (((!u26.Q & u350.Q) & ((((((
@@ -98,6 +98,5 @@ comparisons, every one of them against the value two.
     ) | (u28.Q & (u26.Q | !u350.Q)))
 
 The same treatment on any of the 23 counter pairs expands into megabytes
-of repeated subexpression and says nothing. That asymmetry is itself the
-finding: reading works for the control logic and fails for the counters,
-so the counters get probed instead.
+of repeated subexpression. Decompiling works for the control logic and
+fails for the counters, so the counters get probed instead.

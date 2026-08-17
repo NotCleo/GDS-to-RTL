@@ -4,8 +4,8 @@ THE ARCHITECTURE IS DRAWN ON THE DIE: 11 + 11 + 1
 
 WHAT
   The blog post says "the circuit is physically arranged to hint at its
-  functionality, so look closely at the layout". It is not kidding, and it
-  is not subtle once you know which cells matter.
+  functionality, so look closely at the layout". The arrangement is clear
+  once you know which cells to look at.
 
   Every one of the 23 two-bit counters in this chip sits in a single narrow
   vertical column, and they are stacked in three groups with a visible gap
@@ -16,9 +16,9 @@ WHAT
       11 region counters      y =  49.0 .. 146.9
        1 row counter          off to the side at x = 80.5, y = 103.4
 
-  Eleven of one thing, eleven of another, one of a third. That is the entire
-  architecture of the checker, readable off a floorplan before a single gate
-  is understood. Eleven columns, eleven regions, and one shared row counter.
+  Eleven of one group, eleven of another, one of a third: eleven column
+  counters, eleven region counters and one shared row counter. That is the
+  architecture of the checker, readable off the floorplan alone.
 
 WHERE
   puzzle/puzzle.gds, in the placement coordinates of the flip-flops.
@@ -32,9 +32,9 @@ WHERE
   watches, in puzzle-solution/06_region_map.txt.
 
 HOW
-  Not by looking at the GDS. I tried that first and it is hopeless: 9,875
-  placements, nothing labelled, and no way to tell one flip-flop from
-  another by eye.
+  Not by looking at the GDS. I tried that first and it gives nothing: 9,875
+  placements, none labelled, and no way to tell one flip-flop from another
+  by eye.
 
   What made the hint readable was doing it in the other order. Recover the
   netlist first, find the counters, and only then go back to the geometry.
@@ -48,13 +48,13 @@ HOW
          reference list, so uNNN back to (x, y) is a lookup, not a search.
          Look up all 46 flops.
 
-  The moment those 23 coordinates were on the screen the shape was obvious.
-  They were not scattered through the logic where a placer would have put
-  them if nothing constrained it; they were a neat vertical stack, in two
-  blocks of eleven, with one loner parked away from the rest.
+  With those 23 coordinates on screen the arrangement was clear. They are
+  not scattered through the logic, which is where an unconstrained placer
+  would put them; they form a vertical stack in two blocks of eleven, with
+  one placed away from the rest.
 
-  That is what told me there was a third constraint family I had not
-  accounted for. At that point my working hypothesis was two stars per row
+  That is what indicated a third constraint family I had not accounted for.
+  At that point my working hypothesis was two stars per row
   and per column with no two touching, which needs 22 counters at most and
   arguably only 12. Twenty-three counters in an 11 + 11 + 1 arrangement does
   not fit that story. Something was counting eleven of a thing that was
@@ -65,17 +65,15 @@ HOW
   The missing ten are the rows: the grid streams in row-major at one cell per
   clock, so only one row is ever in flight, and a single counter cleared at
   each row boundary serves all eleven. Columns and regions are interleaved
-  across the whole frame, so each needs a counter that persists. The
-  floorplan is showing you the input format as well as the rule set.
+  across the whole frame, so each needs a counter that persists. So the
+  floorplan gives the input format as well as the rule set.
 
-  The probing that came next, egg 09's neighbour in the story, confirmed all
-  of it from the electrical side: 11 counters watch a column each, 11 watch
-  an irregular blob each, and the 23rd watches every cell but is cleared
-  eleven times a frame.
+  The probing that came next confirmed all of it electrically: 11 counters
+  watch a column each, 11 watch an irregular blob each, and the 23rd
+  watches every cell but is cleared eleven times a frame.
 
 WHEN
   Day 3, after the register graph was working and before the region map was
-  read out. This is the one easter egg that actively helped me solve the
-  puzzle: it is what stopped me from spending another day on a two-constraint
-  hypothesis that had already been falsified and that I had no replacement
-  for.
+  read out. This is the one easter egg that helped solve the puzzle: it
+  stopped further work on a two-constraint hypothesis that had already been
+  falsified.

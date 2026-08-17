@@ -1,5 +1,5 @@
 EASTER EGG 09
-FIVE THINGS THE CHIP CAN SAY, AND THE ONE ALMOST NOBODY WILL SEE
+THE FIVE MESSAGES IN THE OUTPUT ROM
 ======================================================================
 
 WHAT
@@ -13,19 +13,18 @@ WHAT
       TWO NOT TOUCH      every count correct, and two stars touching
       (* TWO STARS *)    the one grid that satisfies every rule
 
-  The fourth one is the good one.
+  The fourth is the least reachable.
 
-  TWO NOT TOUCH is the other name of Star Battle. To see it you have to send
-  a grid that gets absolutely everything right, two stars in every row, two
-  in every column, two in every one of the eleven irregular regions,
-  twenty-two stars in total, and then break exactly one rule: two of your
-  stars are adjacent. The chip's response is to name the rule you broke, and
-  the name of the rule is the name of the puzzle.
+  TWO NOT TOUCH is the other name of Star Battle. To reach it you have to
+  send a grid that gets every count right, two stars in every row, two in
+  every column, two in every one of the eleven irregular regions, 22 stars
+  in total, and then break exactly one rule: two stars are adjacent. The
+  chip names the rule that was broken, and that rule is the name of the
+  puzzle.
 
-  And the fifth is a joke on top of a joke. (* ... *) is Verilog attribute
-  syntax. It is also an OCaml comment, which for Jane Street is about as on
-  brand as it gets. Inside it is the rule the 728 gates spend the whole
-  frame checking: TWO STARS.
+  The fifth is (* ... *), which is Verilog attribute syntax and also an
+  OCaml comment. Inside it is the rule the 728 gates check over the frame:
+  TWO STARS.
 
 WHERE
   O[7:0], streamed one ASCII character per clock starting on the 122nd
@@ -35,18 +34,16 @@ WHERE
   grid that triggers each message.
 
 HOW
-  This is where the testbench work paid off, and where I nearly stopped one
-  message too early.
+  This came out of the testbench work, and I nearly stopped one message
+  short.
 
   The first version was guesswork. Once the chip was answering correctly I
-  got curious about what else it could say, so I drove it with the four
-  cases I could think of, read O[7:0] on each, and found four messages:
-  nothing, everything, something wrong, and the answer. I wrote that up as
-  the catalogue.
+  drove it with the four cases I could think of, read O[7:0] on each, and
+  found four messages: nothing, everything, something wrong, and the
+  answer. I wrote that up as the catalogue.
 
-  It was wrong, and the way it was wrong is instructive. Four messages was
-  not a measurement of the ROM, it was a list of the grids I had happened to
-  try. So I replaced it with something that could not miss:
+  Four messages was not a measurement of the ROM, only a list of the grids
+  I had tried. So I replaced it with an enumeration:
 
       1. Unroll the netlist from reset over 125 steps with all 121 input
          bits left free.
@@ -61,12 +58,11 @@ HOW
       5. Each prefix hands back the grid that produced it. Simulate that
          grid through the gates to read the rest of the string.
 
-  The 'T' split is the whole find. One branch of it is TRY AGAIN, which I
-  already had. The other handed back a grid I would never have thought to
-  try, and driving that grid through the gates spelled TWO NOT TOUCH.
+  The 'T' split is where the fifth message came from. One branch is TRY
+  AGAIN, which I already had. The other returned a grid that drives the
+  gates to spell TWO NOT TOUCH.
 
-  Then I worked out what class of grid that was, which is the part that
-  makes it an easter egg rather than an anomaly. The grid the solver found
+  Then I worked out what class of grid that was. The grid the solver found
   has 22 stars, two in every row, two in every column, two in every region,
   and eleven adjacent pairs. To confirm the trigger rather than assume it, I
   asked z3 for 40 more grids in the same class, satisfy every count and
@@ -81,13 +77,12 @@ HOW
 
   So the condition is exact: every count right, adjacency wrong.
 
-  This is the one verdict a random sweep never finds, and here is why in
-  numbers. Drop 22 stars at random on 121 cells and the chance of hitting
-  two per row and two per column and two per region is negligible; I ran 60
-  such grids and 60 came back TRY AGAIN. I ran 60 grids built to have two
-  stars in every row and every column by construction, and all 60 still came
-  back TRY AGAIN, because none of them happened to also get the regions
-  right. You cannot stumble into this. You have to solve for it.
+  A random sweep does not reach this verdict. Drop 22 stars at random on
+  121 cells and the chance of hitting two per row and two per column and
+  two per region is negligible: I ran 60 such grids and all 60 came back
+  TRY AGAIN. I ran 60 more built to have two stars in every row and every
+  column by construction, and all 60 still came back TRY AGAIN, because
+  none of them also got the regions right. The class has to be solved for.
 
   Finding it also meant my recovered RTL was wrong. It had four verdicts,
   and the 564-grid equivalence run had passed only because none of its grids
@@ -96,9 +91,8 @@ HOW
 
       EQUIVALENCE: 0 success mismatches, 0 O mismatches over 564 grids
 
-  That is the difference between an equivalence result and an equivalence
-  proof. Equivalence is only ever as good as the vectors, and these vectors
-  were improved by something a solver found, not by something I guessed.
+  An equivalence run is only as good as its vectors, and these vectors were
+  extended by a solver result rather than by guesswork.
 
 WHEN
   Day 4, after the puzzle was solved, while writing the equivalence

@@ -6,9 +6,9 @@ vector set: the unique solution, an empty grid, a full grid,
 one-star near misses, random sparse grids, two-per-row grids,
 two-per-row-and-column permutation pairs, and 24 grids that get
 every count right and only break the no-touch rule. That last
-class is the one that separates a four-message reading of the
-output generator from the true five-message one. Every cycle of
-success and of O[7:0] is compared.
+class is what distinguishes a four-message reading of the output
+generator from the five-message one. Every cycle of success and
+of O[7:0] is compared.
 
 EQUIVALENCE: 0 success mismatches, 0 O mismatches over 564 grids
 RESULT: the recovered RTL is cycle-equivalent to the extracted netlist

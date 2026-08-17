@@ -10,8 +10,8 @@ net partition vs warmup/01_netlist.v
   mismatches     0
   golden nets    84
 
-VERDICT: the extracted netlist is the golden netlist. Identical partition of
-         pins into nets, identical port attachment. Names recovered from the DEF.
+RESULT: the extracted netlist is the golden netlist. Identical partition of
+        pins into nets, identical port attachment. Names recovered from the DEF.
 
 NAMES RECOVERED (extracted index -> the name the flow deleted)
 ----------------------------------------------------------------------

@@ -3,13 +3,13 @@ THE BLOG POST TELLS YOU TO READ THE WAVEFORM AS ASCII
 ======================================================================
 
 WHAT
-  Not hidden in a file: hidden in plain sight in the puzzle announcement.
+  Not in any provided file. It is in the puzzle announcement.
 
   The blog post that sets the puzzle links, in passing, to another Jane
   Street post about using ASCII waveforms to test hardware designs. Read as
-  a reading recommendation it is a curiosity. Read as an instruction it is
-  the key to the whole output side of the puzzle: the eight-bit bus O[7:0]
-  is not a number, it is a character.
+  a recommendation it is a curiosity. Read as an instruction it is what
+  makes the output side readable: the eight-bit bus O[7:0] is not a number,
+  it is a character.
 
       https://blog.janestreet.com/can-you-reverse-engineer-an-asic/
       https://blog.janestreet.com/using-ascii-waveforms-to-test-hardware-designs/
@@ -29,14 +29,14 @@ HOW
       hex        54 52 59 20 41 47 41 49 4e
       decimal    84 82 89 32 65 71 65 73 78
 
-  which, as numbers, says nothing at all. I stared at it as decimal, as hex
-  and as binary and moved on, assuming the output block was the part the
-  hint image told me I could ignore.
+  which, as numbers, says nothing. I read it as decimal, as hex and as
+  binary, then moved on, assuming the output block was the part the hint
+  image said I could ignore.
 
   Then I went back to the blog post to re-read the rules, and the ASCII
-  waveform link was sitting there. I do almost all my waveform reading in
-  hex or unsigned, so switching a bus to ASCII is not a habit I have. In
-  Surfer it is a right-click on the signal, Format, ASCII.
+  waveform link was there. I do almost all my waveform reading in hex or
+  unsigned, so switching a bus to ASCII is not a habit I have. In Surfer it
+  is a right-click on the signal, Format, ASCII.
 
   The same nine bytes immediately read:
 
@@ -44,19 +44,15 @@ HOW
 
   Screenshot: Images/try_again_message.png, at the 1255000 ps marker.
 
-  That reframed the entire puzzle in one step. The chip is not returning a
-  status code, it is talking. The block the hint image labels "output
-  generator, safe to ignore at first" is a ROM of English sentences. And
-  the sample waveform is not a neutral demonstration, it is the chip
-  telling whoever recorded it that they got it wrong. Which means there is
-  something to get right, and the chip will say so.
+  So the chip does not return a status code, it returns text. The block the
+  hint image labels "output generator, safe to ignore at first" is a ROM of
+  English sentences, and the sample waveform is a recording of a wrong grid
+  being rejected.
 
-  It also told me where to point the rest of the work: if O is ASCII, then
-  seven bits is a character, and that is what unlocked egg 06 in the
-  opposite direction, on the input side.
+  It also pointed at the input side: if O is ASCII, then seven bits is a
+  character, which is what led to egg 06.
 
 WHEN
   Day 1, after the first pass over the files, while re-reading the puzzle
-  statement. This is the one on this list that actually changed how I
-  attacked the problem, which is why I count it as an easter egg rather
-  than as a hint I missed.
+  statement. It is listed as an easter egg rather than as a missed hint
+  because it changed the approach to the output side entirely.

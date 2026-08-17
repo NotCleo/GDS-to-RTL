@@ -23,6 +23,5 @@ O[7:0] cycle by cycle, counted in enabled rising edges
   edge  136  0x29  ')'
   edge  137  0x00
 
-(* ... *) is Verilog attribute syntax, and it is also an OCaml comment,
-which for Jane Street is about as on brand as it gets. Inside it is the
-rule the 728 gates spend the whole frame checking.
+(* ... *) is Verilog attribute syntax and also an OCaml comment. Inside
+it is the rule the 728 gates check over the frame.

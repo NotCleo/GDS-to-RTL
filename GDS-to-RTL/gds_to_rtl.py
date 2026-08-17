@@ -863,8 +863,8 @@ def golden_check(gds_path, def_path, golden_path, ex, out_path):
     for nm, pins, cands in bad:
         L.append(f"  MISMATCH {nm}: {pins} vs {cands}")
     if not bad and ok == len(gold) and not unmatched:
-        L += ["VERDICT: the extracted netlist is the golden netlist. Identical "
-              "partition of", "         pins into nets, identical port attachment. "
+        L += ["RESULT: the extracted netlist is the golden netlist. Identical "
+              "partition of", "        pins into nets, identical port attachment. "
               "Names recovered from the DEF.", ""]
     L += ["NAMES RECOVERED (extracted index -> the name the flow deleted)", "-" * 70]
     for i in sorted(idx2name):
@@ -1225,10 +1225,10 @@ def vcd_replay(g, vcd_path, out_path):
          f"mismatches        {mism}",
          f"success ever high {'yes at edge %d' % firstsucc if firstsucc else 'no'}", ""]
     L += rows
-    L.append("VERDICT: a netlist recovered from raw polygons reproduces the recorded"
-             if mism == 0 else "VERDICT: MISMATCH. Stop here.")
+    L.append("RESULT: a netlist recovered from raw polygons reproduces the recorded"
+             if mism == 0 else "RESULT: MISMATCH. Stop here.")
     if mism == 0:
-        L.append("         chip outputs exactly, on a trace it was never fitted to.")
+        L.append("        chip outputs exactly, at every compared edge.")
     write(out_path, "\n".join(L))
     return checks, mism, nedge
 
@@ -1301,9 +1301,8 @@ def decompile(g, ast, wrap=76):
     """Expand a logic cone into a boolean expression, stopping at flops and ports.
 
     Useful for the small control cones and useless for the counters, whose 22
-    cones expand into megabytes of repeated subexpression. That asymmetry is
-    itself the finding: it is what says reading the gates is the wrong tool for
-    the counters, and probing them is the right one.
+    cones expand into megabytes of repeated subexpression. The counters are
+    probed instead.
     """
     combof = {o: a for o, a in g.comb}
     label = {}
@@ -1460,14 +1459,13 @@ def structure(g, out_path):
         f = next(x for x in g.flops if x["inst"] == succ_ff[0])
         L += ["", f"THE SET CONDITION OF {succ_ff[0]}, DECOMPILED", "-" * 70,
               "Expanded through the combinational logic and stopped at flip-flop",
-              "outputs and ports. Read the shape rather than the detail: a wide AND",
-              "tree that decomposes into two groups of eleven near-identical two-bit",
-              "comparisons, every one of them against the value two.", "",
+              "outputs and ports. The structure is a wide AND tree that decomposes",
+              "into two groups of eleven near-identical two-bit comparisons, every",
+              "one of them against the value two.", "",
               "  D = " + decompile(g, f["d"]).lstrip(), "",
               "The same treatment on any of the 23 counter pairs expands into megabytes",
-              "of repeated subexpression and says nothing. That asymmetry is itself the",
-              "finding: reading works for the control logic and fails for the counters,",
-              "so the counters get probed instead."]
+              "of repeated subexpression. Decompiling works for the control logic and",
+              "fails for the counters, so the counters get probed instead."]
     write(out_path, "\n".join(L))
     return {"sccs": sccs, "pairs": pairs, "edges": edges, "succ_ff": succ_ff}
 
@@ -1518,7 +1516,7 @@ def probe_regions(g, pairs, out_path, gds_path=None):
         for c in watch[pi]:
             label[c] = ALPHA[i]
 
-    L = ["THE CONSTRAINT MAP, READ OUT OF THE SILICON", "=" * 70, "",
+    L = ["THE CONSTRAINT MAP, RECOVERED BY PROBING", "=" * 70, "",
          f"trials            {FRAME} (one star, one cell, nothing else)",
          f"two-bit counters  {len(pairs)}",
          f"grids accepted    {bin(succ).count('1')}", "",
@@ -1544,8 +1542,7 @@ def probe_regions(g, pairs, out_path, gds_path=None):
           "which is column 10 of every row: the last cell of a row, where the counter is",
           "cleared in the same cycle it is bumped. One counter, cleared at every row",
           "boundary, only works if the grid arrives row-major at one cell per clock, so",
-          "exactly one row is ever in flight. That fixes the input format before",
-          "anything else confirms it.",
+          "exactly one row is ever in flight, which gives the input format.",
           "", "REGION MAP", "-" * 70,
           "     " + " ".join(f"{c:2d}" for c in range(N))]
     for r in range(N):
@@ -1607,8 +1604,8 @@ def floorplan(gds_path, pairs, watch, kindof):
     if rowsl:
         L.append(f"   1 row slice     off to the side at x = {rowsl[0][0]:.1f}, "
                  f"y = {rowsl[0][1]:.1f}")
-    L += ["", "  11 + 11 + 1, drawn on the die. That is the architecture, readable",
-          "  off a floorplan before a single gate is understood.", ""]
+    L += ["", "  11 column counters, 11 region counters and 1 shared row counter,",
+          "  all placed in one column of the die.", ""]
     return L
 
 
@@ -1882,7 +1879,7 @@ def catalogue(g, label, out_path, first_edge=FRAME + 1):
          f"The netlist is unrolled from reset over {steps} steps with all 121 input",
          "bits left free, and the solver enumerates the output bus one character at",
          "a time. Two characters separate every message, so the enumeration closing",
-         "with UNSAT means this list is the whole ROM, not the part a guess found.",
+         "with UNSAT means this list is the whole ROM.",
          "",
          f"first characters reachable on edge {t1 - 1}:   "
          f"{sorted({chr(v) for v, _, _ in prefixes})}",
@@ -1916,10 +1913,9 @@ def catalogue(g, label, out_path, first_edge=FRAME + 1):
             L.append("     " + " ".join("*" if bits[r * N + c] == "1" else "."
                                         for c in range(N)))
         L.append("")
-    L += ["TWO NOT TOUCH is the other name of Star Battle, and the chip only says it",
-          "when you break precisely the rule the name states. It is the one verdict a",
-          "random guess never reaches: the grid has to be right about every count and",
-          "wrong only about touching, and nothing but a solver finds that by accident.",
+    L += ["TWO NOT TOUCH is the other name of Star Battle. The chip prints it only",
+          "when every count is correct and the no-touch rule is the one broken, which",
+          "is a class of grid a random sweep does not reach.",
           ""]
     write(out_path, "\n".join(L))
     return rows, nq
@@ -2333,9 +2329,8 @@ def answer_files(label, sol, msg, succ_edge, obytes_answer, out_dir):
                      else f"  edge {i+1:4d}  0x{v:02x}")
         prev = v
     O += ["",
-          "(* ... *) is Verilog attribute syntax, and it is also an OCaml comment,",
-          "which for Jane Street is about as on brand as it gets. Inside it is the",
-          "rule the 728 gates spend the whole frame checking."]
+          "(* ... *) is Verilog attribute syntax and also an OCaml comment. Inside",
+          "it is the rule the 728 gates check over the frame."]
     write(os.path.join(out_dir, "13_output_string.txt"), "\n".join(O))
 
 
@@ -2398,7 +2393,7 @@ def do_warmup(lib, use_iverilog):
     with stage("W6", "warm-up: solve it from the extracted gates alone (SAT)"):
         keep = cone_of(g, [g.idx["S"]])
         L = ["SOLVING THE WARM-UP FROM ITS EXTRACTED GATES", "=" * 70, "",
-             "No hand tracing, no reading of 00_source.v. The gates are unrolled",
+             "No hand tracing and no reading of 00_source.v. The gates are unrolled",
              "over K clock edges, Tseitin encoded, and asked one question: is there",
              "an input sequence that drives S high?", ""]
         got = None
@@ -2508,13 +2503,12 @@ def do_puzzle(lib, use_iverilog):
             f"predictions failed, so it is {'not linear' if bad else 'linear'}")
         keep = cone_of(g, [g.idx["success"]])
         L = ["GATE-EXACT SAT ON THE RECOVERED NETLIST", "=" * 70, "",
-             "121 input bits is 2^121 possibilities, so no sweep is going to find",
-             "the key. The cheap escape would be linear algebra: if the state update",
-             "were linear over GF(2) the chip would be an LFSR or a CRC and Gaussian",
-             "elimination would invert it instantly. It is not. Testing",
-             "F(u xor v) = F(u) xor F(v) xor F(0) on random input frames:",
-             f"  {bad} of {nlin} predictions failed. Genuinely nonlinear.", "",
-             "So, SAT. The netlist is unrolled over K clock edges, every gate Tseitin",
+             "121 input bits is 2^121 possibilities, so a sweep is not an option.",
+             "A linear state update would be: if F were linear over GF(2) the chip",
+             "would be an LFSR or a CRC and Gaussian elimination would invert it.",
+             "Testing F(u xor v) = F(u) xor F(v) xor F(0) on random input frames:",
+             f"  {bad} of {nlin} predictions failed, so F is nonlinear.", "",
+             "SAT then. The netlist is unrolled over K clock edges, every gate Tseitin",
              "encoded from the same Liberty functions the simulator uses, and one",
              "clause added: success = 1.", "",
              f"cone of influence of success: {len(keep)} of {len(g.names)} nets.",
@@ -2552,9 +2546,8 @@ def do_puzzle(lib, use_iverilog):
         for r in range(N):
             L.append("   " + " ".join("*" if key[r * N + c] == "1" else "."
                                       for c in range(N)))
-        L += ["", "Exactly two stars in every row. Exactly two in every column. No",
-              "two touching, diagonals included. Star Battle, and the answer string",
-              "had been saying TWO STARS the whole time.", ""]
+        L += ["", "Exactly two stars in every row, exactly two in every column, and",
+              "no two touching, diagonals included. That is a Star Battle grid.", ""]
         write(os.path.join(POUT, "07_sat_proof.txt"), "\n".join(L))
         R["sat"] = {"K": K, "key": key, "unique": not ok2,
                     "vars": cnf.n, "clauses": len(cnf.cls), "cone": len(keep)}
@@ -2603,9 +2596,9 @@ def do_puzzle(lib, use_iverilog):
                       "one-star near misses, random sparse grids, two-per-row grids,\n"
                       "two-per-row-and-column permutation pairs, and 24 grids that get\n"
                       "every count right and only break the no-touch rule. That last\n"
-                      "class is the one that separates a four-message reading of the\n"
-                      "output generator from the true five-message one. Every cycle of\n"
-                      "success and of O[7:0] is compared.\n\n" + out)
+                      "class is what distinguishes a four-message reading of the output\n"
+                      "generator from the five-message one. Every cycle of success and\n"
+                      "of O[7:0] is compared.\n\n" + out)
         os.remove(tb)
 
     with stage("P12", "puzzle: drive the answer in and read O[7:0]"):

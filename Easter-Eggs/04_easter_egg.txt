@@ -7,19 +7,14 @@ WHAT
 
       Sat Dec 31 23:59:60 2016
 
-  Second sixty. On the face of it that is a broken timestamp, and most date
-  parsers will refuse it, because most date libraries believe a minute has
-  sixty seconds numbered 0 to 59.
+  A second numbered 60. On the face of it that is a broken timestamp, and
+  most date parsers will reject it, because most date libraries assume a
+  minute has sixty seconds numbered 0 to 59.
 
-  It is not broken. It is a leap second, and it is a real one. 31 December
-  2016 at 23:59:60 UTC is the most recent leap second ever inserted into
-  UTC: the IERS added one that night, so that minute genuinely had 61
-  seconds. It is also, as it happens, a Saturday, so even the weekday is
-  right.
-
-  So the joke has two layers. It is a timestamp that never existed on the
-  computer you are reading it on, and it is a timestamp that did exist on
-  the planet.
+  It is not broken. It is a leap second, and a real one. 31 December 2016
+  at 23:59:60 UTC is the most recent leap second inserted into UTC: the
+  IERS added one that night, so that minute had 61 seconds. The weekday is
+  correct as well, it was a Saturday.
 
 WHERE
   puzzle/example_inputs.vcd, lines 1 to 3, immediately above egg 03:
@@ -33,17 +28,15 @@ HOW
   the VCD in a text editor instead of only in a waveform viewer, both are
   free.
 
-  What made it register rather than slide past is that I had just read the
-  $version line telling me to leave no stone unturned, so I was reading the
-  header carefully instead of skimming to $enddefinitions. The :60 stands
-  out if you are looking at the characters rather than at the shape of a
-  date.
+  I noticed it because I had just read the $version line, so I was reading
+  the header carefully instead of skipping to $enddefinitions. The :60
+  stands out if you read the characters rather than the shape of a date.
 
   Checking it was one search: leap seconds are a short list, 27 of them
   since 1972, and 2016-12-31 is the last entry on it.
 
 WHEN
   Day 1, the same minute as egg 03. The pipeline prints it every run, in
-  puzzle-solution/04_vcd_replay.txt, next to the replay result, because the
-  two facts belong together: this is a recording of a real chip, and
-  somebody dated it with a second that most software says cannot exist.
+  puzzle-solution/04_vcd_replay.txt, next to the replay result, because
+  both facts describe the same file: it is a recording of a real chip, and
+  it is dated with a second most software rejects.

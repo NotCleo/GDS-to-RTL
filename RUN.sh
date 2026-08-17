@@ -57,6 +57,6 @@ cat <<'EOT'
   the grid and region map  puzzle-solution/11_solution_grid.txt
   how to drive the chip    puzzle-solution/12_input_sequence.txt
   the recovered RTL        puzzle-solution/08_recovered_rtl.v
-  the winning waveform     puzzle-solution/14_success_inputs.vcd   (open in Surfer)
+  the success waveform     puzzle-solution/14_success_inputs.vcd   (open in Surfer)
   what every stage did     GDS-to-RTL/summary.md, GDS-to-RTL/run.log
 EOT

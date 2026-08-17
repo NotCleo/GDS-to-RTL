@@ -18,8 +18,8 @@ WHERE
   warmup/04_final.gds at x 65.90 .. 83.00, y 66.20 .. 83.30.
 
 HOW
-  This was my very first find, and it came from just looking. Before
-  writing any code I opened puzzle.gds in the Tiny Tapeout browser viewer
+  The first find, and it came from looking rather than from code. Before
+  writing anything I opened puzzle.gds in the Tiny Tapeout browser viewer
   and then in GDS3D, and turned layers off one at a time to see what each
   one was doing. On met2 there is a pale ring low on the die that does not
   look like anything else in the file. Routing on a metal layer is long
@@ -63,10 +63,10 @@ HOW
                    #################################
                        #########################
 
-  The question that makes it findable without knowing it is there is a dull
-  one: which layer has hundreds of very small polygons crowded into one
-  small square? At the top level of a routed design, nothing else looks
-  like that. Exactly one layer answers.
+  The question that makes it findable without knowing it is there: which
+  layer has hundreds of very small polygons crowded into one small square?
+  At the top level of a routed design, nothing else looks like that, and
+  exactly one layer answers.
 
 WHEN
   Day 1, first hour, in the GDS viewer, before I had written a line of

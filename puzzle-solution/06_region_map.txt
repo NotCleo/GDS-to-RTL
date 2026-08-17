@@ -1,4 +1,4 @@
-THE CONSTRAINT MAP, READ OUT OF THE SILICON
+THE CONSTRAINT MAP, RECOVERED BY PROBING
 ======================================================================
 
 trials            121 (one star, one cell, nothing else)
@@ -41,8 +41,7 @@ star arrives instead: 110 of 121 trials move it. The 11 that do not are exactly
 which is column 10 of every row: the last cell of a row, where the counter is
 cleared in the same cycle it is bumped. One counter, cleared at every row
 boundary, only works if the grid arrives row-major at one cell per clock, so
-exactly one row is ever in flight. That fixes the input format before
-anything else confirms it.
+exactly one row is ever in flight, which gives the input format.
 
 REGION MAP
 ----------------------------------------------------------------------
@@ -99,5 +98,5 @@ WHERE THE COUNTERS SIT ON THE DIE
   11 region slices  y = 49.0 .. 146.9
    1 row slice     off to the side at x = 80.5, y = 103.4
 
-  11 + 11 + 1, drawn on the die. That is the architecture, readable
-  off a floorplan before a single gate is understood.
+  11 column counters, 11 region counters and 1 shared row counter,
+  all placed in one column of the die.

@@ -1,14 +1,13 @@
 GATE-EXACT SAT ON THE RECOVERED NETLIST
 ======================================================================
 
-121 input bits is 2^121 possibilities, so no sweep is going to find
-the key. The cheap escape would be linear algebra: if the state update
-were linear over GF(2) the chip would be an LFSR or a CRC and Gaussian
-elimination would invert it instantly. It is not. Testing
-F(u xor v) = F(u) xor F(v) xor F(0) on random input frames:
-  20 of 20 predictions failed. Genuinely nonlinear.
+121 input bits is 2^121 possibilities, so a sweep is not an option.
+A linear state update would be: if F were linear over GF(2) the chip
+would be an LFSR or a CRC and Gaussian elimination would invert it.
+Testing F(u xor v) = F(u) xor F(v) xor F(0) on random input frames:
+  20 of 20 predictions failed, so F is nonlinear.
 
-So, SAT. The netlist is unrolled over K clock edges, every gate Tseitin
+SAT then. The netlist is unrolled over K clock edges, every gate Tseitin
 encoded from the same Liberty functions the simulator uses, and one
 clause added: success = 1.
 
@@ -38,6 +37,5 @@ blocking clause    re-solve is UNSAT, so the input is unique
    . . . . . * . . * . .
    . * . * . . . . . . .
 
-Exactly two stars in every row. Exactly two in every column. No
-two touching, diagonals included. Star Battle, and the answer string
-had been saying TWO STARS the whole time.
+Exactly two stars in every row, exactly two in every column, and
+no two touching, diagonals included. That is a Star Battle grid.

@@ -1,7 +1,7 @@
 SOLVING THE WARM-UP FROM ITS EXTRACTED GATES
 ======================================================================
 
-No hand tracing, no reading of 00_source.v. The gates are unrolled
+No hand tracing and no reading of 00_source.v. The gates are unrolled
 over K clock edges, Tseitin encoded, and asked one question: is there
 an input sequence that drives S high?
 

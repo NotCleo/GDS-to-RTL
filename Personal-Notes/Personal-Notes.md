@@ -1,7 +1,7 @@
 # Personal notes, tooling, and dead ends
 
-Working notes kept while solving this. Not part of the solution, but the
-viewer setup and the dead ends cost me real time and are worth writing down.
+Working notes kept while solving this. Not part of the solution. The viewer
+setup and the dead ends are recorded because they cost time.
 
 ---
 
@@ -19,7 +19,7 @@ and the per-cell documentation, for example
 [or4b](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/or4b/README.html).
 
 Working through a half adder by hand, from polygons back to "this is a half
-adder", is what made the rest of it make sense. Do this before writing any
+adder", is what made the rest of it make sense. Worth doing before writing any
 extractor.
 
 ---
@@ -70,17 +70,16 @@ Image Size                      : 880x1000
 
 No comment chunk, no author, no custom text. A plain PNG.
 
-Worth recording as a negative result: the interesting metadata in this puzzle is
+A negative result worth recording: the metadata that matters in this puzzle is
 *inside* the file formats, not attached to them. The VCD header fields
 (`$date`, `$version`) and the unknown GDS layer 200/0 are both metadata in that
 sense, and neither of them is anything exiftool would ever look at.
 
 ---
 
-## File sizes, as a picture of what the flow does
+## File sizes across the forward flow
 
-Running the warm-up files in order, the sizes tell the story of the forward flow
-before you read a single line:
+Running the warm-up files in order, the sizes show what each stage adds:
 
 | file | size | what got added |
 |---|---|---|
@@ -90,9 +89,10 @@ before you read a single line:
 | `03_post_place_and_route.def` | 112 KB | coordinates |
 | `04_final.gds` | 306 KB | polygons |
 
-Every step adds detail and removes meaning. `00_source.v` says `A + B == 496` in
-one line. `04_final.gds` says the same thing in 306 KB of geometry and does not
-say it anywhere. Reversing the flow is recovering the 1.2 KB from the 306 KB.
+Every step adds detail and removes meaning. `00_source.v` states `A + B == 496`
+in one line. `04_final.gds` encodes the same thing in 306 KB of geometry and
+states it nowhere. Reversing the flow means recovering the 1.2 KB from the
+306 KB.
 
 ---
 
@@ -107,12 +107,11 @@ Before any code, from `puzzle/layout.png`:
 | `enable` | in | active high enable |
 | `I` | in | one serial bit per clock, the payload |
 | `O[7:0]` | out | status byte |
-| `success` | out | goes high when the right thing was fed in |
+| `success` | out | goes high when a valid input sequence has been fed in |
 
 The image also marks one block "output generator, safe to ignore during your
-initial reverse-engineering steps". That turned out to be true and also a little
-misleading: it is safe to ignore while working out the *rule*, and it is where
-all five of the chip's messages live.
+initial reverse-engineering steps". That is true while working out the *rule*,
+but that block is where all five of the chip's messages are held.
 
 ---
 
@@ -122,8 +121,8 @@ all five of the chip's messages live.
   you can check whether your extractor is right.
 - Open every provided file in a text editor once, even the binary-looking ones.
 - Read the pin geometry from the LEF, never from the GDS text labels.
-- When reading the gates gets hard, stop reading and start poking. The netlist
-  is an oracle you can ask questions of, and it never lies to you about itself.
-- When you think you know what the circuit does, generate grids that satisfy
-  your hypothesis and feed them in. If it rejects all of them, your hypothesis
-  is wrong and you have learned something in five seconds.
+- When reading the gates gets hard, probe instead. The netlist can be simulated,
+  so drive it and observe rather than expanding logic cones.
+- When you think you know what the circuit does, generate inputs that satisfy
+  your hypothesis and feed them in. If it rejects all of them, the hypothesis is
+  wrong.

@@ -9,5 +9,5 @@ outputs compared  624
 mismatches        0
 success ever high no
 
-VERDICT: a netlist recovered from raw polygons reproduces the recorded
-         chip outputs exactly, on a trace it was never fitted to.
+RESULT: a netlist recovered from raw polygons reproduces the recorded
+        chip outputs exactly, at every compared edge.

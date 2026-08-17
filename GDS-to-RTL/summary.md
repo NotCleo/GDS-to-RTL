@@ -43,8 +43,8 @@ recovered RTL. `yosys` is no longer needed at all.
 ## Warm-up stages
 
 The warm-up ships its own answer key: source, gate netlist, placed-and-routed
-DEF, and GDS. It is the only place the extractor can be checked against truth
-rather than against a plausibility argument.
+DEF, and GDS. It is the only place the extractor can be checked against a known
+correct result.
 
 | stage | what it does | result | writes |
 |---|---|---|---|
@@ -63,22 +63,22 @@ partitions, and names play no part in it, so exactness gets proved while every
 instance is still called `u17` and every net `net_412`. The DEF match is only
 there to recover the names afterwards.
 
-### The three traps that hide in W2 and W3
+### Three failure modes in W2 and W3
 
-None of them crash. All three produce a netlist that looks fine and means
-something else.
+None of them crash. All three produce a netlist that parses cleanly and describes
+a different circuit.
 
 | trap | what goes wrong | why it is silent | the fix |
 |---|---|---|---|
 | Pin geometry from GDS labels | A text label tags exactly **one** polygon, but a real pin is often several polygons in different places in the cell, and the router may land on any of them | Pins go missing, and nets that should have joined stay separate | Read every `PIN / PORT / RECT` from the PDK LEF. That list is authoritative |
 | Antenna diodes skipped as inert | The router uses a diode as a convenient place to change layers and **lands on it twice** | Skipping it tears one real net into two halves that never reconnect | Treat it as an electrical bridge: its connections are one net |
-| Cell outline from the geometric bounding box | The nwell implant **overhangs** the cell outline, so every box is consistently too big | Every corner is wrong by the same amount, so **0 of 79** components match and it looks like a coordinate bug | sky130 draws the real abutment box on its own layer, **81/4** |
+| Cell outline from the geometric bounding box | The nwell implant **overhangs** the cell outline, so every box is consistently too big | Every corner is wrong by the same amount, so **0 of 79** components match | sky130 draws the real abutment box on its own layer, **81/4** |
 
-### W6, and why it is the rehearsal that matters
+### W6, solving the warm-up without reading its source
 
-The warm-up could be read: it is 79 cells and the source is right there. It was
-solved by SAT instead, because that is the technique the real puzzle turns on.
-Unroll, encode, ask one question, read the answer. Not one gate traced.
+The warm-up could be read: it is 79 cells and the source is provided. It was
+solved by SAT instead, because that is the technique the puzzle needs later.
+Unroll, encode, ask one question, read the answer. No gate traced by hand.
 
 The solver returned `A = 242, B = 254`. An earlier run returned `245` and `251`.
 Both are correct: `A` and `B` are eight bits each, so `A + B = 496` has exactly
@@ -116,8 +116,8 @@ cycle-equivalent to the gates.
 2. Every via cut joins the island below it to the island above it.
 3. Union-find over both, then look up which island covers each cell pin.
 
-Same-layer overlap means connected. Different layers mean nothing without a cut.
-That is the entire electrical content of a GDS file.
+Same-layer overlap means connected. Different layers mean nothing without a cut
+between them. That is the whole electrical content of a GDS file.
 
 | conductor | shapes | islands |
 |---|---|---|
@@ -139,39 +139,37 @@ that landed on nothing would be floating in space.
 | via3, met3 to met4 | 687 / 687 |
 | via4, met4 to met5 | 108 / 108 |
 
-**22,713 of 22,713.** None floating.
+**22,713 of 22,713** cuts bridged, none floating.
 
-### P4, the check nobody should skip
+### P4, the replay against recorded silicon
 
 `example_inputs.vcd` is a recording of the real chip: known inputs, and the
-outputs it actually produced. Driving those inputs into a netlist built from
-nothing but polygon coordinates and getting the same outputs back is the
-strongest statement available without an answer key, because the trace cannot
-have been fitted to.
+outputs it produced. Driving those inputs into a netlist built from polygon
+coordinates alone and getting the same outputs back is the strongest check
+available without an answer key, because the trace cannot have been fitted to.
 
 If P4 ever reports a mismatch the pipeline stops, because every later stage would
 be interpreting a circuit that does not exist.
 
-### P7, the idea the whole thing turns on
+### P7, the single-cell probe
 
 Decompiling a counter's logic cone tells you it is gated on some value. It does
 not tell you what that value means physically, and the 22 counter cones expand
-into megabytes of repeated subexpression, so reading is the wrong tool.
+into megabytes of repeated subexpression, so decompiling is not usable here.
 
-So stop reading and start poking: put a star at exactly one grid position, clock
-the whole frame through, and see which counters moved. A counter that ticks for
-cell (r, c) is watching cell (r, c). No inference, no algebra. 121 trials, one
-bit-parallel pass, 0.04 s.
+Probing instead: put a star at exactly one grid position, clock the whole frame
+through, and see which counters moved. A counter that ticks for cell (r, c) is
+watching cell (r, c). 121 trials, one bit-parallel pass, 0.04 s.
 
-Eleven columns and eleven irregular blobs come back. Eleven rows do not, and the
-reason is the useful part. The row counter is cleared at every row boundary, so at
+Eleven columns and eleven irregular blobs come back. Eleven rows do not, for a
+reason that is useful. The row counter is cleared at every row boundary, so at
 the end of the frame it always reads zero. Sampling it in the cycle each star
 arrives instead, it moves in **110** of 121 trials, and the 11 it misses are
 exactly cells `10 21 32 43 54 65 76 87 98 109 120`, which is column 10 of every
 row: the last cell of a row, where the counter is bumped and cleared in the same
 cycle. One shared row counter only works if the grid arrives row-major at one
-cell per clock, so exactly one row is ever in flight. That fixes the input format
-before anything else confirms it.
+cell per clock, so exactly one row is ever in flight, which gives the input
+format.
 
 ### P8, solving 2^121 possibilities
 
@@ -185,18 +183,18 @@ output generator and is why this is cheap.
 | 121 | 129,325 | 387,595 | **UNSAT** |
 | 122 | 130,385 | 390,772 | **SAT** in 0.44 s |
 
-122 is therefore provably the shortest unlock: 121 cells in, verdict on the next
-edge. Adding a blocking clause on the 121 recovered bits and re-solving returns
+122 is therefore the shortest unlock: 121 cells in, verdict on the next edge.
+Adding a blocking clause on the 121 recovered bits and re-solving returns
 **UNSAT**, so the key is unique at gate level, not just unique under an
 assumption about what the puzzle is.
 
 ### P10, and the fifth message
 
-The old version of this pipeline drove four grid classes it could think of, read
-`O[7:0]`, and reported four messages. That is guessing, and it was one message
-short.
+The old version of this pipeline drove four grid classes, read `O[7:0]`, and
+reported four messages. That was a list of the grids tried rather than a
+measurement of the ROM, and it was one message short.
 
-The rigorous version: unroll from reset with all 121 input bits free and let the
+The replacement: unroll from reset with all 121 input bits free and let the
 solver enumerate every value the output bus can take on the first output edge,
 then every value it can take on the second given the first. Two characters
 separate every message, so when the enumeration returns UNSAT the catalogue is
@@ -214,10 +212,9 @@ which then gets simulated to read the rest of the string.
 | **`TWO NOT TOUCH`** | 0 | every count right, two per row and per column and per region, and at least one touching pair |
 | `(* TWO STARS *)` | 1 | the one grid that satisfies every rule |
 
-`TWO NOT TOUCH` is the other name of Star Battle, and the chip only says it when
-you break precisely the rule the name states. It is the one verdict a random
-sweep never reaches: the grid has to be right about every count and wrong only
-about touching, and a solver is the only thing that finds that by accident.
+`TWO NOT TOUCH` is the other name of Star Battle. The chip prints it only when
+every count is correct and the no-touch rule is the one broken, which is a class
+of grid a random sweep does not reach.
 
 ### P11, and why the vector set changed
 
@@ -227,13 +224,12 @@ fifth case. So P11 now asks z3 for **24** grids that satisfy every count and
 touch, and adds them to the vector set: **564 grids, 0 success mismatches, 0
 output mismatches**.
 
-That is the difference between an equivalence proof and an equivalence result.
-Equivalence is only ever as good as the vectors, and the vectors were improved by
-something the solver found, not by something anybody guessed.
+An equivalence run is only as good as its vectors, and these vectors were
+extended by a solver result rather than by guesswork.
 
 ---
 
-## Loose ends, and what does not matter
+## Loose ends
 
 | | |
 |---|---|
@@ -242,7 +238,7 @@ something the solver found, not by something anybody guessed.
 | **Combinational loops** | none. The topological sort of the gate graph completes, which is checked, not assumed |
 | **Clock tree** | every one of the 92 flop clock pins traces back through buffers to the single primary input `clk`. There is no gated clock in this design |
 | **The four un-reset flops** | `u34` to `u37` are `dfxtp_2`, no reset, so real silicon powers them up randomly. The pipeline runs the answer with them initialised low and again initialised high: `success = 1` and `(* TWO STARS *)` both times, so their power-up state is provably irrelevant to the result |
-| **The same-layer gap tolerance** | The extractor joins islands on the same layer that sit within 60 nm of each other without formally overlapping, which happens 23 times on the puzzle. I checked whether the answer depends on that number, and it does not: at 0 nm, 20 nm, 60 nm and 120 nm the recovered net partition is byte-identical on both designs. It is not a fitting parameter, and there is no threshold anywhere in this flow that was tuned to make the answer come out |
+| **The same-layer gap tolerance** | The extractor joins islands on the same layer that sit within 60 nm of each other without formally overlapping, which happens 23 times on the puzzle. I checked whether the answer depends on that number, and it does not: at 0 nm, 20 nm, 60 nm and 120 nm the recovered net partition is byte-identical on both designs, so it is not a fitting parameter |
 
 ## Determinism
 

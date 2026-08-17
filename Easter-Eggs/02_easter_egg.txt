@@ -7,9 +7,8 @@ WHAT
 
       PER ARENAM AD ASTRA
 
-  Latin, roughly "through the sand, to the stars", playing on per aspera
-  ad astra. Sand is silicon and the puzzle is about stars, so it works
-  twice.
+  Latin, roughly "through the sand, to the stars", a play on per aspera
+  ad astra.
 
 WHERE
   puzzle/puzzle.gds
@@ -27,10 +26,9 @@ WHERE
   4.14 / 1.38 = 3 exactly.
 
 HOW
-  This is the one I am happiest about, because I found it without knowing
-  there was anything to find. It came straight out of the GDS inventory,
-  which is the first thing my pipeline builds, and three separate lines of
-  that inventory pointed at the same place.
+  Found without knowing there was anything to find. It came out of the GDS
+  inventory, which is the first thing my pipeline builds, and three
+  separate lines of that inventory pointed at the same place.
 
   1. The top cell's bounding box came back as
 
@@ -54,8 +52,8 @@ HOW
      know. Layer 200/0 is flagged. It carries 2 polygons: one inside each
      of those two structures.
 
-  Then the confirming step, which is the one that made it a message rather
-  than a curiosity. Both the puzzle and the warm-up went through the same
+  Then the confirming step, which separates a message from a curiosity.
+  Both the puzzle and the warm-up went through the same
   flow, so any layer present in one and absent from the other was put there
   on purpose. That diff gives three entries and separates cleanly:
 
@@ -64,8 +62,8 @@ HOW
       200/0    outside every standard cell -> hand added
 
   66/15 and 81/23 appear only because the puzzle instantiates conb_1 and
-  diode_2 and the warm-up has neither. 200/0 is the only genuinely
-  hand-added layer in the file. Nothing else in either design is decoration.
+  diode_2 and the warm-up has neither. 200/0 is the only hand-added layer
+  in the file.
 
   With 36 bars in two widths at a 1:3 ratio, the thing to measure is the
   gaps. Dividing them by the narrow bar width, every gap is exactly 1, 3

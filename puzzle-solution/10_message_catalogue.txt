@@ -4,7 +4,7 @@ EVERY STRING THE CHIP CAN PRINT
 The netlist is unrolled from reset over 125 steps with all 121 input
 bits left free, and the solver enumerates the output bus one character at
 a time. Two characters separate every message, so the enumeration closing
-with UNSAT means this list is the whole ROM, not the part a guess found.
+with UNSAT means this list is the whole ROM.
 
 first characters reachable on edge 122:   ['(', 'B', 'E', 'T']
 distinct two-character prefixes:  5
@@ -94,7 +94,6 @@ AN EXAMPLE GRID FOR EACH
      . . * . . . . . * . .
      . * . * . . . . . . .
 
-TWO NOT TOUCH is the other name of Star Battle, and the chip only says it
-when you break precisely the rule the name states. It is the one verdict a
-random guess never reaches: the grid has to be right about every count and
-wrong only about touching, and nothing but a solver finds that by accident.
+TWO NOT TOUCH is the other name of Star Battle. The chip prints it only
+when every count is correct and the no-touch rule is the one broken, which
+is a class of grid a random sweep does not reach.
