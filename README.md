@@ -325,7 +325,9 @@ You can see the complete run log [here](https://github.com/NotCleo/GDS-to-RTL/bl
 - Step 1 is a union of overlapping polygons per layer. 
 - Step 2 needs a spatial index or it is quadratic and unusable, so it goes through an R-tree. 
 
-#### note : Shapely 2.0 changed `STRtree.query` to take a `predicate` argument and return integer indices rather than geometries. On Shapely 1.8 the call signature does not exist. So 2.0 is a hard floor.
+#### note :
+
+Shapely 2.0 changed `STRtree.query` to take a `predicate` argument and return integer indices rather than geometries. On Shapely 1.8 the call signature does not exist. So 2.0 is a hard floor.
 
 - Step 3,4 come with an interesting find;
 
@@ -334,16 +336,21 @@ You can see the complete run log [here](https://github.com/NotCleo/GDS-to-RTL/bl
 | Pin geometry | Used the GDS text labels to decide which polygon is which pin | A label tags exactly one polygon. A real pin is often several polygons at different places in the cell. Pins went missing, and nets that should have been joined stayed separate | Read the pin rectangles out of the PDK's LEF. `PIN ... PORT ... RECT` is the authoritative geometry and lists every rectangle belonging to each pin |
 | Antenna diodes | Treated `diode_2` as an inert protection device and skipped it | The router uses a diode as a convenient place to jump layers and lands on it twice. Skipping it tears one real net into two halves that never reconnect | Treat it as an electrical bridge: its two connections are the same net |
 
-The diode one is the sort of thing that only surfaces if you have ground truth.
-The netlist without diodes had the right cell count, no dangling pins and no
-obvious defect. It just described a different circuit.
-
-There was a third bug, less interesting but more infuriating. To recover
-instance names I matched my extracted placements against the DEF, comparing cell
-type and lower-left corner. I got 0 matches out of 79. Not a few, all of them.
-
-The cause: I was using the geometric bounding box of each cell, and the nwell
-implant overhangs the cell outline. So my box was consistently bigger than the
-real one, and every corner was wrong by the same small amount. What the DEF
-records is the abutment box, which sky130 stores as its own layer, 81/4. Reading
+- The diode one is the sort of thing that only surfaces if you have ground truth.
+- The netlist without diodes had the right cell count, no dangling pins and no obvious defect. It just described a different circuit.
+- There was another bug; To recover instance names I matched my extracted placements against the DEF, comparing cell type and lower-left corner. I got 0 matches out of 79.
+- The cause? I was using the geometric bounding box of each cell, and the nwell implant overhangs the cell outline. So my box was consistently bigger than the
+real one, and every corner was wrong by the same small amount. What the DEF records is the abutment box, which sky130 stores as its own layer, 81/4. Reading
 that instead gave 79 out of 79 immediately.
+- Now came the time for proving the extractor is exact or not, I based it off 4 checks;
+
+| check | what it proves | result |
+|---|---|---|
+| Every net has exactly one driver | No shorts, no floating outputs, no gate driving into another gate's output | 84 nets, 0 violations |
+| Every GDS placement matches a DEF component | Same cell, same corner, same orientation | 79 of 79 |
+| Net partition matches the golden netlist | The two circuits are literally the same circuit | 84 exact matches, 0 mismatches |
+| Simulate both netlists side by side for 3000 cycles | They behave identically | All checks passed |
+
+- Seeing the third check pass helped as the two netlists (golden and extracted) are identical if and only if they split the same set of pins into the same groups, with the same ports attached to the same groups.
+- At this stage, I could prove exactness while my extracted netlist still called everything u17 and net_412.
+
