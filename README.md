@@ -178,6 +178,11 @@ It was found that to drive "success" flag high, the following input sequence was
 
 - One can read about how the puzzle works [here](https://krazydad.com/twonottouch/intro_tutorial/)
 
+##### Want to try the puzzle from this challenge? 
+
+- See [here](https://github.com/NotCleo/GDS-to-RTL/tree/main/TwoNotTouch-Interactive-Puzzle)
+
+
 ##### Want to try the puzzle?
 
 - Check out this sample [interactive Two Not Touch Puzzle](https://krazydad.com/play/starbattle/?kind=10x10&volumeNumber=2&bookNumber=1&puzzleNumber=24)
