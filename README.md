@@ -61,7 +61,7 @@ I have documented my entire solution's implementation is this readme file, below
 
 The puzzle provided the two sets of files : 
 
-### Set I (Main Puzzle) 
+#### Set I (Main Puzzle) 
 
 | File | What it is about | 
 |---|---|
@@ -69,7 +69,7 @@ The puzzle provided the two sets of files :
 | (II) [A Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png) (136KB)| an image of the GDS file with the I/O's labelled for reference |
 | (III)  [An Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd) (8.4KB)|  driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs). |
 
-### Set II (Warmup) 
+#### Set II (Warmup) 
 
 | File | What it is about | 
 |---|---|
