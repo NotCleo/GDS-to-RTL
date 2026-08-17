@@ -182,7 +182,9 @@ It was found that to drive "success" flag high, the following input sequence was
 ![Surfer showing success high and O[7:0] spelling the verdict](Images/success-waveform.png)
 
 
-##### Note : Star Battle is also referred to as Two Not Touch
+##### Note :
+
+Star Battle is also referred to as Two Not Touch
 
 - One can read about how the puzzle works [here](https://krazydad.com/twonottouch/intro_tutorial/)
 
