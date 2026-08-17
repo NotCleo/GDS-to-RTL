@@ -38,7 +38,6 @@ Below table lists all final deliverable files / outputs for the Puzzle :
 | (VIII) "The night sky awaits" | Found in [example_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/example_inputs.vcd) |
 | (IX) 496 (3rd Perfect Number in warmup puzzele) | Found in [00_source.v](https://github.com/NotCleo/GDS-to-RTL/blob/main/warmup-task/00_source.v) |
 
-
 ----
 
 ## Summary of README
@@ -58,16 +57,31 @@ I have documented my entire solution's implementation is this readme file, below
 
 ----
 
-
 ## (I) What were the files provided for the puzzle
 
-The puzzle provided the following files : 
+The puzzle provided the two sets of files : 
+
+### Set I (Main Puzzle) 
 
 | File | What it is about | 
 |---|---|
 | (I) [A GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds) (1.4MB) | contains metal, routing, and active transistor layers, with the cell names, net names and hierarchy stripped out |
 | (II) [A Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png) (136KB)| an image of the GDS file with the I/O's labelled for reference |
 | (III)  [An Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd) (8.4KB)|  driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs). |
+
+### Set II (Warmup) 
+
+| File | What it is about | 
+|---|---|
+| (I) [RTL source file](https://github.com/NotCleo/GDS-to-RTL/blob/main/warmup-task/00_source.v) (1.2KB) | The original Verilog source code of the example design |
+| (II) [Netlist file](https://github.com/NotCleo/GDS-to-RTL/blob/main/warmup-task/01_netlist.v) (19KB)| Synthesized netlist comprising of a list of standard cells and connections |
+| (III)  [Netlist file (with power rails)](https://github.com/NotCleo/GDS-to-RTL/blob/main/warmup-task/02_netlist_with_power_rails.v) (30KB)| Netlist with VDD and GND rails added |
+| (IV) [post_pnr DEF file](https://github.com/NotCleo/GDS-to-RTL/blob/main/warmup-task/03_post_place_and_route.def) (112KB) | Physical layout of cells and routing connections, corresponding to cell and net names. |
+| (V) [GDS file](https://github.com/NotCleo/GDS-to-RTL/blob/main/warmup-task/04_final.gds) (306KB)| The final manufacturable layout file, with many internal names removed |
+
+The warmup puzzle is a small example design and was run through the same RTL to GDS flow, to obtain the GDS file (similar to main puzzle GDS). The example design consists of two shift registers, an adder, and a comparator, outputting success if A + B == 496.
+
+The whole flow was carried out using SkyWater's 130 nm PDK, see [more](https://skywater-pdk.readthedocs.io/en/main/).
 
 -----
 
