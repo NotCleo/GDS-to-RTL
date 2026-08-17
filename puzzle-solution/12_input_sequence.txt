@@ -1,0 +1,29 @@
+HOW TO DRIVE THE CHIP
+======================================================================
+
+  rst_n   hold low for at least two clocks, then release high
+  enable  hold high for the whole run
+  I       one grid cell per rising clock edge, row-major
+          row 0 column 0 first, row 10 column 10 last, 121 bits
+
+  success rises on enabled rising edge 122 and latches.
+  O[7:0] streams the ASCII verdict from that same edge, one character
+  per clock, 15 characters.
+
+THE 121 BITS, row-major
+  0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000
+
+SPLIT BY ROW
+  row  0  00000001010
+  row  1  10000100000
+  row  2  00000001010
+  row  3  10100000000
+  row  4  00001010000
+  row  5  00100000100
+  row  6  00001000001
+  row  7  01000010000
+  row  8  00010000001
+  row  9  00000100100
+  row 10  01010000000
+
+OUTPUT  (* TWO STARS *)

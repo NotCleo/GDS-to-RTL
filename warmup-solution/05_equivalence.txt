@@ -1,0 +1,9 @@
+GOLDEN NETLIST vs NETLIST EXTRACTED FROM THE GDS
+======================================================================
+
+phase 1, 3000 random cycles: 0 mismatches
+phase 2, 200 byte pairs: S <=> (A+B==496) holds in 200 of 200
+A=245 B=251 sum=496 -> S=1
+A=248 B=248 sum=496 -> S=1
+A=100 B=100 sum=200 -> S=0
+ALL CHECKS PASSED: extracted == golden, and S <=> (A+B==496)

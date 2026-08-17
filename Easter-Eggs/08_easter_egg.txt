@@ -1,0 +1,81 @@
+EASTER EGG 08
+THE ARCHITECTURE IS DRAWN ON THE DIE: 11 + 11 + 1
+======================================================================
+
+WHAT
+  The blog post says "the circuit is physically arranged to hint at its
+  functionality, so look closely at the layout". It is not kidding, and it
+  is not subtle once you know which cells matter.
+
+  Every one of the 23 two-bit counters in this chip sits in a single narrow
+  vertical column, and they are stacked in three groups with a visible gap
+  between the two big ones:
+
+      11 column counters      y = 185.0 .. 285.6
+      a gap                   y = 146.9 .. 185.0
+      11 region counters      y =  49.0 .. 146.9
+       1 row counter          off to the side at x = 80.5, y = 103.4
+
+  Eleven of one thing, eleven of another, one of a third. That is the entire
+  architecture of the checker, readable off a floorplan before a single gate
+  is understood. Eleven columns, eleven regions, and one shared row counter.
+
+WHERE
+  puzzle/puzzle.gds, in the placement coordinates of the flip-flops.
+
+  The counter column occupies x = 114.8 .. 126.3 um of a 200 um wide die, so
+  the whole checker is 11.5 um across on a die 17 times wider than that.
+  Everything else on the die is the input handling, the scan position
+  counter and the output generator.
+
+  Full table, with each counter's die coordinate and how many grid cells it
+  watches, in puzzle-solution/06_region_map.txt.
+
+HOW
+  Not by looking at the GDS. I tried that first and it is hopeless: 9,875
+  placements, nothing labelled, and no way to tell one flip-flop from
+  another by eye.
+
+  What made the hint readable was doing it in the other order. Recover the
+  netlist first, find the counters, and only then go back to the geometry.
+
+      1. Extract the netlist from the polygons.  738 nets, 728 cells.
+      2. Build the register graph: one node per flip-flop, an edge a -> b
+         when Q(a) is in the combinational fan-in of D(b). Run Tarjan.
+         26 feedback groups come back, 23 of them pairs of flops in a tight
+         loop, all the same shape. Two-bit counters.
+      3. My extractor numbers instances uNNN by their position in the GDS
+         reference list, so uNNN back to (x, y) is a lookup, not a search.
+         Look up all 46 flops.
+
+  The moment those 23 coordinates were on the screen the shape was obvious.
+  They were not scattered through the logic where a placer would have put
+  them if nothing constrained it; they were a neat vertical stack, in two
+  blocks of eleven, with one loner parked away from the rest.
+
+  That is what told me there was a third constraint family I had not
+  accounted for. At that point my working hypothesis was two stars per row
+  and per column with no two touching, which needs 22 counters at most and
+  arguably only 12. Twenty-three counters in an 11 + 11 + 1 arrangement does
+  not fit that story. Something was counting eleven of a thing that was
+  neither a row nor a column.
+
+  It also explains the asymmetry that had been bothering me. Eleven rows,
+  eleven columns and eleven regions suggests 33 counters, and there are 23.
+  The missing ten are the rows: the grid streams in row-major at one cell per
+  clock, so only one row is ever in flight, and a single counter cleared at
+  each row boundary serves all eleven. Columns and regions are interleaved
+  across the whole frame, so each needs a counter that persists. The
+  floorplan is showing you the input format as well as the rule set.
+
+  The probing that came next, egg 09's neighbour in the story, confirmed all
+  of it from the electrical side: 11 counters watch a column each, 11 watch
+  an irregular blob each, and the 23rd watches every cell but is cleared
+  eleven times a frame.
+
+WHEN
+  Day 3, after the register graph was working and before the region map was
+  read out. This is the one easter egg that actively helped me solve the
+  puzzle: it is what stopped me from spending another day on a two-constraint
+  hypothesis that had already been falsified and that I had no replacement
+  for.

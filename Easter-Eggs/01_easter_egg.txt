@@ -1,0 +1,74 @@
+EASTER EGG 01
+THE JANE STREET LOGO, ETCHED IN METAL 2
+======================================================================
+
+WHAT
+  The Jane Street mark, drawn as real mask geometry on the second metal
+  layer. 1,366 sub-micron polygons packed into a 17.10 x 17.10 um square.
+  It is electrically floating: it connects to nothing, carries no signal,
+  and my extractor sees it as 1,366 shapes that merge into islands no pin
+  ever lands on.
+
+WHERE
+  puzzle/puzzle.gds
+    layer 69/20, which is met2 drawing
+    x 34.90 .. 52.00 um, y 35.20 .. 52.30 um
+
+  It is in the warm-up GDS too, same 1,366 polygons, same 17.10 um square:
+  warmup/04_final.gds at x 65.90 .. 83.00, y 66.20 .. 83.30.
+
+HOW
+  This was my very first find, and it came from just looking. Before
+  writing any code I opened puzzle.gds in the Tiny Tapeout browser viewer
+  and then in GDS3D, and turned layers off one at a time to see what each
+  one was doing. On met2 there is a pale ring low on the die that does not
+  look like anything else in the file. Routing on a metal layer is long
+  power straps and short jogs between vias. This was neither: hundreds of
+  tiny squares crammed into one small block, in a place with no cells under
+  it.
+
+  Zooming in, it resolved into the concentric-circle mark. Rasterising the
+  polygon bounding boxes to ASCII later confirmed it:
+
+                           #################
+                       #########################
+                   ################################
+                #################     #############
+             ###########   #################   ###
+           ########## ###########################      #####
+         ######### #################################  ########
+        ########  ##########               ##########  ########
+       #######  ########## #################  #########  #######
+      #######  ####### ######################### #######  #######
+     ###### ######## #############   ############# ######## ######
+     #####  ####### #########             ######### #######  #####
+    ###### ####### #######                    ###### ####### #######
+    #####  ###### ######                       ###### ######  ######
+    ##### ####### #####                         ##### ####### ######
+    ##### ######  #####                         #####  ###### ######
+    ####  ######  ####                           ####  ######  #####
+    ##### ######  #####                         #####  ###### ######
+    ##### ######  #####                         ##### ####### ######
+    #####         ######                        ##### ######  ######
+    ######         #######                        ## ####### #######
+     #####       ## #########             ##        #######  #####
+     ######    ##### #############   ########      ######## ######
+      #######  ####### ########################  #######  #######
+       #######  ########## #################  #########  #######
+        ########  ##########               ##########  ########
+         ######### ################################# #########
+           ########## ########################### ##########
+             ###########   #################   ###########
+                #################     #################
+                   #################################
+                       #########################
+
+  The question that makes it findable without knowing it is there is a dull
+  one: which layer has hundreds of very small polygons crowded into one
+  small square? At the top level of a routed design, nothing else looks
+  like that. Exactly one layer answers.
+
+WHEN
+  Day 1, first hour, in the GDS viewer, before I had written a line of
+  code. It is also visible in the warm-up, so anyone doing the warm-up
+  properly can find this one on day one without touching the puzzle.

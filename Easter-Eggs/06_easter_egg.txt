@@ -1,0 +1,93 @@
+EASTER EGG 06
+"THE NIGHT SKY AWAITS", HIDDEN IN THE SAMPLE INPUTS
+======================================================================
+
+WHAT
+  The sample waveform is described in the puzzle as "some inputs being fed
+  to the design (unfortunately, not the correct inputs to make success go
+  high!)". For most of day one I read that as a failed solve attempt and
+  treated the file as scenery.
+
+  It is not a failed attempt. The inputs are a message. Read the 121 bits
+  of each frame as an 11 x 11 grid, take each row as a 7-bit ASCII
+  character with column 0 as the least significant bit, and the two frames
+  say:
+
+      "The night s" + "ky awaits  "  =  "The night sky awaits"
+
+WHERE
+  puzzle/example_inputs.vcd, the I input, sampled on every rising clock
+  edge while enable is high. There are two frames of 121 bits, separated by
+  a reset.
+
+HOW
+  Egg 05 had just taught me that eight bits on this chip means a character.
+  That put the same question on the input side: what if I is carrying text
+  too?
+
+  Two things gave the payload away before I decoded anything, and both come
+  from just counting.
+
+  1. Both frames contain exactly 38 stars. Not similar, identical. A random
+     wrong guess and a second random wrong guess do not agree to the bit on
+     their star count.
+
+  2. In both frames, columns 7, 8, 9 and 10 are empty in every single row.
+     44 of the 121 cells are switched off, in a perfectly rectangular block
+     down the right-hand side.
+
+  Eleven rows, seven usable columns per row. Seven bits is exactly one
+  ASCII character, and the four empty columns are the four bits standard
+  ASCII does not need. So each row is one letter, and the reason those
+  columns are dead is that no printable ASCII character needs bit 7.
+
+  Reading each row LSB first:
+
+  frame 0, 38 stars, columns 7..10 all empty
+     . . * . * . * . . . .   0010101 ->  84 -> 'T'
+     . . . * . * * . . . .   0001011 -> 104 -> 'h'
+     * . * . . * * . . . .   1010011 -> 101 -> 'e'
+     . . . . . * . . . . .   0000010 ->  32 -> ' '
+     . * * * . * * . . . .   0111011 -> 110 -> 'n'
+     * . . * . * * . . . .   1001011 -> 105 -> 'i'
+     * * * . . * * . . . .   1110011 -> 103 -> 'g'
+     . . . * . * * . . . .   0001011 -> 104 -> 'h'
+     . . * . * * * . . . .   0010111 -> 116 -> 't'
+     . . . . . * . . . . .   0000010 ->  32 -> ' '
+     * * . . * * * . . . .   1100111 -> 115 -> 's'
+
+  frame 1, 38 stars, columns 7..10 all empty
+     * * . * . * * . . . .   1101011 -> 107 -> 'k'
+     * . . * * * * . . . .   1001111 -> 121 -> 'y'
+     . . . . . * . . . . .   0000010 ->  32 -> ' '
+     * . . . . * * . . . .   1000011 ->  97 -> 'a'
+     * * * . * * * . . . .   1110111 -> 119 -> 'w'
+     * . . . . * * . . . .   1000011 ->  97 -> 'a'
+     * . . * . * * . . . .   1001011 -> 105 -> 'i'
+     . . * . * * * . . . .   0010111 -> 116 -> 't'
+     * * . . * * * . . . .   1100111 -> 115 -> 's'
+     . . . . . * . . . . .   0000010 ->  32 -> ' '
+     . . . . . * . . . . .   0000010 ->  32 -> ' '
+
+  A detail that makes the reading self-checking: every one of the 22 rows
+  decodes to a printable character on the first try. Get the bit order
+  backwards and you get control codes and garbage, so the fact that all 22
+  land in the printable range, and spell English, is the confirmation. The
+  two trailing spaces in frame 1 are padding to fill the frame.
+
+  Two consequences beyond the joke, and both mattered.
+
+  First, the frame is 121 bits long. That is the strongest early evidence
+  that the input format is a fixed 121-cell frame and not a free-running
+  stream, and 121 = 11 x 11 is where the grid comes from. Later the SAT
+  solve proved the same thing independently: at 121 clock edges the netlist
+  provably cannot produce success, at 122 it can.
+
+  Second, the word "sky", and then "stars" from the output side, said this
+  puzzle was about a night sky before I understood a single gate. The file I
+  had written off as a dead end on day one had told me the theme on day one.
+
+WHEN
+  Day 1, straight after egg 05. Switching the output bus to ASCII made me
+  go back and ask the same question about the input bus, and this fell out
+  within a few minutes of counting the stars per frame.

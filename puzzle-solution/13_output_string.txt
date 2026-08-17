@@ -1,0 +1,28 @@
+WHAT THE CHIP PRINTS
+======================================================================
+
+  (* TWO STARS *)
+
+O[7:0] cycle by cycle, counted in enabled rising edges
+----------------------------------------------------------------------
+  edge    1  0x00
+  edge  122  0x28  '('
+  edge  123  0x2a  '*'
+  edge  124  0x20  ' '
+  edge  125  0x54  'T'
+  edge  126  0x57  'W'
+  edge  127  0x4f  'O'
+  edge  128  0x20  ' '
+  edge  129  0x53  'S'
+  edge  130  0x54  'T'
+  edge  131  0x41  'A'
+  edge  132  0x52  'R'
+  edge  133  0x53  'S'
+  edge  134  0x20  ' '
+  edge  135  0x2a  '*'
+  edge  136  0x29  ')'
+  edge  137  0x00
+
+(* ... *) is Verilog attribute syntax, and it is also an OCaml comment,
+which for Jane Street is about as on brand as it gets. Inside it is the
+rule the 728 gates spend the whole frame checking.

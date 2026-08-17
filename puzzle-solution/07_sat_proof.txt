@@ -1,0 +1,43 @@
+GATE-EXACT SAT ON THE RECOVERED NETLIST
+======================================================================
+
+121 input bits is 2^121 possibilities, so no sweep is going to find
+the key. The cheap escape would be linear algebra: if the state update
+were linear over GF(2) the chip would be an LFSR or a CRC and Gaussian
+elimination would invert it instantly. It is not. Testing
+F(u xor v) = F(u) xor F(v) xor F(0) on random input frames:
+  20 of 20 predictions failed. Genuinely nonlinear.
+
+So, SAT. The netlist is unrolled over K clock edges, every gate Tseitin
+encoded from the same Liberty functions the simulator uses, and one
+clause added: success = 1.
+
+cone of influence of success: 471 of 738 nets.
+The output generator drops out here, which is why this is cheap.
+
+  K = 121 edges   129325 variables   387595 clauses   UNSAT
+  K = 122 edges   130385 variables   390772 clauses   SAT
+
+minimum depth      122 clock edges. At 121 the netlist provably
+                   cannot be satisfied, so 121 cells in and the
+                   verdict on the next edge is exactly the protocol.
+key                0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000
+blocking clause    re-solve is UNSAT, so the input is unique
+
+121 = 11 x 11. Laid out as a square:
+
+   . . . . . . . * . * .
+   * . . . . * . . . . .
+   . . . . . . . * . * .
+   * . * . . . . . . . .
+   . . . . * . * . . . .
+   . . * . . . . . * . .
+   . . . . * . . . . . *
+   . * . . . . * . . . .
+   . . . * . . . . . . *
+   . . . . . * . . * . .
+   . * . * . . . . . . .
+
+Exactly two stars in every row. Exactly two in every column. No
+two touching, diagonals included. Star Battle, and the answer string
+had been saying TWO STARS the whole time.

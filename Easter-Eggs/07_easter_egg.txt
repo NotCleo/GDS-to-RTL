@@ -1,0 +1,85 @@
+EASTER EGG 07
+496, THE THIRD PERFECT NUMBER
+======================================================================
+
+WHAT
+  The warm-up design is a pair of 8-bit shift registers, an adder and a
+  comparator, and it raises success when
+
+      A + B == 496
+
+  496 looks like an arbitrary constant. It is not. It is the third perfect
+  number: a number that equals the sum of its own proper divisors.
+
+      496 = 1 + 2 + 4 + 8 + 16 + 31 + 62 + 124 + 248
+
+  The perfect numbers go 6, 28, 496, 8128. Picking 496 rather than, say,
+  500, for a toy comparator constant is a choice somebody made on purpose.
+
+  Two more things fall out of the number once you have noticed it.
+
+  It is a Mersenne-derived perfect number: 496 = 2^4 x (2^5 - 1) = 16 x 31,
+  the Euclid form 2^(p-1) x (2^p - 1) with p = 5.
+
+  And it is a nice constant for an 8-bit adder specifically. A and B are
+  eight bits each, so A + B ranges over 0 to 510, and A + B = 496 has
+  exactly 15 solutions, A from 241 to 255. That is 15 keys out of 65,536
+  input pairs. It is not so tight that the comparator is trivial and not so
+  loose that a random guess finds it.
+
+WHERE
+  warmup/00_source.v, in the comparator module:
+
+      module comparator496 (
+          input  wire [8:0] val,
+          output wire       eq
+      );
+          assign eq = (val == 9'd496);
+      endmodule
+
+  It survives all the way down the flow: the whole point of the warm-up is
+  that you can watch the same fact become harder to see at each stage. It is
+  a named constant in 00_source.v, an anonymous cone of gates in
+  01_netlist.v, coordinates in 03_post_place_and_route.def, and polygons in
+  04_final.gds.
+
+WHEN
+  Day 2, when I stopped reading the puzzle files and started on the warm-up.
+  This one comes free: 00_source.v is 59 lines and the module is called
+  comparator496.
+
+HOW
+  The warm-up was the first thing I ran the extractor at, because it is the
+  only place in this puzzle where I could check my own work. That is worth
+  spelling out, because it was the single best decision in the project.
+
+  Suppose you write an extractor, point it at puzzle.gds, and it emits a
+  netlist. How do you know it is right? A subtly wrong extraction does not
+  crash. It produces a circuit that is plausible, simulates cleanly, and
+  means something completely different. You then spend three days reverse
+  engineering a circuit that does not exist.
+
+  The warm-up ships the truth: source, gate netlist, placed-and-routed DEF
+  and GDS. So the extractor got built against the warm-up and proved exact
+  there first:
+
+      79 of 79 GDS placements matched to DEF components
+      84 exact net matches, 0 mismatches, against a golden netlist of 84 nets
+      3,000 random cycles of golden versus extracted, 0 mismatches
+      S equals (A + B == 496) on 200 of 200 random byte pairs
+
+  Then, instead of reading the answer out of 00_source.v, I asked a SAT
+  solver to find it from the extracted gates alone. That was the rehearsal
+  for the technique the real puzzle turns on:
+
+      minimum depth 8 clock edges
+      A = 11110010 = 242
+      B = 11111110 = 254
+      A + B = 496
+
+  Not one gate traced. And because there are 15 valid answers, the solver
+  returning 242 and 254 rather than the 245 and 251 an earlier run gave is
+  not a discrepancy, it is the point.
+
+  See warmup-solution/06_sat_solve.txt and
+  warmup-solution/04_golden_crosscheck.txt.

@@ -1,0 +1,100 @@
+EVERY STRING THE CHIP CAN PRINT
+======================================================================
+
+The netlist is unrolled from reset over 125 steps with all 121 input
+bits left free, and the solver enumerates the output bus one character at
+a time. Two characters separate every message, so the enumeration closing
+with UNSAT means this list is the whole ROM, not the part a guess found.
+
+first characters reachable on edge 122:   ['(', 'B', 'E', 'T']
+distinct two-character prefixes:  5
+SAT queries                       14
+
+THE CATALOGUE
+----------------------------------------------------------------------
+  message           success stars 2/row  2/col  2/region  touching pairs
+  '(* TWO STARS *)'    1       22 True   True   True      0
+  'BIG BANG'           0      121 False  False  False     420
+  'EMPTY SKY'          0        0 False  False  False     0
+  'TRY AGAIN'          0       97 False  False  False     310
+  'TWO NOT TOUCH'      0       22 True   True   True      11
+
+WHAT TRIGGERS EACH ONE
+----------------------------------------------------------------------
+  '(* TWO STARS *)' the one grid that satisfies every rule
+  'BIG BANG'        every cell a star
+  'EMPTY SKY'       an empty grid
+  'TRY AGAIN'       any other wrong grid
+  'TWO NOT TOUCH'   every count correct, two stars per row, per column and per region, but at least one touching pair
+
+AN EXAMPLE GRID FOR EACH
+----------------------------------------------------------------------
+  (* TWO STARS *)   (22 stars)
+     . . . . . . . * . * .
+     * . . . . * . . . . .
+     . . . . . . . * . * .
+     * . * . . . . . . . .
+     . . . . * . * . . . .
+     . . * . . . . . * . .
+     . . . . * . . . . . *
+     . * . . . . * . . . .
+     . . . * . . . . . . *
+     . . . . . * . . * . .
+     . * . * . . . . . . .
+
+  BIG BANG   (121 stars)
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+
+  EMPTY SKY   (0 stars)
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+
+  TRY AGAIN   (97 stars)
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * *
+     * * * * * * * * * * .
+     * * * * * * * * * * *
+     * . * * . . . . * * .
+     . . . . . . . . . . .
+     * . . . * * * . * . .
+
+  TWO NOT TOUCH   (22 stars)
+     . . . . * . . . * . .
+     . . . . . . * * . . .
+     . . . . . * . . . * .
+     . * * . . . . . . . .
+     . . . . . * . * . . .
+     * . . . . . . . . . *
+     * . . . . . . . . . *
+     . . . . * . * . . . .
+     . . . * . . . . . * .
+     . . * . . . . . * . .
+     . * . * . . . . . . .
+
+TWO NOT TOUCH is the other name of Star Battle, and the chip only says it
+when you break precisely the rule the name states. It is the one verdict a
+random guess never reaches: the grid has to be right about every count and
+wrong only about touching, and nothing but a solver finds that by accident.

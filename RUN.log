@@ -1,0 +1,182 @@
+tools
+  python     Python 3.12.3
+  iverilog   Icarus Verilog version 12.0 (stable) ()
+  vvp        Icarus Verilog runtime version 12.0 (stable) ()
+  gdstk      1.0.1
+  shapely    2.1.2
+  z3         5.1.0
+  python-sat Cadical153 available
+GDS to RTL: recovering Jane Street's ASIC puzzle from its layout
+repository /home/amrut/GDS-to-RTL
+python 3.12.3, gdstk 1.0.1
+
+P0  load the sky130 Liberty
+    428 cells, 45 sequential, from pdk/sky130_fd_sc_hd__tt_025C_1v80.lib
+    [0.09s]
+
+W1  warm-up: inventory 04_final.gds
+    top cell adder_demo, 1099 placements: 79 logic, 869 vias, 151 physical
+    16 logic cell types, ports ['A', 'B', 'S', 'clk', 'en', 'rst_n']
+    [0.01s]
+
+W2  warm-up: extract a netlist from the polygons
+    li1     1322 shapes ->   664 islands
+    met1    1354 shapes ->   349 islands
+    met2    2104 shapes ->   223 islands
+    met3     331 shapes ->   100 islands
+    met4     111 shapes ->     7 islands
+    met5      28 shapes ->     5 islands
+    84 nets, 79 logic cells, 0 nets with a driver count other than one
+    [1.09s]
+
+W3  warm-up: check it against the shipped DEF and netlist
+    placements matched to DEF components 79/79
+    net partition vs 01_netlist.v: 84 exact, 0 mismatches, golden has 84 nets
+    [0.01s]
+
+W4  warm-up: cell models from the Liberty file
+    18 cell models generated from sky130_fd_sc_hd__tt_025C_1v80.lib
+    [0.00s]
+
+W5  warm-up: simulate golden and extracted side by side
+    phase 1, 3000 random cycles: 0 mismatches
+    phase 2, 200 byte pairs: S <=> (A+B==496) holds in 200 of 200
+    A=245 B=251 sum=496 -> S=1
+    A=248 B=248 sum=496 -> S=1
+    A=100 B=100 sum=200 -> S=0
+    ALL CHECKS PASSED: extracted == golden, and S <=> (A+B==496)
+    [0.10s]
+
+W6  warm-up: solve it from the extracted gates alone (SAT)
+    minimum depth 8 edges
+    A = 11110010 = 242,  B = 11111110 = 254,  A + B = 496
+    [0.02s]
+
+P1  puzzle: inventory puzzle.gds
+    top cell puzzle, die (0.0, -52.7) .. (200.0, 300.0) um
+    9875 placements: 728 logic in 66 types, 8221 vias, 880 physical, 10 diodes, 36 not standard cells
+    ports ['I', 'O[0]', 'O[1]', 'O[2]', 'O[3]', 'O[4]', 'O[5]', 'O[6]', 'O[7]', 'VGND', 'VGND', 'VPWR', 'VPWR', 'clk', 'enable', 'rst_n', 'success']
+    [0.02s]
+
+P2  puzzle: extract a netlist from the polygons
+    li1    10819 shapes ->  5495 islands
+    met1   12606 shapes ->  3001 islands
+    met2    8517 shapes ->  2060 islands
+    met3    2560 shapes ->   811 islands
+    met4     867 shapes ->    45 islands
+    met5     162 shapes ->    18 islands
+    cut mcon   17188/17188  bridged metal on both sides
+    cut via     3779/3779   bridged metal on both sides
+    cut via2     951/951    bridged metal on both sides
+    cut via3     687/687    bridged metal on both sides
+    cut via4     108/108    bridged metal on both sides
+    738 nets, 728 logic cells, 10 diodes treated as bridges
+    nets with a driver count other than one: 0, undriven signal nets: 0
+    [4.13s]
+
+P3  puzzle: cell models for this design's cell set
+    66 cell models generated from the Liberty
+    bit-parallel simulator: 738 nets, 642 gate outputs, 92 flops, 830 generated lines
+    [0.02s]
+
+P4  puzzle: replay the recorded silicon waveform
+    312 rising edges replayed, 624 outputs compared, 0 mismatches
+    clock roots ['clk']
+    [0.03s]
+
+P5  puzzle: register graph and feedback groups
+    92 flops, 26 feedback groups, 23 of them two-bit pairs
+    success is one latched flop, u28_dfrtp_2, whose set condition is a wide AND tree over the pairs
+    [0.00s]
+
+P6  puzzle: falsify the rows-and-columns hypothesis
+    25 grids satisfying two per row, two per column, no touching
+    accepted by the netlist: 0
+    what the chip said instead: {'TRY AGAIN': 25}
+    [0.29s]
+
+P7  puzzle: read the region map out of the gates, 121 probes
+    column counters 11, irregular groups 11, shared row counters 1
+    region sizes {'A': 14, 'B': 21, 'C': 7, 'D': 5, 'E': 28, 'F': 8, 'G': 11, 'H': 9, 'I': 6, 'J': 8, 'K': 4}, sum 121
+    [0.04s]
+
+P8  puzzle: solve the gates and prove the key unique (SAT)
+    GF(2) linearity of the frame's state update: 20 of 20 random predictions failed, so it is not linear
+    K = 121 edges: UNSAT  (129325 variables, 387595 clauses, 0.43s)
+    K = 122 edges: SAT  (130385 variables, 390772 clauses, 0.42s)
+    blocking that assignment and re-solving: UNSAT  -> the key is unique
+    [1.01s]
+
+P9  puzzle: independent solve of the recovered puzzle (z3)
+    solutions to the probed constraint set: 1 (that is all of them)
+    matches the SAT key: True
+    [0.10s]
+
+P10  puzzle: enumerate every string the chip can print (SAT)
+    '(* TWO STARS *)'  success=1   22 stars  rows2=True  cols2=True  regions2=True  touching=0
+    'BIG BANG'         success=0  121 stars  rows2=False cols2=False regions2=False touching=420
+    'EMPTY SKY'        success=0    0 stars  rows2=False cols2=False regions2=False touching=0
+    'TRY AGAIN'        success=0   97 stars  rows2=False cols2=False regions2=False touching=310
+    'TWO NOT TOUCH'    success=0   22 stars  rows2=True  cols2=True  regions2=True  touching=11
+    14 SAT queries, the last one UNSAT: the catalogue is complete
+    [1.60s]
+
+P11  puzzle: emit behavioural RTL and prove it equivalent
+    24 grids that satisfy every count but touch, from z3, added to the vector set
+    wrote puzzle-solution/08_recovered_rtl.v
+    EQUIVALENCE: 0 success mismatches, 0 O mismatches over 564 grids
+    RESULT: the recovered RTL is cycle-equivalent to the extracted netlist
+    [5.17s]
+
+P12  puzzle: drive the answer in and read O[7:0]
+    success=1, O[7:0] spells '(* TWO STARS *)'
+    success rises on enabled rising edge 122, 15 characters follow, one per clock
+    same run with the four un-reset flops powered up high: success=1, '(* TWO STARS *)'
+    [0.03s]
+
+P13  puzzle: write the answer files and the winning waveform
+    puzzle-solution/14_success_inputs.vcd: success first high at t=1255000 ps, rising edge 126
+    puzzle-solution/11_solution_grid.txt
+    puzzle-solution/12_input_sequence.txt
+    puzzle-solution/13_output_string.txt
+    [0.02s]
+
+========================================================================
+ANSWER  (* TWO STARS *)
+KEY     0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000
+success on enabled rising edge 122, unique at the gate level: True
+========================================================================
+
+total 13.8s
+
+deliverables
+  warmup-solution/
+    01_gds_inventory.txt
+    02_extracted_netlist.v
+    03_cell_models.v
+    04_golden_crosscheck.txt
+    05_equivalence.txt
+    06_sat_solve.txt
+    07_name_map.json
+  puzzle-solution/
+    01_gds_inventory.txt
+    02_extracted_netlist.v
+    03_cell_models.v
+    04_vcd_replay.txt
+    05_register_structure.txt
+    06_region_map.txt
+    07_sat_proof.txt
+    08_recovered_rtl.v
+    09_equivalence.txt
+    10_message_catalogue.txt
+    11_solution_grid.txt
+    12_input_sequence.txt
+    13_output_string.txt
+    14_success_inputs.vcd
+
+  the answer string        puzzle-solution/13_output_string.txt
+  the grid and region map  puzzle-solution/11_solution_grid.txt
+  how to drive the chip    puzzle-solution/12_input_sequence.txt
+  the recovered RTL        puzzle-solution/08_recovered_rtl.v
+  the winning waveform     puzzle-solution/14_success_inputs.vcd   (open in Surfer)
+  what every stage did     GDS-to-RTL/summary.md, GDS-to-RTL/run.log

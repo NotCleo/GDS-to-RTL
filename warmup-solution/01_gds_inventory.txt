@@ -1,0 +1,194 @@
+GDS INVENTORY: warmup/04_final.gds
+======================================================================
+
+library            LIB
+units              1e-06 m, precision 1e-09 m
+structures in file 27
+top structure      adder_demo
+bounding box       (0.00, 0.00) .. (100.00, 100.00) um
+                   100.00 x 100.00 um
+
+PLACEMENTS
+----------------------------------------------------------------------
+  total 1099
+  logic                      79
+  via                       869
+  physical only             151
+
+logic cell types: 16
+     16 x sky130_fd_sc_hd__dfrtp_2
+     16 x sky130_fd_sc_hd__mux2_1
+      8 x sky130_fd_sc_hd__nor2_2
+      7 x sky130_fd_sc_hd__and2_2
+      5 x sky130_fd_sc_hd__a31o_2
+      5 x sky130_fd_sc_hd__or2_2
+      5 x sky130_fd_sc_hd__xor2_2
+      4 x sky130_fd_sc_hd__nand2_2
+      3 x sky130_fd_sc_hd__clkbuf_16
+      3 x sky130_fd_sc_hd__xnor2_2
+      2 x sky130_fd_sc_hd__and4bb_2
+      1 x sky130_fd_sc_hd__a21bo_2
+      1 x sky130_fd_sc_hd__a21boi_2
+      1 x sky130_fd_sc_hd__a21o_2
+      1 x sky130_fd_sc_hd__and3_2
+      1 x sky130_fd_sc_hd__o21bai_2
+
+via structures:
+    313 x VIA_M1M2_PR
+    268 x VIA_L1M1_PR_MR
+     75 x VIA_via4_5_2000_480_1_5_400_400
+     75 x VIA_via3_4_2000_480_1_5_400_400
+     75 x VIA_via2_3_2000_480_1_6_320_320
+     45 x VIA_M2M3_PR
+     13 x VIA_via5_6_2000_2000_1_1_1600_1600
+      5 x VIA_M3M4_PR
+
+physical only structures:
+     93 x sky130_fd_sc_hd__tapvpwrvgnd_1
+     58 x sky130_fd_sc_hd__decap_3
+
+SURVIVING TEXT LABELS IN THE TOP CELL  (these are the I/O ports)
+----------------------------------------------------------------------
+  'A'          on layer 70/5  at (0.30, 41.14)
+  'B'          on layer 70/5  at (0.30, 35.70)
+  'S'          on layer 70/5  at (99.70, 16.66)
+  'clk'        on layer 70/5  at (0.30, 73.78)
+  'en'         on layer 70/5  at (0.30, 30.26)
+  'rst_n'      on layer 70/5  at (0.30, 57.46)
+  'VGND'       on layer 71/5  at (30.14, 50.32)
+  'VPWR'       on layer 71/5  at (26.44, 50.32)
+  'VGND'       on layer 72/5  at (49.91, 31.23)
+  'VPWR'       on layer 72/5  at (49.91, 27.53)
+
+PIN LABELS INSIDE THE CELL DEFINITIONS: 186 labels, 40 distinct names
+----------------------------------------------------------------------
+  A A0 A1 A2 A3 A_N B B1 B1_N B_N C CLK D Q RESET_B S VGND VNB VPB VPWR X Y a21bo_2 a21boi_2 a21o_2 a31o_2 and2_2 and3_2 and4bb_2 clkbuf_16 decap_3 dfrtp_2 mux2_1 nand2_2 nor2_2 o21bai_2 or2_2 tapvpwrvgnd_1 xnor2_2 xor2_2
+
+  example, sky130_fd_sc_hd__decap_3: [('VPWR', '68/5'), ('VGND', '68/5'), ('VPB', '64/5'), ('VNB', '64/59'), ('decap_3', '83/44')]
+
+GEOMETRY DRAWN DIRECTLY IN THE TOP CELL  (inter-cell routing + power)
+----------------------------------------------------------------------
+   68/20  met1                  367 shapes  <- conductor, extracted
+   69/20  met2                 1596 shapes  <- conductor, extracted
+   70/16  met3.pin                6 shapes
+   70/20  met3                  125 shapes  <- conductor, extracted
+   71/16  met4.pin                5 shapes
+   71/20  met4                   13 shapes  <- conductor, extracted
+   72/16  met5.pin                5 shapes
+   72/20  met5                   10 shapes  <- conductor, extracted
+  235/4   prBoundary              1 shapes
+
+EVERY LAYER IN THE FILE, CELL INTERIORS INCLUDED
+----------------------------------------------------------------------
+   64/16  nwell.pin                     18 polygons
+   64/20  nwell                         18 polygons
+   65/20  diff                          55 polygons
+   65/44  tap                            2 polygons
+   66/20  poly                          84 polygons
+   66/44  licon1                       498 polygons
+   67/16  li1.pin                      105 polygons
+   67/20  li1                          159 polygons
+   67/44  mcon                         331 polygons
+   68/16  met1.pin                      38 polygons
+   68/20  met1                          21 polygons
+   68/44  via                            7 polygons
+   69/20  met2                        1370 polygons
+   69/44  via2                           6 polygons
+   70/16  met3.pin                       6 polygons
+   70/20  met3                          13 polygons
+   70/44  via3                           6 polygons
+   71/16  met4.pin                       5 polygons
+   71/20  met4                           9 polygons
+   71/44  via4                           1 polygons
+   72/16  met5.pin                       5 polygons
+   72/20  met5                           6 polygons
+   78/44  hvtp                          19 polygons
+   81/4   areaid.standardc              18 polygons
+   93/44  nsdm                          19 polygons
+   94/20  psdm                          19 polygons
+   95/20  npc                           19 polygons
+  122/16  not a sky130 mask layer       18 polygons
+  235/4   prBoundary                     1 polygons
+  236/0   not a sky130 mask layer       17 polygons
+
+EVERY LOGIC PLACEMENT (79 rows): cell, x_um, y_um, orientation
+----------------------------------------------------------------------
+  sky130_fd_sc_hd__nor2_2               69.920    16.320  FN
+  sky130_fd_sc_hd__and2_2               69.920    16.320  N
+  sky130_fd_sc_hd__or2_2                72.220    16.320  S
+  sky130_fd_sc_hd__dfrtp_2              29.900    21.760  N
+  sky130_fd_sc_hd__mux2_1               34.040    21.760  S
+  sky130_fd_sc_hd__or2_2                63.020    21.760  N
+  sky130_fd_sc_hd__a31o_2               65.320    21.760  N
+  sky130_fd_sc_hd__and2_2               67.160    21.760  FS
+  sky130_fd_sc_hd__or2_2                67.160    21.760  S
+  sky130_fd_sc_hd__xor2_2               68.540    21.760  N
+  sky130_fd_sc_hd__and2_2               74.980    21.760  N
+  sky130_fd_sc_hd__xnor2_2              75.900    21.760  S
+  sky130_fd_sc_hd__nand2_2              77.740    21.760  N
+  sky130_fd_sc_hd__mux2_1               29.900    27.200  FN
+  sky130_fd_sc_hd__dfrtp_2              29.900    27.200  N
+  sky130_fd_sc_hd__dfrtp_2              35.880    27.200  S
+  sky130_fd_sc_hd__mux2_1               36.340    27.200  FS
+  sky130_fd_sc_hd__nor2_2               57.500    27.200  N
+  sky130_fd_sc_hd__and2_2               59.800    27.200  N
+  sky130_fd_sc_hd__nand2_2              61.640    27.200  S
+  sky130_fd_sc_hd__a31o_2               62.560    27.200  FS
+  sky130_fd_sc_hd__xnor2_2              62.560    27.200  N
+  sky130_fd_sc_hd__xor2_2               68.540    27.200  N
+  sky130_fd_sc_hd__a21boi_2             69.920    27.200  S
+  sky130_fd_sc_hd__xnor2_2              69.920    27.200  FS
+  sky130_fd_sc_hd__xor2_2               74.980    27.200  N
+  sky130_fd_sc_hd__a31o_2               75.900    27.200  FS
+  sky130_fd_sc_hd__nand2_2              79.120    27.200  FS
+  sky130_fd_sc_hd__nand2_2              80.960    27.200  N
+  sky130_fd_sc_hd__nor2_2               83.260    27.200  N
+  sky130_fd_sc_hd__mux2_1               22.080    32.640  S
+  sky130_fd_sc_hd__mux2_1               26.220    32.640  S
+  sky130_fd_sc_hd__dfrtp_2              26.220    32.640  FS
+  sky130_fd_sc_hd__mux2_1               29.900    32.640  FN
+  sky130_fd_sc_hd__dfrtp_2              29.900    32.640  N
+  sky130_fd_sc_hd__dfrtp_2              36.340    32.640  FS
+  sky130_fd_sc_hd__nor2_2               59.340    32.640  FS
+  sky130_fd_sc_hd__nor2_2               65.320    32.640  FN
+  sky130_fd_sc_hd__a31o_2               65.780    32.640  S
+  sky130_fd_sc_hd__xor2_2               68.540    32.640  N
+  sky130_fd_sc_hd__a21o_2               68.540    32.640  FN
+  sky130_fd_sc_hd__o21bai_2             69.920    32.640  S
+  sky130_fd_sc_hd__xor2_2               69.920    32.640  FS
+  sky130_fd_sc_hd__a31o_2               75.900    32.640  FS
+  sky130_fd_sc_hd__or2_2                77.740    32.640  N
+  sky130_fd_sc_hd__and2_2               77.740    32.640  FN
+  sky130_fd_sc_hd__nor2_2               79.120    32.640  FS
+  sky130_fd_sc_hd__dfrtp_2              26.220    38.080  FS
+  sky130_fd_sc_hd__dfrtp_2              29.900    38.080  N
+  sky130_fd_sc_hd__mux2_1               36.340    38.080  FS
+  sky130_fd_sc_hd__nor2_2               67.160    38.080  S
+  sky130_fd_sc_hd__nor2_2               69.920    38.080  FN
+  sky130_fd_sc_hd__and2_2               69.920    38.080  S
+  sky130_fd_sc_hd__and2_2               69.920    38.080  N
+  sky130_fd_sc_hd__or2_2                73.600    38.080  FS
+  sky130_fd_sc_hd__a21bo_2              73.600    38.080  S
+  sky130_fd_sc_hd__mux2_1               29.900    43.520  FS
+  sky130_fd_sc_hd__clkbuf_16            30.820    43.520  N
+  sky130_fd_sc_hd__clkbuf_16            31.740    48.960  N
+  sky130_fd_sc_hd__and4bb_2             69.920    48.960  N
+  sky130_fd_sc_hd__and4bb_2             74.520    48.960  S
+  sky130_fd_sc_hd__and3_2               69.920    54.400  FS
+  sky130_fd_sc_hd__mux2_1               29.900    59.840  FS
+  sky130_fd_sc_hd__dfrtp_2              29.900    59.840  N
+  sky130_fd_sc_hd__mux2_1               25.760    65.280  N
+  sky130_fd_sc_hd__dfrtp_2              29.900    65.280  N
+  sky130_fd_sc_hd__clkbuf_16            35.880    65.280  S
+  sky130_fd_sc_hd__mux2_1               26.220    70.720  S
+  sky130_fd_sc_hd__dfrtp_2              26.220    70.720  FS
+  sky130_fd_sc_hd__mux2_1               29.900    70.720  FN
+  sky130_fd_sc_hd__dfrtp_2              29.900    70.720  N
+  sky130_fd_sc_hd__dfrtp_2              36.340    70.720  FS
+  sky130_fd_sc_hd__mux2_1               39.560    70.720  N
+  sky130_fd_sc_hd__mux2_1               25.760    76.160  N
+  sky130_fd_sc_hd__dfrtp_2              26.220    76.160  FS
+  sky130_fd_sc_hd__mux2_1               26.220    76.160  S
+  sky130_fd_sc_hd__dfrtp_2              29.900    76.160  N
+  sky130_fd_sc_hd__dfrtp_2              36.340    76.160  FS
+  sky130_fd_sc_hd__mux2_1               29.900    81.600  FS

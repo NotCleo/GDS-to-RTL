@@ -1,0 +1,96 @@
+GOLDEN CROSS-CHECK OF THE WARM-UP EXTRACTION
+======================================================================
+
+DEF components (decap and tap included) 230
+GDS logic placements                    79
+placements matched to a DEF component   79  ALL
+
+net partition vs warmup/01_netlist.v
+  exact matches  84
+  mismatches     0
+  golden nets    84
+
+VERDICT: the extracted netlist is the golden netlist. Identical partition of
+         pins into nets, identical port attachment. Names recovered from the DEF.
+
+NAMES RECOVERED (extracted index -> the name the flow deleted)
+----------------------------------------------------------------------
+  u0    clkbuf_16    clkbuf_0_clk
+  u1    and4bb_2     cmp0/_3_
+  u2    and3_2       cmp0/_2_
+  u3    clkbuf_16    clkbuf_1_1__f_clk
+  u4    mux2_1       sr_a/_11_
+  u5    mux2_1       sr_a/_12_
+  u6    mux2_1       sr_a/_14_
+  u7    mux2_1       sr_a/_08_
+  u8    dfrtp_2      sr_a/_21_
+  u9    dfrtp_2      sr_a/_20_
+  u10   dfrtp_2      sr_a/_19_
+  u11   dfrtp_2      sr_a/_18_
+  u12   dfrtp_2      sr_a/_16_
+  u13   dfrtp_2      sr_a/_22_
+  u14   mux2_1       sr_a/_13_
+  u15   mux2_1       sr_a/_10_
+  u16   mux2_1       sr_a/_15_
+  u17   mux2_1       sr_a/_09_
+  u18   dfrtp_2      sr_a/_23_
+  u19   dfrtp_2      sr_a/_17_
+  u20   mux2_1       sr_b/_10_
+  u21   mux2_1       sr_b/_09_
+  u22   mux2_1       sr_b/_08_
+  u23   dfrtp_2      sr_b/_22_
+  u24   dfrtp_2      sr_b/_19_
+  u25   dfrtp_2      sr_b/_23_
+  u26   dfrtp_2      sr_b/_18_
+  u27   mux2_1       sr_b/_15_
+  u28   mux2_1       sr_b/_12_
+  u29   mux2_1       sr_b/_14_
+  u30   dfrtp_2      sr_b/_17_
+  u31   clkbuf_16    clkbuf_1_0__f_clk
+  u32   dfrtp_2      sr_b/_21_
+  u33   dfrtp_2      sr_b/_16_
+  u34   dfrtp_2      sr_b/_20_
+  u35   mux2_1       sr_b/_13_
+  u36   mux2_1       sr_b/_11_
+  u37   a31o_2       add0/_50_
+  u38   nor2_2       add0/_66_
+  u39   nor2_2       add0/_41_
+  u40   nor2_2       add0/_53_
+  u41   nor2_2       add0/_49_
+  u42   a21boi_2     add0/_68_
+  u43   o21bai_2     add0/_72_
+  u44   and2_2       add0/_71_
+  u45   and2_2       add0/_65_
+  u46   xor2_2       add0/_34_
+  u47   xor2_2       add0/_58_
+  u48   xor2_2       add0/_52_
+  u49   xor2_2       add0/_40_
+  u50   a31o_2       add0/_63_
+  u51   or2_2        add0/_60_
+  u52   and2_2       add0/_55_
+  u53   and4bb_2     cmp0/_4_
+  u54   or2_2        add0/_37_
+  u55   a21bo_2      add0/_45_
+  u56   and2_2       add0/_43_
+  u57   nor2_2       add0/_56_
+  u58   nor2_2       add0/_44_
+  u59   a21o_2       add0/_57_
+  u60   or2_2        add0/_54_
+  u61   nor2_2       add0/_48_
+  u62   nand2_2      add0/_61_
+  u63   and2_2       add0/_33_
+  u64   a31o_2       add0/_62_
+  u65   or2_2        add0/_42_
+  u66   xnor2_2      add0/_64_
+  u67   a31o_2       add0/_51_
+  u68   xor2_2       add0/_46_
+  u69   xnor2_2      add0/_69_
+  u70   nand2_2      add0/_59_
+  u71   nand2_2      add0/_38_
+  u72   nor2_2       add0/_67_
+  u73   nand2_2      add0/_32_
+  u74   and2_2       add0/_39_
+  u75   a31o_2       add0/_36_
+  u76   xnor2_2      add0/_35_
+  u77   or2_2        add0/_70_
+  u78   and2_2       add0/_47_

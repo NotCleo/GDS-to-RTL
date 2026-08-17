@@ -1,0 +1,13 @@
+REPLAY OF THE RECORDED SILICON WAVEFORM
+======================================================================
+
+source            puzzle/example_inputs.vcd
+$date             'Sat Dec 31 23:59:60 2016'
+$version          'Leave no stone unturned! But for this file, consider looking at it in a waveform viewer instead.'
+rising clk edges  312
+outputs compared  624
+mismatches        0
+success ever high no
+
+VERDICT: a netlist recovered from raw polygons reproduces the recorded
+         chip outputs exactly, on a trace it was never fitted to.

@@ -1,0 +1,119 @@
+EASTER EGG 02
+"PER ARENAM AD ASTRA", IN MORSE CODE, UNDER THE DIE
+======================================================================
+
+WHAT
+  A strip of 36 bars in two widths, spelling out in International Morse:
+
+      PER ARENAM AD ASTRA
+
+  Latin, roughly "through the sand, to the stars", playing on per aspera
+  ad astra. Sand is silicon and the puzzle is about stars, so it works
+  twice.
+
+WHERE
+  puzzle/puzzle.gds
+    layer 200/0, which is not a sky130 mask layer at all
+    all 36 bars at y = -52.72 um, spanning x = 1.33 .. 198.67 um
+    below the die: the placement area starts at y = 0, so nothing here
+    would ever be fabricated
+
+  The bars are placements of two structures that are neither standard cells
+  nor vias:
+
+      INTERNAL_3   1.38 um wide x 2.72 um tall   21 placements   the dot
+      INTERNAL_7   4.14 um wide x 2.72 um tall   15 placements   the dash
+
+  4.14 / 1.38 = 3 exactly.
+
+HOW
+  This is the one I am happiest about, because I found it without knowing
+  there was anything to find. It came straight out of the GDS inventory,
+  which is the first thing my pipeline builds, and three separate lines of
+  that inventory pointed at the same place.
+
+  1. The top cell's bounding box came back as
+
+         (0.00, -52.72) .. (200.00, 300.00)
+
+     A negative y. The placement rows of a standard cell design start at
+     y = 0, so there is something drawn 52.72 um below where the chip is.
+
+  2. The placement histogram splits into logic cells, vias, taps, decaps,
+     antenna diodes, and a last bucket for anything that is none of those.
+     That bucket was not empty:
+
+         21 x INTERNAL_3
+         15 x INTERNAL_7
+
+     36 placements of two structures with no pins, no transistors and names
+     no PDK uses.
+
+  3. The layer histogram lists every (layer, datatype) pair in the file
+     against the sky130 layer map, and flags the ones the map does not
+     know. Layer 200/0 is flagged. It carries 2 polygons: one inside each
+     of those two structures.
+
+  Then the confirming step, which is the one that made it a message rather
+  than a curiosity. Both the puzzle and the warm-up went through the same
+  flow, so any layer present in one and absent from the other was put there
+  on purpose. That diff gives three entries and separates cleanly:
+
+      66/15    only inside standard cells  -> a cell-library difference
+      81/23    only inside standard cells  -> a cell-library difference
+      200/0    outside every standard cell -> hand added
+
+  66/15 and 81/23 appear only because the puzzle instantiates conb_1 and
+  diode_2 and the warm-up has neither. 200/0 is the only genuinely
+  hand-added layer in the file. Nothing else in either design is decoration.
+
+  With 36 bars in two widths at a 1:3 ratio, the thing to measure is the
+  gaps. Dividing them by the narrow bar width, every gap is exactly 1, 3
+  or 7 units:
+
+    widths  : . - - . . . - . . - . - . . - . . - - - . - - . . . - . . . - . - . . -
+    gaps    : 1 1 1 3 3 1 1 7 1 3 1 1 3 3 1 3 1 3 1 7 1 3 1 1 7 1 3 1 1 3 3 1 1 3 1
+
+  Short mark, long mark at 3, gaps at 1 inside a letter, 3 between letters,
+  7 between words. That is International Morse timing exactly, and it
+  decodes with no ambiguity:
+
+    P    .--.
+    E    .
+    R    .-.
+         (word gap)
+    A    .-
+    R    .-.
+    E    .
+    N    -.
+    A    .-
+    M    --
+         (word gap)
+    A    .-
+    D    -..
+         (word gap)
+    A    .-
+    S    ...
+    T    -
+    R    .-.
+    A    .-
+
+  4 + 1 + 3 + 2 + 3 + 1 + 2 + 2 + 2 + 2 + 3 + 2 + 3 + 1 + 3 + 2 = 36 marks.
+  Every bar is accounted for.
+
+  The instance counts settle which cell is which without measuring
+  anything: the decode needs exactly 21 dots and 15 dashes, INTERNAL_3 is
+  placed 21 times and INTERNAL_7 is placed 15 times. So INTERNAL_3 is the
+  dot and INTERNAL_7 is the dash, which the widths then confirm. The 3 and
+  the 7 in the names are the letter gap and the word gap, the two numbers
+  you need to know to read the strip at all.
+
+WHEN
+  Day 1, within an hour of the logo, as soon as the inventory script
+  printed a negative bounding box and two structures it could not classify.
+
+  No script in this repository decodes it any more, because it does not
+  need to. The pipeline's inventory stage still prints the negative
+  bounding box, the two unclassified structures and the unknown layer, and
+  from there the decode is done by hand once. It is in
+  puzzle-solution/01_gds_inventory.txt.

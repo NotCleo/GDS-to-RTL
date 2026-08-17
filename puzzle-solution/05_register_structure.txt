@@ -1,0 +1,103 @@
+REGISTER-LEVEL STRUCTURE OF THE RECOVERED NETLIST
+======================================================================
+
+logic cells      728
+nets             738
+flip-flops       92  {'dfrtp_2': 84, 'dfxtp_2': 4, 'dfstp_2': 4}
+clock roots      ['clk']
+feedback groups  26
+  of size 2      23   <- two-bit counters
+
+FEEDBACK GROUPS (Tarjan SCC over the register graph)
+----------------------------------------------------------------------
+  size  9  ports ['enable', 'rst_n']
+           u350_dfrtp_2 u352_dfrtp_2 u354_dfrtp_2 u355_dfrtp_2 u363_dfrtp_2 u467_dfrtp_2 u468_dfrtp_2 u471_dfrtp_2 u475_dfrtp_2
+  size  8  ports ['I', 'enable', 'rst_n']
+           u252_dfrtp_2 u253_dfrtp_2 u254_dfrtp_2 u255_dfrtp_2 u263_dfstp_2 u264_dfstp_2 u265_dfstp_2 u266_dfstp_2
+  size  4  ports none
+           u34_dfxtp_2 u35_dfxtp_2 u36_dfxtp_2 u37_dfxtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u106_dfrtp_2 u178_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u107_dfrtp_2 u179_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u108_dfrtp_2 u180_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u117_dfrtp_2 u189_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u118_dfrtp_2 u190_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u121_dfrtp_2 u153_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u122_dfrtp_2 u141_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u123_dfrtp_2 u143_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u124_dfrtp_2 u142_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u126_dfrtp_2 u188_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u194_dfrtp_2 u209_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u197_dfrtp_2 u215_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u198_dfrtp_2 u226_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u231_dfrtp_2 u233_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u232_dfrtp_2 u601_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u416_dfrtp_2 u420_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u595_dfrtp_2 u661_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u596_dfrtp_2 u614_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u597_dfrtp_2 u625_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u600_dfrtp_2 u622_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u602_dfrtp_2 u635_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u603_dfrtp_2 u634_dfrtp_2
+  size  2  ports ['I', 'enable', 'rst_n']
+           u647_dfrtp_2 u651_dfrtp_2
+
+WHAT success DEPENDS ON
+----------------------------------------------------------------------
+  1 flip-flops, ports []
+  ['u28_dfrtp_2']
+
+WHAT O[7:0] DEPENDS ON
+----------------------------------------------------------------------
+  O[0]  16 flip-flops, ports []
+  O[1]  16 flip-flops, ports []
+  O[2]  16 flip-flops, ports []
+  O[3]  16 flip-flops, ports []
+  O[4]  16 flip-flops, ports []
+  O[5]  16 flip-flops, ports []
+  O[6]  16 flip-flops, ports []
+  O[7]  16 flip-flops, ports []
+
+THE SET CONDITION OF u28_dfrtp_2, DECOMPILED
+----------------------------------------------------------------------
+Expanded through the combinational logic and stopped at flip-flop
+outputs and ports. Read the shape rather than the detail: a wide AND
+tree that decomposes into two groups of eleven near-identical two-bit
+comparisons, every one of them against the value two.
+
+  D = (((!u390.Q & (!u419.Q & (((u451.Q & u449.Q) & u460.Q) & ((!u459.Q & !u461.Q)
+    & !(((u453.Q | u447.Q) | u454.Q)))))) & (((!u26.Q & u350.Q) & ((((((
+    !u622.Q & u600.Q) & (u596.Q & !u614.Q)) & (!u232.Q & u601.Q)) & (!u625.Q
+    & u597.Q)) & ((((u647.Q & !u651.Q) & (!u661.Q & u595.Q)) & (!u603.Q &
+    u634.Q)) & (u635.Q & !u602.Q))) & (((!u215.Q & u197.Q) & (u233.Q &
+    !u231.Q)) & (!u226.Q & u198.Q)))) & ((((((!u106.Q & u178.Q) & (u107.Q &
+    !u179.Q)) & (!u121.Q & u153.Q)) & (!u108.Q & u180.Q)) & ((((u190.Q &
+    !u118.Q) & (!u194.Q & u209.Q)) & (!u126.Q & u188.Q)) & (u117.Q & !u189.Q
+    ))) & (((!u122.Q & u141.Q) & (u142.Q & !u124.Q)) & (!u123.Q & u143.Q))))
+    ) | (u28.Q & (u26.Q | !u350.Q)))
+
+The same treatment on any of the 23 counter pairs expands into megabytes
+of repeated subexpression and says nothing. That asymmetry is itself the
+finding: reading works for the control logic and fails for the counters,
+so the counters get probed instead.

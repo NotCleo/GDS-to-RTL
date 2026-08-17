@@ -1,0 +1,103 @@
+THE CONSTRAINT MAP, READ OUT OF THE SILICON
+======================================================================
+
+trials            121 (one star, one cell, nothing else)
+two-bit counters  23
+grids accepted    0
+
+WHAT EACH COUNTER WATCHES
+----------------------------------------------------------------------
+  u194_dfrtp_2     u209_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 0
+  u118_dfrtp_2     u190_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 1
+  u117_dfrtp_2     u189_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 2
+  u126_dfrtp_2     u188_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 3
+  u107_dfrtp_2     u179_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 4
+  u106_dfrtp_2     u178_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 5
+  u108_dfrtp_2     u180_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 6
+  u121_dfrtp_2     u153_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 7
+  u124_dfrtp_2     u142_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 8
+  u122_dfrtp_2     u141_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 9
+  u123_dfrtp_2     u143_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   COLUMN 10
+  u597_dfrtp_2     u625_dfrtp_2      14 cells at end of frame,  14 the moment the star arrives   REGION A
+  u231_dfrtp_2     u233_dfrtp_2      21 cells at end of frame,  21 the moment the star arrives   REGION B
+  u600_dfrtp_2     u622_dfrtp_2       7 cells at end of frame,   7 the moment the star arrives   REGION C
+  u596_dfrtp_2     u614_dfrtp_2       5 cells at end of frame,   5 the moment the star arrives   REGION D
+  u197_dfrtp_2     u215_dfrtp_2      28 cells at end of frame,  28 the moment the star arrives   REGION E
+  u595_dfrtp_2     u661_dfrtp_2       8 cells at end of frame,   8 the moment the star arrives   REGION F
+  u647_dfrtp_2     u651_dfrtp_2      11 cells at end of frame,  11 the moment the star arrives   REGION G
+  u602_dfrtp_2     u635_dfrtp_2       9 cells at end of frame,   9 the moment the star arrives   REGION H
+  u198_dfrtp_2     u226_dfrtp_2       6 cells at end of frame,   6 the moment the star arrives   REGION I
+  u232_dfrtp_2     u601_dfrtp_2       8 cells at end of frame,   8 the moment the star arrives   REGION J
+  u603_dfrtp_2     u634_dfrtp_2       4 cells at end of frame,   4 the moment the star arrives   REGION K
+  u416_dfrtp_2     u420_dfrtp_2       0 cells at end of frame, 110 the moment the star arrives   ROW, shared
+
+row counters 1   column counters 11   irregular groups 11
+
+There are eleven column counters and eleven region counters, not thirty-three.
+The eleven rows share one counter, and at the end of the frame it is always
+zero, so a naive read says it watches nothing. Sampling it in the cycle each
+star arrives instead: 110 of 121 trials move it. The 11 that do not are exactly
+  [10, 21, 32, 43, 54, 65, 76, 87, 98, 109, 120]
+which is column 10 of every row: the last cell of a row, where the counter is
+cleared in the same cycle it is bumped. One counter, cleared at every row
+boundary, only works if the grid arrives row-major at one cell per clock, so
+exactly one row is ever in flight. That fixes the input format before
+anything else confirms it.
+
+REGION MAP
+----------------------------------------------------------------------
+      0  1  2  3  4  5  6  7  8  9 10
+   0 A  A  A  A  A  B  B  C  D  D  E
+   1 A  A  F  A  A  B  C  C  D  D  E
+   2 A  A  F  B  B  B  B  C  C  D  E
+   3 A  A  F  B  G  G  G  E  C  C  E
+   4 F  A  F  B  G  E  E  E  E  E  E
+   5 F  F  F  B  G  G  G  E  H  H  H
+   6 B  B  B  B  B  B  G  E  H  I  I
+   7 B  J  J  J  G  G  G  E  H  I  I
+   8 B  J  J  K  E  E  E  E  H  I  I
+   9 B  B  J  K  K  E  E  E  H  H  H
+  10 B  J  J  K  E  E  E  E  E  E  E
+
+  region sizes {'A': 14, 'B': 21, 'C': 7, 'D': 5, 'E': 28, 'F': 8, 'G': 11, 'H': 9, 'I': 6, 'J': 8, 'K': 4}  sum 121
+  cells with no region: none
+
+Eleven irregular contiguous blobs that tile the grid, plus two per row,
+two per column and a no-touch rule. That is a Star Battle.
+
+WHERE THE COUNTERS SIT ON THE DIE
+----------------------------------------------------------------------
+  die (0.0, -52.7) .. (200.0, 300.0) um
+         x        y  what         cells  flops
+    116.61    48.96  REGION F       8  u595_dfrtp_2+u661_dfrtp_2
+    119.37    68.00  REGION G      11  u647_dfrtp_2+u651_dfrtp_2
+    119.60    78.88  REGION H       9  u602_dfrtp_2+u635_dfrtp_2
+    115.00    78.88  REGION K       4  u603_dfrtp_2+u634_dfrtp_2
+    119.60    95.20  REGION D       5  u596_dfrtp_2+u614_dfrtp_2
+    119.14    97.92  REGION C       7  u600_dfrtp_2+u622_dfrtp_2
+     80.50   103.36  ROW, shared     0  u416_dfrtp_2+u420_dfrtp_2
+    126.27   108.80  REGION A      14  u597_dfrtp_2+u625_dfrtp_2
+    115.00   119.68  REGION J       8  u232_dfrtp_2+u601_dfrtp_2
+    124.20   133.28  REGION B      21  u231_dfrtp_2+u233_dfrtp_2
+    126.27   138.72  REGION E      28  u197_dfrtp_2+u215_dfrtp_2
+    121.44   146.88  REGION I       6  u198_dfrtp_2+u226_dfrtp_2
+    115.23   184.96  COLUMN 0      11  u194_dfrtp_2+u209_dfrtp_2
+    119.60   206.72  COLUMN 1      11  u118_dfrtp_2+u190_dfrtp_2
+    119.37   212.16  COLUMN 2      11  u117_dfrtp_2+u189_dfrtp_2
+    115.23   217.60  COLUMN 3      11  u126_dfrtp_2+u188_dfrtp_2
+    114.77   231.20  COLUMN 4      11  u107_dfrtp_2+u179_dfrtp_2
+    119.60   239.36  COLUMN 5      11  u106_dfrtp_2+u178_dfrtp_2
+    120.06   244.80  COLUMN 6      11  u108_dfrtp_2+u180_dfrtp_2
+    114.77   258.40  COLUMN 7      11  u121_dfrtp_2+u153_dfrtp_2
+    115.23   274.72  COLUMN 9      11  u122_dfrtp_2+u141_dfrtp_2
+    119.60   280.16  COLUMN 8      11  u124_dfrtp_2+u142_dfrtp_2
+    119.60   285.60  COLUMN 10     11  u123_dfrtp_2+u143_dfrtp_2
+
+  the checker is one vertical column at x = 114.8 .. 126.3 um of a 200 um wide die
+  11 column slices  y = 185.0 .. 285.6
+     a gap         y = 146.9 .. 185.0
+  11 region slices  y = 49.0 .. 146.9
+   1 row slice     off to the side at x = 80.5, y = 103.4
+
+  11 + 11 + 1, drawn on the die. That is the architecture, readable
+  off a floorplan before a single gate is understood.

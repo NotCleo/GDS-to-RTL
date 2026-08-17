@@ -1,0 +1,19 @@
+SOLVING THE WARM-UP FROM ITS EXTRACTED GATES
+======================================================================
+
+No hand tracing, no reading of 00_source.v. The gates are unrolled
+over K clock edges, Tseitin encoded, and asked one question: is there
+an input sequence that drives S high?
+
+  K =  6 edges   UNSAT
+  K =  7 edges   UNSAT
+  K =  8 edges   SAT
+
+minimum depth      8 clock edges
+A, first 8 edges   11110010 = 242
+B, first 8 edges   11111110 = 254
+A + B              496
+
+496 is the third perfect number: 1+2+4+8+16+31+62+124+248 = 496.
+A and B are eight bits each, so A + B = 496 has exactly 15 solutions,
+and the solver is free to return any one of them.

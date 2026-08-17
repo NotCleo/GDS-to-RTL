@@ -1,0 +1,61 @@
+EASTER EGG 03
+"LEAVE NO STONE UNTURNED!" IN THE WAVEFORM HEADER
+======================================================================
+
+WHAT
+  A note left for a human in the $version field of the sample waveform:
+
+      Leave no stone unturned! But for this file, consider looking at it
+      in a waveform viewer instead.
+
+  No simulator writes a $version field like that. iverilog writes
+  "Icarus Verilog", Verilator writes its own banner. This is a person
+  talking to you, and it is telling you two things: that there is more in
+  this file than the obvious, and where to go and look for it.
+
+WHERE
+  puzzle/example_inputs.vcd, lines 4 to 6, the $version block:
+
+      $date
+        Sat Dec 31 23:59:60 2016
+      $end
+      $version
+        Leave no stone unturned! But for this file, consider looking at it
+        in a waveform viewer instead.
+      $end
+      $timescale
+        1ps
+      $end
+
+HOW
+  By opening the file in a text editor.
+
+  That sounds too obvious to write down, so here is the honest version. A
+  VCD is a waveform, so my instinct was to treat it as one: drag it into
+  Surfer, or feed it to a parser. I did both. What I did not do at first
+  was read it as text, which is what it actually is, and the line is inside
+  the first ten lines of the file.
+
+  I got there by deciding to be systematic rather than clever. There are
+  only three puzzle files, so I gave each one a first pass that assumed
+  nothing:
+
+      puzzle.gds            open in a viewer, then inventory it
+      layout.png            read the labels, note the ports
+      example_inputs.vcd    open it raw, then open it in Surfer
+
+  The raw pass on the VCD is what found this, and eggs 04 and 06 with it.
+  It also cost nothing: the header is nine lines long.
+
+  For completeness, all three files also went through exiftool. Nothing.
+  layout.png is a plain 880 x 1000 RGBA PNG with no comment, author or
+  custom chunk, and the other two are not formats exiftool has anything to
+  say about. That negative result is worth recording because it is the
+  obvious first thing to try, and it is a dead end. The interesting metadata
+  in this puzzle is inside the file formats, not attached to them.
+
+WHEN
+  Day 1, during the first pass over the three provided files, a few minutes
+  after the GDS viewer finds. It is quoted verbatim in
+  puzzle-solution/04_vcd_replay.txt, because the pipeline prints both
+  header fields as part of validating the extraction against this file.
