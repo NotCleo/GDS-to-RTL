@@ -84,7 +84,13 @@ The puzzle provided the following files :
 
 ----
 
-##### Note : I ran the three files through exiftool for a preliminary check and found nothing interesting and when I ran the warmup files (listed below); we notice the file size going from 1.2 KB (00_source.v) -> 19 KB (01_netlist.v) -> 30 KB (02_netlist_with_power_rails.v) -> 112 KB (03_post_place_and_route.def) -> 306KB (04_final.gds). see [exiftool logs](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/exiftool.log).
+##### Note : 
+
+I ran the three puzzle files through exiftool for a preliminary check and found nothing interesting.
+
+I ran the warmup files and you will notice the file size going from 1.2 KB (00_source.v) -> 19 KB (01_netlist.v) -> 30 KB (02_netlist_with_power_rails.v) -> 112 KB (03_post_place_and_route.def) -> 306KB (04_final.gds). 
+
+see logs for both tests [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/exiftool.log).
 
 
 -----
