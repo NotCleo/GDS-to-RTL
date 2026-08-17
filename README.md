@@ -169,7 +169,7 @@ The following table summarizes what was utilized
     python3 -m venv .venv
     .venv/bin/pip install -r requirements.txt
     sudo apt install yosys iverilog python3-tk
-    mkdir -p ~/Downloads/surfer_install && cd ~/Downloads/surfer_install
+    mkdir -p ~/surfer_install && cd ~/surfer_install
     wget "https://gitlab.com/api/v4/projects/42073614/jobs/artifacts/main/raw/surfer_linux.zip?job=linux_build" -O surfer_linux.zip
     unzip surfer_linux.zip
     chmod +x surfer
