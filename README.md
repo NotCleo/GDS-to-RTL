@@ -47,9 +47,13 @@ A perfect number is a positive whole number that equals the sum of its positive 
     
 ----
 
-## Summary of README
+## Documentation (20 min read)
 
-I have documented my entire solution's implementation is this readme file, below table is a glimpse of what follows;
+I have documented my entire solution's implementation is this single readme file, below table is a glimpse of what follows;
+
+#### Sections (I) through (VII) discuss the core findings (5 min read)
+
+#### Sections (VIII) discusses the complete implementation details (15 min read) 
 
 | Title | What it is about |
 |---|---|
@@ -60,7 +64,7 @@ I have documented my entire solution's implementation is this readme file, below
 | (V) Success Waveform  | The puzzle's main solution/deliverable component |
 | (VI) How to run | Quick start / Installations |
 | (VII) Directory Layout  | Solution's File layout |
-| (VIII) Read More  | Break out links for further descriptions |
+| (VIII) Full Picture  | Complete breakdown of the solution |
 
 ----
 
@@ -230,6 +234,7 @@ The following table summarizes what was utilized
     python3 -m venv .venv
     .venv/bin/pip install -r requirements.txt
     sudo apt install yosys iverilog python3-tk
+    sudo apt install tree -y
     mkdir -p ~/surfer_install && cd ~/surfer_install
     wget "https://gitlab.com/api/v4/projects/42073614/jobs/artifacts/main/raw/surfer_linux.zip?job=linux_build" -O surfer_linux.zip
     unzip surfer_linux.zip
@@ -242,13 +247,11 @@ The following table summarizes what was utilized
 #### To view the run results (for puzzle): 
 
     cd results/puzzle
-    sudo apt install tree -y
     tree
 
 #### To view the run results (for warmup): 
 
     cd results/warmup
-    sudo apt install tree -y
     tree
 
 In either directories, you will find all deliverable files, but the main list of output files have been listed in a dedicated section below.
@@ -257,7 +260,9 @@ In either directories, you will find all deliverable files, but the main list of
 
 If you want to attempt complete OpenROAD run, please watch this [short video](https://www.youtube.com/watch?v=QnJzoJjC7RQ)
 
-#### Note : You can see the complete run log [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/run.log) and for more details about the files produced by the pipeline, see [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/RUN.md).
+#### Note :
+
+You can see the complete run log [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/run.log) and for more details about the files produced by the pipeline, see [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/RUN.md).
 
 ----
 
@@ -275,13 +280,7 @@ If you want to attempt complete OpenROAD run, please watch this [short video](ht
 | `Images/` | Screenshots used by the READMEs. |
 | `extra-stuff/` | Working notes and a full run log. |
 
-`run.sh` also writes `results/`, which is 7 MB of intermediates and is
-gitignored. Every file in it is filed permanently under `puzzle-task/` and
-`warmup-task/`, so nothing is lost by not committing it.
-
-----
-
-## (VIII) Read more
+## Read more
 
 | you want | go here |
 |---|---|
@@ -295,3 +294,8 @@ gitignored. Every file in it is filed permanently under `puzzle-task/` and
 | To play the puzzle yourself | [`TwoNotTouch-Interactive-Puzzle/README.md`](TwoNotTouch-Interactive-Puzzle/README.md) |
 | Viewer setup, tooling notes, dead ends | [`extra-stuff/tips-and-personal-notes.txt`](extra-stuff/tips-and-personal-notes.txt) |
 | Jane Street's original brief | [`Challenge-README.md`](Challenge-README.md) |
+
+
+----
+
+## (VIII) Full Picture 
