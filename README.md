@@ -36,6 +36,7 @@ Below table lists all final deliverable files / outputs for the Puzzle :
 | (VI) "Switch to ASCII" (Reading Waveforms in ASCII) | Found in [sucesss_inputs.vcd](https://blog.janestreet.com/using-ascii-waveforms-to-test-hardware-designs/)|
 | (VII) "Jane Street logo, etched in metal 2" | Found in [puzzle.gds](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/puzzle.gds) |
 | (VIII) "The night sky awaits" | Found in [example_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/example_inputs.vcd) |
+| (IX) 496 (3rd Perfect Number in warmup puzzele) | Found in [00_source.v](https://github.com/NotCleo/GDS-to-RTL/blob/main/warmup-task/00_source.v) |
 
 
 ----
