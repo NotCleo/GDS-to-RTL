@@ -354,3 +354,4 @@ that instead gave 79 out of 79 immediately.
 - Seeing the third check pass helped as the two netlists (golden and extracted) are identical if and only if they split the same set of pins into the same groups, with the same ports attached to the same groups.
 - At this stage, I could prove exactness while my extracted netlist still called everything u17 and net_412.
 
+
