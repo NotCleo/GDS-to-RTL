@@ -125,8 +125,6 @@ I ran the warmup files and you will notice the file size going from
 - 112 KB (03_post_place_and_route.def)
 - 306KB (04_final.gds). 
 
-see logs for both tests [here](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/exiftool.log).
-
 
 -----
 
