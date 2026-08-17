@@ -44,6 +44,10 @@ Below table lists all final deliverable files / outputs for the Puzzle :
 A perfect number is a positive whole number that equals the sum of its positive proper divisors, leaving out the number itself;
 
     496 (1 + 2 + 4 + 8 + 16 + 31 + 62 + 124 + 248)
+
+#### Note : 
+
+A total of 9 Easter Eggs = number of positive proper divisors of 496 (PLEASE TAKE THIS AS A JOKE)
     
 ----
 
