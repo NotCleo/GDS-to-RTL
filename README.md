@@ -38,6 +38,13 @@ Below table lists all final deliverable files / outputs for the Puzzle :
 | (VIII) "The night sky awaits" | Found in [example_inputs.vcd](https://github.com/NotCleo/GDS-to-RTL/blob/main/puzzle-task/example_inputs.vcd) |
 | (IX) 496 (3rd Perfect Number in warmup puzzele) | Found in [00_source.v](https://github.com/NotCleo/GDS-to-RTL/blob/main/warmup-task/00_source.v) |
 
+
+#### Note : 
+
+A perfect number is a positive whole number that equals the sum of its positive proper divisors, leaving out the number itself;
+
+    496 (1 + 2 + 4 + 8 + 16 + 31 + 62 + 124 + 248)
+    
 ----
 
 ## Summary of README
