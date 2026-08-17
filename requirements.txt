@@ -29,6 +29,7 @@ shapely>=2.0,<3                 # verified with 2.1.2
 # Battle solve, and the uniqueness enumeration.
 #   used by: 14_uniqueness, 16_starbattle
 z3-solver>=4.12                 # verified with 5.0.0.0
+klayout
 
 
 # ---------------------------------------------------------------------------
