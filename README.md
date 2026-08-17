@@ -303,3 +303,59 @@ You can see the complete run log [here](https://github.com/NotCleo/GDS-to-RTL/bl
 ----
 
 ## (VIII) Full Picture 
+
+- I started with the puzzle.gds file provided, first question, What does a GDS actually contain?
+- A GDS is a geometry file. 
+- It stores polygons, each tagged with a layer number and a datatype, plus a hierarchy of cells that can be instantiated at a position with a rotation and an optional mirror.
+- There is no concept of a wire, a gate, a pin, or a connection. 
+- Two pieces of metal are connected if and only if they physically overlap, and the file does not say so anywhere. 
+- You have to work it out from the coordinates.
+- The standard cells were still named, which is the one significant break I got. 
+- "sky130_fd_sc_hd__nand3_2" tells me what a cell does. 
+- What was stripped is everything above that: which instance is which, what the nets are called, and how the design was organised.
+- Following my instinct to open it in a viewer and stare. I tried the TinyTapeout online viewer, then switched to GDS3D because I wanted to magnify specific sections and the browser viewer fought me. Staring taught me almost nothing.
+- Suppose I did write a netlist extractor (because that was the first thing this challenge requires), and point it at puzzle.gds, and it produces a netlist. How do I know that netlist is right?
+- Fortunately, we have the warmup, either I build the netlist extractor against my puzzle gds and then use the warmup files to golden reference it or the other way round, this table below was what I decided to follow
+
+| stage | what it buys me |
+|---|---|
+| Build the extractor against the warm-up | I can compare to the golden netlist exactly, net by net |
+| Only then point it at the puzzle | Any disagreement later is about the puzzle, not about my tools |
+
+- Before any connectivity work, I just took inventory: what cells are placed, where, in what orientation, and every text label that survived.
+- The warm-up came out at 230 standard cell instances, of which 79 are logic and the rest are well taps and decoupling capacitors. Two shift registers, an adder, a comparator, three clock buffers.
+- Now that I knew how to take inventory off a gds file, came the next question, what do these discrete std cells connect to perform? for this I came to my netlist extraction stage.
+- It would appear next to impossible to take in polygons to output their connectivity, right? but the algorithm is much simpler than I initially thought;
+
+| step | what happens |
+|---|---|
+| 1 | For each conducting layer, take every polygon and merge overlapping ones into islands. Each island is one contiguous piece of conductor. |
+| 2 | Walk the via layers. A via cut that touches island X on the layer below and island Y on the layer above means X and Y are the same electrical node. |
+| 3 | Union-find over all of those relationships. Every resulting connected component is a net. |
+| 4 | For each placed cell, look up where its pins are, find which net covers each pin, and emit Verilog. |
+
+- Step 1 is a union of overlapping polygons per layer. 
+- Step 2 needs a spatial index or it is quadratic and unusable, so it goes through an R-tree. 
+
+#### note : Shapely 2.0 changed `STRtree.query` to take a `predicate` argument and return integer indices rather than geometries. On Shapely 1.8 the call signature does not exist. So 2.0 is a hard floor.
+
+- Step 3,4 come with an interesting find;
+
+| bug | what I did wrong | why it silently broke things | the fix |
+|---|---|---|---|
+| Pin geometry | Used the GDS text labels to decide which polygon is which pin | A label tags exactly one polygon. A real pin is often several polygons at different places in the cell. Pins went missing, and nets that should have been joined stayed separate | Read the pin rectangles out of the PDK's LEF. `PIN ... PORT ... RECT` is the authoritative geometry and lists every rectangle belonging to each pin |
+| Antenna diodes | Treated `diode_2` as an inert protection device and skipped it | The router uses a diode as a convenient place to jump layers and lands on it twice. Skipping it tears one real net into two halves that never reconnect | Treat it as an electrical bridge: its two connections are the same net |
+
+The diode one is the sort of thing that only surfaces if you have ground truth.
+The netlist without diodes had the right cell count, no dangling pins and no
+obvious defect. It just described a different circuit.
+
+There was a third bug, less interesting but more infuriating. To recover
+instance names I matched my extracted placements against the DEF, comparing cell
+type and lower-left corner. I got 0 matches out of 79. Not a few, all of them.
+
+The cause: I was using the geometric bounding box of each cell, and the nwell
+implant overhangs the cell outline. So my box was consistently bigger than the
+real one, and every corner was wrong by the same small amount. What the DEF
+records is the abutment box, which sky130 stores as its own layer, 81/4. Reading
+that instead gave 79 out of 79 immediately.
