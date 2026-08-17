@@ -47,7 +47,7 @@ A perfect number is a positive whole number that equals the sum of its positive 
     
 ----
 
-## Documentation (20 min read)
+## Documentation (20-25 min read)
 
 I have documented my entire solution's implementation is this single readme file, below table is a glimpse of what follows;
 
