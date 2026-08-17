@@ -65,9 +65,9 @@ The puzzle provided the two sets of files :
 
 | File | What it is about | 
 |---|---|
-| (I) [A GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds) (1.4MB) | contains metal, routing, and active transistor layers, with the cell names, net names and hierarchy stripped out |
-| (II) [A Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png) (136KB)| an image of the GDS file with the I/O's labelled for reference |
-| (III)  [An Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd) (8.4KB)|  driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs). |
+| (I) [GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds) (1.4MB) | contains metal, routing, and active transistor layers, with the cell names, net names and hierarchy stripped out |
+| (II) [Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png) (136KB)| an image of the GDS file with the I/O's labelled for reference |
+| (III)  [Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd) (8.4KB)|  driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs). |
 
 #### Set II (Warmup) 
 
