@@ -388,13 +388,13 @@ A total of 9 Easter Eggs = number of positive proper divisors of 496 (PLEASE TAK
     
 ----
 
-## Documentation (50 min read)
+## Documentation (25 min read)
 
 I have documented my entire solution's implementation is this single readme file, below table is a glimpse of what follows;
 
-#### Sections (I) through (VII) discuss the core findings (15 min read)
+#### Sections (I) through (VII) discuss the core findings (5 min read)
 
-#### Sections (VIII) discusses the complete implementation details (35 min read) 
+#### Sections (VIII) discusses the complete implementation details (20 min read) 
 
 | Title | What it is about |
 |---|---|
