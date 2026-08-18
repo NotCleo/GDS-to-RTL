@@ -923,15 +923,13 @@ numbers is in [`RUN.log`](RUN.log).
 
 ### 1. What is actually inside a GDS file
 
-I started with `puzzle/puzzle.gds`, and the first thing I needed to know was what
-kind of file I was holding.
-
-A GDS is a geometry file, and that is all it is. It stores polygons, each tagged
-with a layer number and a datatype, plus a hierarchy of cells that can be placed
-at a position with a rotation and an optional mirror. There is no concept in the
-format of a wire, a gate, a pin, or a connection. Two pieces of metal are
-connected if and only if they physically overlap, and the file never says so
-anywhere. That has to be worked out from the coordinates.
+- I started with `puzzle/puzzle.gds`.
+- The first thing I needed to know was what kind of file I was holding.
+- A GDS is a geometry file.
+- It stores polygons, each tagged with a layer number and a datatype, plus a hierarchy of cells that can be placed at a position with a rotation and an optional mirror.
+- There is no concept in the format of a wire, a gate, a pin, or a connection.
+- Two pieces of metal are connected if and only if they physically overlap, and the file never says so anywhere.
+- That has to be worked out from the coordinates.
 
 | what a GDS keeps | what it does not have |
 |---|---|
@@ -940,29 +938,25 @@ anywhere. That has to be worked out from the coordinates.
 | text labels, if the flow did not strip them | signal names, module boundaries, hierarchy above the cell |
 | a hierarchy of references, with rotation and mirror | anything at all about intent |
 
-One thing survived that mattered enormously: **the standard cells were still
-named.** `sky130_fd_sc_hd__nand3_2` tells me exactly what that cell does, because
-the PDK that defines it is public. What the flow stripped is everything above
-the cell: which instance is which, what the nets were called, and how the design
-was organised.
-
-My first instinct was to open it in a viewer and stare. I tried the Tiny Tapeout
-online viewer, then switched to GDS3D because I wanted to magnify specific
-regions and the browser viewer fought me. Staring taught me almost nothing about
-the circuit. It did turn up one thing, which is section 7 below.
+- One thing survived (mattered enormously): **the standard cells were still
+named.** 
+- `sky130_fd_sc_hd__nand3_2` tells me exactly what that cell does, because
+the PDK that defines it is public.
+- What the flow stripped is everything above the cell: which instance is which, what the nets were called, and how the design was organised.
+- My first instinct was to open it in a viewer and stare.
+- I tried the suggested Tiny Tapeout online viewer, then switched to GDS3D because I wanted to magnify specific regions.
+- Staring did not explain the circuit.
+- It did turn up one thing, which is in section 7 below.
 
 ----
 
 ### 2. Deciding what to build first, and against what
 
-The challenge asks for a netlist extractor, so at some point I have to write one.
-The problem I could see coming is this: suppose I write it, point it at
-`puzzle.gds`, and it produces a netlist. **How would I know that netlist is
-right?** A netlist can parse cleanly, have every pin connected, have no
-duplicate drivers, and still describe a different circuit, because one missed
-overlap splits one net into two and nothing anywhere reports an error.
+- The challenge asks for a netlist extractor, so at some point I need some extraction pipeline prepared.
+- The problem I could see coming is this: suppose I write it, point it at `puzzle.gds`, and it produces a netlist.
+- **How would I know that netlist is right?** A netlist can parse cleanly, have every pin connected, have no duplicate drivers, and still describe a different circuit, because one missed overlap splits one net into two and nothing anywhere reports an error.
 
-The puzzle ships with a warm-up, and the warm-up ships its answer key:
+Thankfully, the puzzle ships with a warmup, and the warmup ships with golden references:
 
 | `warmup/` contains | which is |
 |---|---|
@@ -971,25 +965,20 @@ The puzzle ships with a warm-up, and the warm-up ships its answer key:
 | `03_post_place_and_route.def` | where every one of those gates was placed |
 | `04_final.gds` | the geometry, which is the only thing the puzzle gives me for the real chip |
 
-So the order of work chose itself.
+----
 
 | stage | what it buys me |
 |---|---|
 | Build the extractor against the warm-up | I can compare my output to the golden netlist exactly, net by net, and to the DEF placement by placement |
-| Only then point the same code at the puzzle | Any disagreement after that is about the puzzle, not about my tools |
-
-Nothing in the pipeline reads a warm-up answer file when it processes the puzzle.
-The warm-up is the test bench for the extractor, and then it is finished with.
+| Only then point the same code at the puzzle | Any disagreement after that is about the puzzle, not about my pipeline |
 
 ----
 
 ### 3. Inventory, before any connectivity work
 
-Before trying to work out what is connected to what, I wanted a plain bill of
-materials: which cells are placed, where, in what orientation, and every text
-label that survived. No interpretation, just counting. This is stage **W1** for
-the warm-up and **P1** for the puzzle, and it writes
-`01_gds_inventory.txt` in each solution directory.
+- Before trying to work out what is connected to what, I wanted an inventory: which cells are placed, where, in what orientation, and every text label that survived.
+- No interpretation as of yet, just counting.
+- This is stage **W1** for the warm-up and **P1** for the puzzle, and it writes `01_gds_inventory.txt` in each solution directory.
 
 | | puzzle | warm-up |
 |---|---|---|
@@ -1006,11 +995,10 @@ the warm-up and **P1** for the puzzle, and it writes
 | pin labels inside cell definitions | 876 | 186 |
 | top-level text labels | 17 | 10 |
 
-The warm-up is 79 logic cells: two shift registers, an adder, a comparator and
-three clock buffers. Small enough to read by hand, which is the point of it.
+- The warm-up is 79 logic cells: two shift registers, an adder, a comparator and three clock buffers.
+- Just small enough to read by hand, which is the point of it.
 
-The 17 top-level labels on the puzzle are the ports, and they are the last real
-names left anywhere in the file:
+The 17 top-level labels on the puzzle are the ports, and they are the last real names left anywhere in the file:
 
 ```
 'I'        on layer 70/5 at (  0.30,  79.22)
@@ -1021,17 +1009,14 @@ names left anywhere in the file:
 'success'  on layer 70/5 at (199.70, 285.94)
 ```
 
-Inputs down the left edge, outputs down the right, exactly as the hint image in
-section (I) draws them. Two rows of that table are odd and both turn out to
-matter, which is section 9.
+- Inputs down the left edge, outputs down the right, exactly as the hint image in section (I) draws them. 
 
 ----
 
 ### 4. Turning polygons into a netlist
 
-Now the real question: given a pile of polygons, how do I work out what is
-connected to what? It sounds close to impossible, and the algorithm turns out to
-be four steps.
+- Now the real question: given a pile of polygons, how do I work out what is connected to what?
+- It sounds close to impossible, and the algorithm turns out to be four steps.
 
 | step | what happens |
 |---|---|
@@ -1040,9 +1025,8 @@ be four steps.
 | 3 | Union-find over all of those relationships. Every resulting connected component is a net. |
 | 4 | For each placed cell, look up where its pins are, find which net covers each pin, and emit Verilog. |
 
-Step 1 is a grouping problem over shapes. Step 2 needs a spatial index or it is
-quadratic and unusable, so every lookup goes through an R-tree, which shapely
-provides as `STRtree`.
+- Step 1 is a grouping problem over shapes. 
+- Step 2 needs a spatial index or it is quadratic and unusable, so every lookup goes through an R-tree, which shapely provides as `STRtree`.
 
 > **Note on shapely.** 2.0 changed `STRtree.query` to take a `predicate`
 > argument and to return integer indices rather than geometries. On shapely 1.8
@@ -1050,17 +1034,15 @@ provides as `STRtree`.
 > netlist rather than failing. **2.0 is a hard floor**, and `requirements.txt`
 > pins it.
 
-This is stage **W2** and **P2**, and it writes `02_extracted_netlist.v`.
+- This is stage **W2** and **P2**, and it writes `02_extracted_netlist.v`.
 
 ----
 
 ### 5. Three bugs, each of which produced a clean netlist of the wrong circuit
 
-None of these crashed. All three gave me a netlist that parsed, had no dangling
-pins, had exactly one driver per net, and described a circuit that is not the one
-on the die. Every one of them was caught by the warm-up comparison and by
-nothing else, which is the entire argument for building against the warm-up
-first.
+- None of three bugs (listed in below table) caused any crash. 
+- All three gave me a netlist that parsed, had no dangling pins, had exactly one driver per net, and described a circuit that is not the one on the die.
+- Every one of them was caught by the warm-up comparison and by nothing else, which is the entire argument for building against the warm-up first.
 
 | bug | what I did wrong | why it broke silently | the fix |
 |---|---|---|---|
