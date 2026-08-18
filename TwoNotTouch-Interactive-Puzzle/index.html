@@ -114,10 +114,11 @@
 <div class="rules">
   <h2>How to play</h2>
   <ul>
-    <li><b>Click</b> a cell to mark it with a dot: cannot be a star.</li>
-    <li><b>Double-click</b>, or <b>right-click</b>, or <b>long-press</b> on a
-        phone, to place a star.</li>
-    <li>Click a marked cell again to clear it.</li>
+    <li><b>One click</b> per cell, and it steps round:
+        <b>empty</b> to <b>star</b> to <b>dot</b> and back to empty. A dot means
+        "this one cannot be a star" and is only for your own bookkeeping.</li>
+    <li><b>Right-click</b> steps the other way, so a dot is one click too.</li>
+    <li>On a phone, tap. Same three steps.</li>
   </ul>
   <h2>The rule the chip checks</h2>
   <ul>
@@ -302,16 +303,19 @@ function finish(msg){
   }, 1000);
 }
 
-function cycle(r, c, toStar){
+// One click does one thing, immediately: empty -> star -> dot -> empty.
+// Nothing here waits to find out whether a second click is coming, so there is
+// no delay between the click and the board changing.
+const FORWARD = {0: STAR, 2: DOT, 1: EMPTY};
+const BACKWARD = {0: DOT, 1: STAR, 2: EMPTY};
+
+function cycle(r, c, back){
   if (solved) return;
-  if (toStar) state[r][c] = (state[r][c] === STAR) ? EMPTY : STAR;
-  else        state[r][c] = (state[r][c] === EMPTY) ? DOT : EMPTY;
+  state[r][c] = (back ? BACKWARD : FORWARD)[state[r][c]];
   draw(); verdict();
 }
 
 // -- input ------------------------------------------------------------------
-let pending = null, held = null;
-
 function cellAt(ev){
   const t = ev.target;
   if (!t || t.dataset.r === undefined) return null;
@@ -320,28 +324,13 @@ function cellAt(ev){
 
 svg.addEventListener("click", ev => {
   const cell = cellAt(ev); if (!cell) return;
-  if (pending) clearTimeout(pending);
-  pending = setTimeout(() => { pending = null; cycle(cell[0], cell[1], false); }, 220);
-});
-svg.addEventListener("dblclick", ev => {
-  const cell = cellAt(ev); if (!cell) return;
-  if (pending){ clearTimeout(pending); pending = null; }
-  cycle(cell[0], cell[1], true);
+  cycle(cell[0], cell[1], false);
 });
 svg.addEventListener("contextmenu", ev => {
   const cell = cellAt(ev); if (!cell) return;
   ev.preventDefault();
   cycle(cell[0], cell[1], true);
 });
-svg.addEventListener("touchstart", ev => {
-  const cell = cellAt(ev); if (!cell) return;
-  held = setTimeout(() => {
-    held = null;
-    if (pending){ clearTimeout(pending); pending = null; }
-    cycle(cell[0], cell[1], true);
-  }, 420);
-}, {passive:true});
-svg.addEventListener("touchend", () => { if (held){ clearTimeout(held); held = null; } });
 
 document.getElementById("clear").onclick = () => {
   state = Array.from({length:N}, () => new Array(N).fill(EMPTY));

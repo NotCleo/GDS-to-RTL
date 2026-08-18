@@ -847,11 +847,16 @@ shape that `--layers` accepts, and you pass that PDK's own `--lef` and `--lib`.
 
 One file,
 [`TwoNotTouch-Interactive-Puzzle/index.html`](TwoNotTouch-Interactive-Puzzle/index.html),
-no scripts loaded from anywhere, works offline if you just open the file. Click
-for a dot, double-click or right-click or long-press for a star. The line under
-the board is the verdict the **real chip** returns for the grid you have placed,
-and it reproduces all five of the messages the output ROM holds, including
-`TWO NOT TOUCH`. Solve it and the tab closes itself.
+no scripts loaded from anywhere, works offline if you just open the file.
+
+**One click per cell**, and it steps round: empty, star, dot, empty. Right-click
+steps the other way, so a dot is one click too. Nothing waits to see whether a
+second click is coming, so the board changes the instant you click it, and the
+solution goes in in 22 clicks.
+
+The line under the board is the verdict the **real chip** returns for the grid
+you have placed, and it reproduces all five of the messages the output ROM holds,
+including `TWO NOT TOUCH`. Solve it and the tab closes itself.
 
 The five verdicts on that page were checked against the five grids the solver
 pulled out of the netlist in stage P10, and they agree on all five.

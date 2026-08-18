@@ -53,12 +53,15 @@ so it also works offline if you just open the file:
 
 | | |
 |---|---|
-| single click | puts a dot |
-| double click, or right click, or long press on a phone | puts a star |
-| click a marked cell again | clears it |
+| one click on a cell | steps it round: empty, then star, then dot, then empty again |
+| right click | steps it the other way, so a dot is also one click |
+| tap, on a phone | the same three steps |
 | **Clear** | empties the board |
 | **Fill obvious dots** | marks every cell a placed star already rules out |
 | **Theme** | light or dark |
+
+Nothing waits to find out whether a second click is coming, so the board changes
+the instant you click it. The solution goes in in 22 clicks.
 
 The line under the board is the verdict the **real chip** returns for the grid you
 have placed. It reproduces all five of the messages the output ROM holds, and it
