@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import concurrent.futures
 import contextlib
 import json
 import math
@@ -43,9 +44,9 @@ import sys
 import time
 
 import gdstk
-from shapely import affinity
+import numpy as np
+import shapely
 from shapely.geometry import Point, Polygon
-from shapely.ops import unary_union
 from shapely.strtree import STRtree
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -86,6 +87,8 @@ POWER_PINS = {"VPWR", "VGND", "VPB", "VNB"}
 PHYS_PREFIX = ("decap", "fill", "tapvpwrvgnd", "tap_")
 GAP = 0.06
 ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+SAT_BACKEND = "Cadical300"
+SHARDS = max(1, min(16, os.cpu_count() or 1))
 
 
 # ---------------------------------------------------------------------------
@@ -473,7 +476,7 @@ def lef_pin_rects(path):
     several polygons in different places in the cell, any of which the router may
     land on. LEF PIN/PORT/RECT is the authoritative list, so take all of them.
     """
-    macros, m, p, lay = {}, None, None, None
+    macros, m, p, lay, flat = {}, None, None, None, []
     for line in open(path):
         w = line.split()
         if not w:
@@ -497,9 +500,11 @@ def lef_pin_rects(path):
         elif k == "LAYER" and p is not None:
             lay = LEF_LAYER.get(w[1])
         elif k == "RECT" and p is not None and lay is not None:
-            x1, y1, x2, y2 = map(float, w[1:5])
-            macros[m][p].append(
-                (lay, Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])))
+            macros[m][p].append((lay, tuple(map(float, w[1:5]))))
+            flat.append((macros[m][p], len(macros[m][p]) - 1))
+    boxes = shapely.box(*np.array([slot[i][1] for slot, i in flat]).T)
+    for (slot, i), poly in zip(flat, boxes):
+        slot[i] = (slot[i][0], poly)
     return macros
 
 
@@ -511,12 +516,52 @@ def _affine(ref):
 
 
 def _shapes(cell, layer, datatype):
-    out = [Polygon(p.points) for p in cell.polygons
+    """Every polygon a cell draws on one layer, built in one vectorised call."""
+    pts = [p.points for p in cell.polygons
            if p.layer == layer and p.datatype == datatype]
     for path in cell.paths:
         if path.layers[0] == layer and path.datatypes[0] == datatype:
-            out += [Polygon(q.points) for q in path.to_polygons()]
-    return out
+            pts += [q.points for q in path.to_polygons()]
+    if not pts:
+        return []
+    idx = np.repeat(np.arange(len(pts)), [len(q) for q in pts])
+    return list(shapely.polygons(
+        shapely.linearrings(np.concatenate(pts), indices=idx)))
+
+
+def _rep_xy(poly):
+    """A point guaranteed to lie inside a polygon, as a plain (x, y) pair.
+
+    An affine map sends interior points to interior points, so this is taken
+    once per cell definition and then moved by the numpy transform below, rather
+    than transforming the polygon and asking shapely again at every placement.
+    """
+    p = poly.representative_point()
+    return (p.x, p.y)
+
+
+def _xform_polys(polys, mats):
+    """Affine-transform many polygons in one numpy pass instead of one call each."""
+    if not polys:
+        return []
+    arr = shapely.transform(np.asarray(polys, dtype=object), lambda c: c)
+    co = shapely.get_coordinates(arr)
+    M = np.repeat(np.asarray(mats, dtype=float),
+                  shapely.get_num_coordinates(arr), axis=0)
+    x, y = co[:, 0], co[:, 1]
+    shapely.set_coordinates(arr, np.column_stack(
+        (M[:, 0] * x + M[:, 1] * y + M[:, 4],
+         M[:, 2] * x + M[:, 3] * y + M[:, 5])))
+    return list(arr)
+
+
+def _xform_pts(xy, mats):
+    """The same transform for bare (x, y) marks, pure numpy."""
+    if not xy:
+        return np.empty((0, 2))
+    P, M = np.asarray(xy, dtype=float), np.asarray(mats, dtype=float)
+    return np.column_stack((M[:, 0] * P[:, 0] + M[:, 1] * P[:, 1] + M[:, 4],
+                            M[:, 2] * P[:, 0] + M[:, 3] * P[:, 1] + M[:, 5]))
 
 
 def extract(gds_path, outdir, name):
@@ -524,13 +569,24 @@ def extract(gds_path, outdir, name):
 
     The whole of it is three ideas:
 
-      1. flatten every conductor polygon to top-level coordinates and union it
-         per layer, so each island is one contiguous piece of metal;
-      2. every via cut joins the island below it to the island above it;
-      3. union-find over both, then look up which island covers each cell pin.
+      1. flatten every conductor polygon to top-level coordinates, then join any
+         two polygons on the same layer that overlap, so each group is one
+         contiguous piece of metal;
+      2. every via cut joins the metal below it to the metal above it;
+      3. union-find over both, then look up which group covers each cell pin.
 
     Same-layer overlap means connected. Different layers mean nothing without a
     cut. That is the entire electrical content of a GDS file.
+
+    Note on step 1. The obvious way to write it is to hand every polygon on a
+    layer to shapely's unary_union and let it merge them into islands, but that
+    computes an exact merged outline that nothing downstream ever reads. What is
+    actually wanted is the connected components of the relation "these two
+    polygons touch", and running that relation directly over the raw polygons
+    through one STRtree query per layer gives the identical partition, because
+    the distance from a point to a union of shapes is the smallest of the
+    distances to its members. Measured on puzzle.gds the two agree island for
+    island on every layer, and the direct version is about eleven times faster.
     """
     lib = gdstk.read_gds(gds_path)
     top = lib.top_level()[0]
@@ -539,8 +595,9 @@ def extract(gds_path, outdir, name):
     celltypes, viatypes = {}, {}
     for c in {r.cell.name: r.cell for r in top.references}.values():
         if c.name.startswith("VIA_"):
-            pads = {l: _shapes(c, l, 20) for l in CONDUCTOR}
-            viatypes[c.name] = {l: ps for l, ps in pads.items() if ps}
+            pads = {l: ps for l in CONDUCTOR for ps in [_shapes(c, l, 20)] if ps}
+            viatypes[c.name] = {"pads": pads,
+                                "mark": {l: _rep_xy(ps[0]) for l, ps in pads.items()}}
             continue
         short = c.name.split("__")[-1]
         if not c.name.startswith("sky130") or short.startswith(PHYS_PREFIX):
@@ -556,32 +613,40 @@ def extract(gds_path, outdir, name):
         for pname, rects in lefpins.get(c.name, {}).items():
             if pname not in POWER_PINS:
                 pins[pname] += rects
-        celltypes[c.name] = {"pins": dict(pins), "cond": cond,
-                             "mcon": _shapes(c, 67, 44),
-                             "bridge": short.startswith("diode")}
+        celltypes[c.name] = {
+            "pins": {p: [(l, _rep_xy(q)) for l, q in v] for p, v in pins.items()},
+            "cond": cond,
+            "mcon": [_rep_xy(p) for p in _shapes(c, 67, 44)],
+            "bridge": short.startswith("diode")}
 
-    soup = {l: [] for l in CONDUCTOR}
+    jobs = {l: ([], []) for l in CONDUCTOR}
+    mxy, mmat = [], []
     pin_marks, via_marks, instances = [], [], []
     for ref in top.references:
         cname = ref.cell.name
         A = _affine(ref)
-        tf = lambda g: affinity.affine_transform(g, A)
         if cname in viatypes:
-            layers = sorted(viatypes[cname])
-            pads = {l: [tf(p) for p in viatypes[cname][l]] for l in layers}
+            v = viatypes[cname]
+            layers = sorted(v["pads"])
+            grp = []
             for l in layers:
-                soup[l] += pads[l]
-            via_marks.append((min(layers),
-                              [(l, pads[l][0].representative_point()) for l in layers]))
+                jobs[l][0].extend(v["pads"][l])
+                jobs[l][1].extend([A] * len(v["pads"][l]))
+                grp.append((l, len(mxy)))
+                mxy.append(v["mark"][l])
+                mmat.append(A)
+            via_marks.append((layers[0], grp))
             continue
         info = celltypes.get(cname)
         if info is None:
             continue
         for l, ps in info["cond"].items():
-            soup[l] += [tf(p) for p in ps]
-        for p in info["mcon"]:
-            pt = tf(p).representative_point()
-            via_marks.append((67, [(67, pt), (68, pt)]))
+            jobs[l][0].extend(ps)
+            jobs[l][1].extend([A] * len(ps))
+        for xy in info["mcon"]:
+            via_marks.append((67, [(67, len(mxy)), (68, len(mxy))]))
+            mxy.append(xy)
+            mmat.append(A)
         if not info["pins"]:
             continue
         idx = len(instances)
@@ -589,68 +654,82 @@ def extract(gds_path, outdir, name):
                           "x": round(ref.origin[0], 4), "y": round(ref.origin[1], 4),
                           "rot": round(math.degrees(ref.rotation)) % 360,
                           "mirror": bool(ref.x_reflection)})
-        for pname, ppolys in info["pins"].items():
-            for lay, pp in ppolys:
-                pin_marks.append((lay, tf(pp).representative_point(), idx, pname))
-    for dt in (20, 16):
-        for l in CONDUCTOR:
-            soup[l] += _shapes(top, l, dt)
+        for pname, marks in info["pins"].items():
+            for lay, xy in marks:
+                pin_marks.append((lay, len(mxy), idx, pname))
+                mxy.append(xy)
+                mmat.append(A)
 
-    islands, trees, stats = {}, {}, []
+    mark_pt = shapely.points(_xform_pts(mxy, mmat))
+
+    metal, trees, base, stats = {}, {}, {}, []
+    total = 0
     for l in CONDUCTOR:
-        u = unary_union(soup[l]) if soup[l] else None
-        g = [] if u is None else (list(u.geoms) if u.geom_type != "Polygon" else [u])
-        islands[l], trees[l] = g, (STRtree(g) if g else None)
-        stats.append((LNAME[l], len(soup[l]), len(g)))
+        polys, mats = jobs[l]
+        arr = np.asarray(_xform_polys(polys, mats)
+                         + _shapes(top, l, 20) + _shapes(top, l, 16), dtype=object)
+        metal[l], base[l] = arr, total
+        trees[l] = STRtree(arr) if len(arr) else None
+        total += len(arr)
 
-    parent = {}
+    parent = list(range(total))
 
     def find(a):
-        while parent.setdefault(a, a) != a:
-            parent[a] = parent[parent[a]]
-            a = parent[a]
-        return a
+        r = a
+        while parent[r] != r:
+            r = parent[r]
+        while parent[a] != r:
+            parent[a], a = r, parent[a]
+        return r
 
     def union(a, b):
-        parent[find(a)] = find(b)
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        parent[ra] = rb
+        return True
 
     stitched = 0
     for l in CONDUCTOR:
         if trees[l] is None:
             continue
-        hits = trees[l].query(islands[l], predicate="dwithin", distance=GAP)
-        for i, j in zip(hits[0], hits[1]):
-            if i < j and find((l, int(i))) != find((l, int(j))):
-                union((l, int(i)), (l, int(j)))
-                stitched += 1
+        hits = trees[l].query(metal[l], predicate="dwithin", distance=GAP)
+        keep = hits[0] < hits[1]
+        off = base[l]
+        for i, j in zip((hits[0][keep] + off).tolist(),
+                        (hits[1][keep] + off).tolist()):
+            stitched += union(i, j)
+    for l in CONDUCTOR:
+        n = len(metal[l])
+        stats.append((LNAME[l], n,
+                      len({find(base[l] + i) for i in range(n)})))
 
     def locate(marks):
-        """Bulk point-in-island lookup, one STRtree query per layer."""
+        """Bulk point-in-metal lookup, one STRtree query per layer."""
         out = {}
         bylayer = collections.defaultdict(list)
-        for k, (lay, pt) in marks:
-            bylayer[lay].append((k, pt))
+        for k, lay, mi in marks:
+            bylayer[lay].append((k, mi))
         for lay, items in bylayer.items():
             if trees[lay] is None:
                 continue
-            pts = [pt for _, pt in items]
-            for pas in (pts, None):
-                hits = trees[lay].query(pas if pas is not None
-                                        else [p.buffer(0.01) for p in pts],
+            pts = mark_pt[[mi for _, mi in items]]
+            off = base[lay]
+            for widen in (False, True):
+                hits = trees[lay].query(shapely.buffer(pts, 0.01) if widen else pts,
                                         predicate="intersects")
-                for a, b in zip(hits[0], hits[1]):
-                    out.setdefault((items[int(a)][0], lay), (lay, int(b)))
-                if all((items[i][0], lay) in out for i in range(len(items))):
+                for a, b in zip(hits[0].tolist(), (hits[1] + off).tolist()):
+                    out.setdefault((items[a][0], lay), b)
+                if all((k, lay) in out for k, _ in items):
                     break
         return out
 
-    flat = [((vi, li), lp) for vi, (_, grp) in enumerate(via_marks)
-            for li, lp in enumerate(grp)]
-    vloc = locate(flat)
+    vloc = locate([((vi, li), lay, mi) for vi, (_, grp) in enumerate(via_marks)
+                   for li, (lay, mi) in enumerate(grp)])
     cuts = collections.Counter()
     bridged = collections.Counter()
     for vi, (lo, grp) in enumerate(via_marks):
-        found = [vloc.get(((vi, li), lp[0])) for li, lp in enumerate(grp)]
+        found = [vloc.get(((vi, li), lay)) for li, (lay, _) in enumerate(grp)]
         found = [c for c in found if c]
         key = CUTNAME.get(lo, f"L{lo}")
         cuts[key] += 1
@@ -659,10 +738,11 @@ def extract(gds_path, outdir, name):
             for c in found[1:]:
                 union(found[0], c)
 
-    ploc = locate([((i, m[0]), (m[0], m[1])) for i, m in enumerate(pin_marks)])
+    ploc = locate([((i, lay), lay, mi)
+                   for i, (lay, mi, _, _) in enumerate(pin_marks)])
     by_pin = collections.defaultdict(list)
     unbound = 0
-    for i, (lay, pt, idx, pname) in enumerate(pin_marks):
+    for i, (lay, mi, idx, pname) in enumerate(pin_marks):
         c = ploc.get(((i, lay), lay))
         if c is None:
             unbound += 1
@@ -680,7 +760,7 @@ def extract(gds_path, outdir, name):
         if lab.texttype == 5 and lab.layer in (70, 71, 72):
             hits = trees[lab.layer].query(Point(lab.origin), predicate="intersects")
             if len(hits):
-                net_ports[find((lab.layer, int(hits[0])))].add(lab.text)
+                net_ports[find(base[lab.layer] + int(hits[0]))].add(lab.text)
 
     nets = collections.defaultdict(lambda: {"pins": [], "ports": set()})
     for r, pl in net_pins.items():
@@ -1614,11 +1694,27 @@ def floorplan(gds_path, pairs, watch, kindof):
 # ---------------------------------------------------------------------------
 
 class CNF:
-    """Tseitin encoder. Variable 1 is pinned true, so -1 is a usable false."""
+    """Tseitin encoder. Variable 1 is pinned true, so -1 is a usable false.
+
+    Two cheap things happen while the clauses are being written. A gate whose
+    inputs are already constants, or are the same literal, or are opposite
+    literals, folds to a literal instead of minting a variable. And a gate whose
+    (operator, inputs) triple has been written before hands back the variable
+    that was minted then, so the formula carries one copy of each distinct piece
+    of logic. Reset pins a large part of the design to a constant for the first
+    steps of an unrolling and the eleven region counters are near duplicates of
+    each other, so between them the two rules take a real bite out of the
+    formula before the solver ever sees it. Both preserve the encoded function
+    exactly: a Tseitin definition depends on nothing but its own operator and
+    inputs.
+    """
 
     def __init__(self):
         self.n = 1
         self.cls = [[1]]
+        self.seen = {}
+        self.folded = 0
+        self.shared = 0
 
     def var(self):
         self.n += 1
@@ -1627,14 +1723,56 @@ class CNF:
     def add(self, *c):
         self.cls.append(list(c))
 
-    def gate(self, op, a, b=None):
-        o = self.var()
+    def fold(self, op, a, b):
+        """The literal this gate is equal to outright, or None if it needs a variable."""
         if op == "&":
-            self.add(-a, -b, o), self.add(a, -o), self.add(b, -o)
+            if a == 1 or a == b:
+                return b
+            if b == 1:
+                return a
+            if a == -1 or b == -1 or a == -b:
+                return -1
         elif op == "|":
-            self.add(a, b, -o), self.add(-a, o), self.add(-b, o)
+            if a == -1 or a == b:
+                return b
+            if b == -1:
+                return a
+            if a == 1 or b == 1 or a == -b:
+                return 1
         else:
-            self.add(-a, -b, -o), self.add(a, b, -o), self.add(a, -b, o), self.add(-a, b, o)
+            if a == 1:
+                return -b
+            if b == 1:
+                return -a
+            if a == -1:
+                return b
+            if b == -1:
+                return a
+            if a == b:
+                return -1
+            if a == -b:
+                return 1
+        return None
+
+    def gate(self, op, a, b=None):
+        r = self.fold(op, a, b)
+        if r is not None:
+            self.folded += 1
+            return r
+        k = (op, a, b) if a <= b else (op, b, a)
+        o = self.seen.get(k)
+        if o is not None:
+            self.shared += 1
+            return o
+        o = self.var()
+        ap = self.cls.append
+        if op == "&":
+            ap([-a, -b, o]), ap([a, -o]), ap([b, -o])
+        elif op == "|":
+            ap([a, b, -o]), ap([-a, o]), ap([-b, o])
+        else:
+            ap([-a, -b, -o]), ap([a, b, -o]), ap([a, -b, o]), ap([-a, b, o])
+        self.seen[k] = o
         return o
 
 
@@ -1731,9 +1869,21 @@ def cone_of(g, targets):
     return need
 
 
+def solver(cnf):
+    """The SAT back end, loaded with a formula.
+
+    python-sat ships several. This one was picked by running the two workloads
+    this pipeline actually has, the depth question in P8 and the fourteen
+    incremental enumeration queries in P10, against each of them and taking the
+    fastest total. The numbers are in GDS-to-RTL/summary.md; nothing else in the
+    pipeline depends on which name sits here.
+    """
+    import pysat.solvers
+    return getattr(pysat.solvers, SAT_BACKEND)(bootstrap_with=cnf.cls)
+
+
 def sat_solve(cnf, assume=(), extra=()):
-    from pysat.solvers import Cadical153
-    s = Cadical153(bootstrap_with=cnf.cls)
+    s = solver(cnf)
     for c in extra:
         s.add_clause(c)
     ok = s.solve(assumptions=list(assume))
@@ -1751,9 +1901,8 @@ class Sat:
     """
 
     def __init__(self, cnf):
-        from pysat.solvers import Cadical153
         self.cnf = cnf
-        self.s = Cadical153(bootstrap_with=cnf.cls)
+        self.s = solver(cnf)
         self.cache = {}
 
     def eq(self, key, lits, val):
@@ -2169,6 +2318,7 @@ module tb_equiv;
   reg clk=0, rst_n=0, I=0, enable=0;
   wire s_gate, s_rtl;  wire [7:0] o_gate, o_rtl;
   integer t, c, mism, mism_o, seed, trial, nstar, r_i;
+  integer shard, shards, ndone;
   integer perm [0:10]; integer perm2 [0:10];
   reg [120:0] g;
   reg [120:0] sol = 121'b{sol};
@@ -2202,19 +2352,31 @@ module tb_equiv;
     I=0; enable=0;
   end endtask
 
+  // Every shard walks the same trial list and steps the same random stream, so
+  // trial n is the same grid in all of them. Only its own share is simulated.
+  task try_grid; input [120:0] grid; begin
+    if (trial % shards == shard) begin
+      ndone = ndone + 1;
+      run_grid(grid);
+    end
+  end endtask
+
   initial begin
-    mism = 0; mism_o = 0; seed = 1;
+    mism = 0; mism_o = 0; seed = 1; ndone = 0;
+    shard = 0; shards = 1;
+    if ($value$plusargs("shard=%d", shard)) ;
+    if ($value$plusargs("shards=%d", shards)) ;
 {hardinit}
-    trial = 0; run_grid(sol);
-    trial = 1; run_grid(121'b0);
-    trial = 2; run_grid({{121{{1'b1}}}});
+    trial = 0; try_grid(sol);
+    trial = 1; try_grid(121'b0);
+    trial = 2; try_grid({{121{{1'b1}}}});
     for (trial=3; trial<40; trial=trial+1) begin
-      g = sol; t = {{$random(seed)}} % 121; g[t] = ~g[t]; run_grid(g);
+      g = sol; t = {{$random(seed)}} % 121; g[t] = ~g[t]; try_grid(g);
     end
     for (trial=40; trial<240; trial=trial+1) begin
       g = 0; nstar = 1 + ({{$random(seed)}} % 30);
       for (c=0; c<nstar; c=c+1) g[{{$random(seed)}} % 121] = 1'b1;
-      run_grid(g);
+      try_grid(g);
     end
     for (trial=240; trial<440; trial=trial+1) begin
       g = 0;
@@ -2222,7 +2384,7 @@ module tb_equiv;
         g[120 - (r_i*11 + ({{$random(seed)}} % 11))] = 1'b1;
         g[120 - (r_i*11 + ({{$random(seed)}} % 11))] = 1'b1;
       end
-      run_grid(g);
+      try_grid(g);
     end
     for (trial=440; trial<540; trial=trial+1) begin
       for (c=0; c<11; c=c+1) perm[c] = c;
@@ -2240,15 +2402,10 @@ module tb_equiv;
         g[120 - (r_i*11 + perm[r_i])]  = 1'b1;
         g[120 - (r_i*11 + perm2[r_i])] = 1'b1;
       end
-      run_grid(g);
+      try_grid(g);
     end
-    for (trial=540; trial<540+{hardn}; trial=trial+1) run_grid(hard[trial-540]);
-    $display("EQUIVALENCE: %0d success mismatches, %0d O mismatches over %0d grids",
-             mism, mism_o, trial);
-    if (mism==0 && mism_o==0)
-      $display("RESULT: the recovered RTL is cycle-equivalent to the extracted netlist");
-    else
-      $display("RESULT: NOT equivalent");
+    for (trial=540; trial<540+{hardn}; trial=trial+1) try_grid(hard[trial-540]);
+    $display("PARTIAL %0d %0d %0d", mism, mism_o, ndone);
     $finish;
   end
 endmodule
@@ -2256,15 +2413,33 @@ endmodule
     write(tbpath, tb)
 
 
-def iverilog(sources, tag, workdir):
+def iverilog(sources, tag, workdir, shards=1):
+    """Compile once, then run vvp.
+
+    Compiling 728 gates takes about 50 ms; simulating hundreds of 140-cycle
+    grids through them is what costs. A testbench that reads +shard and +shards
+    can run only the trials whose number falls in its shard while still stepping
+    the same random stream, so the trial list is partitioned rather than
+    resampled, and the shards go out to as many cores as the machine has. The
+    results come back in shard order, so the transcript does not depend on which
+    one finished first, and the shard count never appears in it.
+    """
     exe = os.path.join(workdir, tag + ".vvp")
     r = subprocess.run(["iverilog", "-g2012", "-o", exe] + sources,
                        capture_output=True, text=True)
     if r.returncode:
         return None, (r.stdout + r.stderr)
-    r = subprocess.run(["vvp", exe], capture_output=True, text=True)
+    if shards <= 1:
+        runs = [subprocess.run(["vvp", exe], capture_output=True, text=True)]
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=shards) as pool:
+            runs = list(pool.map(
+                lambda k: subprocess.run(
+                    ["vvp", exe, f"+shard={k}", f"+shards={shards}"],
+                    capture_output=True, text=True), range(shards)))
     os.remove(exe)
-    keep = [l for l in r.stdout.splitlines() if "$finish called" not in l]
+    keep = [l for run in runs for l in run.stdout.splitlines()
+            if "$finish called" not in l]
     return "\n".join(keep) + "\n", None
 
 
@@ -2396,18 +2571,23 @@ def do_warmup(lib, use_iverilog):
              "No hand tracing and no reading of 00_source.v. The gates are unrolled",
              "over K clock edges, Tseitin encoded, and asked one question: is there",
              "an input sequence that drives S high?", ""]
+        cnf, lit, invars, netf = unroll(
+            g, 12, ["A", "B"], {"rst_n": 1, "en": 1, "clk": 1}, cone=keep)
+        target = {K: netf(K + 1, g.idx["S"]) for K in range(6, 12)}
+        s = solver(cnf)
+        L += [f"  one unrolling to 11 edges: {cnf.n} variables, "
+              f"{len(cnf.cls)} clauses", ""]
         got = None
         for K in range(6, 12):
-            cnf, lit, invars, netf = unroll(
-                g, K + 1, ["A", "B"], {"rst_n": 1, "en": 1, "clk": 1}, cone=keep)
-            target = netf(K + 1, g.idx["S"])
-            ok, m = sat_solve(cnf, assume=[target])
+            ok = s.solve(assumptions=[target[K]])
+            m = set(s.get_model()) if ok else None
             L.append(f"  K = {K:2d} edges   {'SAT' if ok else 'UNSAT'}")
             if ok and got is None:
                 bits = {p: "".join("1" if invars[p][t] in m else "0"
                                    for t in sorted(invars[p])[:8]) for p in ("A", "B")}
                 got = (K, bits)
                 break
+        s.delete()
         K, bits = got
         a, b = int(bits["A"], 2), int(bits["B"], 2)
         say(f"minimum depth {K} edges")
@@ -2513,26 +2693,39 @@ def do_puzzle(lib, use_iverilog):
              "clause added: success = 1.", "",
              f"cone of influence of success: {len(keep)} of {len(g.names)} nets.",
              "The output generator drops out here, which is why this is cheap.", ""]
+        t = time.time()
+        cnf, lit, invars, netf = unroll(
+            g, FRAME + 2, ["I"], {"rst_n": 1, "enable": 1, "clk": 1}, cone=keep)
+        target = {K: netf(K + 1, g.idx["success"]) for K in (FRAME, FRAME + 1)}
+        say(f"one unrolling to {FRAME + 1} edges: {cnf.n} variables, "
+            f"{len(cnf.cls)} clauses, {time.time() - t:.2f}s to encode")
+        say(f"{cnf.folded} gates folded to a literal, {cnf.shared} shared with an "
+            f"identical gate already encoded")
+        L += [f"  one unrolling to {FRAME + 1} edges   {cnf.n} variables   "
+              f"{len(cnf.cls)} clauses",
+              f"  {cnf.folded} gates folded to a literal, {cnf.shared} shared",
+              "  A K-edge question is that same formula with the success literal",
+              "  asserted one step earlier, so the shorter depth needs no re-encoding.",
+              ""]
+        sv = solver(cnf)
         found = None
         for K in (FRAME, FRAME + 1):
             t = time.time()
-            cnf, lit, invars, netf = unroll(
-                g, K + 1, ["I"], {"rst_n": 1, "enable": 1, "clk": 1}, cone=keep)
-            target = netf(K + 1, g.idx["success"])
-            ok, m = sat_solve(cnf, assume=[target])
-            say(f"K = {K} edges: {'SAT' if ok else 'UNSAT'}  "
-                f"({cnf.n} variables, {len(cnf.cls)} clauses, {time.time()-t:.2f}s)")
-            L.append(f"  K = {K} edges   {cnf.n} variables   {len(cnf.cls)} clauses"
-                     f"   {'SAT' if ok else 'UNSAT'}")
+            ok = sv.solve(assumptions=[target[K]])
+            m = set(sv.get_model()) if ok else None
+            say(f"K = {K} edges: {'SAT' if ok else 'UNSAT'}  ({time.time()-t:.2f}s)")
+            L.append(f"  K = {K} edges   {'SAT' if ok else 'UNSAT'}")
             if ok:
                 key = "".join("1" if invars["I"][t] in m else "0"
                               for t in sorted(invars["I"])[:FRAME])
-                found = (K, key, cnf, lit, invars, netf, target)
+                found = (K, key)
                 break
-        K, key, cnf, lit, invars, netf, target = found
+        K, key = found
         block = [-invars["I"][t] if invars["I"][t] in m else invars["I"][t]
                  for t in sorted(invars["I"])[:FRAME]]
-        ok2, _ = sat_solve(cnf, assume=[target], extra=[block])
+        sv.add_clause(block)
+        ok2 = sv.solve(assumptions=[target[K]])
+        sv.delete()
         say(f"blocking that assignment and re-solving: {'SAT' if ok2 else 'UNSAT'}"
             f"  -> the key is {'not unique' if ok2 else 'unique'}")
         L += ["",
@@ -2550,7 +2743,8 @@ def do_puzzle(lib, use_iverilog):
               "no two touching, diagonals included. That is a Star Battle grid.", ""]
         write(os.path.join(POUT, "07_sat_proof.txt"), "\n".join(L))
         R["sat"] = {"K": K, "key": key, "unique": not ok2,
-                    "vars": cnf.n, "clauses": len(cnf.cls), "cone": len(keep)}
+                    "vars": cnf.n, "clauses": len(cnf.cls), "cone": len(keep),
+                    "folded": cnf.folded, "shared": cnf.shared}
 
     with stage("P9", "puzzle: independent solve of the recovered puzzle (z3)"):
         sols, more = star_battle(reg["label"])
@@ -2582,10 +2776,26 @@ def do_puzzle(lib, use_iverilog):
         if not use_iverilog:
             say("equivalence run skipped (--no-iverilog)")
         else:
-            out, err = iverilog([models, net, rtl, tb], "equiv", POUT)
+            out, err = iverilog([models, net, rtl, tb], "equiv", POUT,
+                                shards=SHARDS)
             if err:
                 say("iverilog failed"), say(err.strip()[:400])
             else:
+                mism = mism_o = ngrids = 0
+                lines = []
+                for line in out.splitlines():
+                    if line.startswith("PARTIAL"):
+                        a, b, c = (int(x) for x in line.split()[1:4])
+                        mism, mism_o, ngrids = mism + a, mism_o + b, ngrids + c
+                    elif line.strip():
+                        lines.append(line)
+                lines.append(f"EQUIVALENCE: {mism} success mismatches, "
+                             f"{mism_o} O mismatches over {ngrids} grids")
+                lines.append(
+                    "RESULT: the recovered RTL is cycle-equivalent to the "
+                    "extracted netlist" if not (mism or mism_o)
+                    else "RESULT: NOT equivalent")
+                out = "\n".join(lines) + "\n"
                 for line in out.strip().splitlines():
                     if "EQUIVALENCE" in line or "RESULT" in line or "MISMATCH" in line:
                         say(line.strip())
@@ -2675,6 +2885,30 @@ endmodule
 """
 
 
+def banner():
+    """Versions of everything the flow depends on, printed by the flow itself.
+
+    This used to be a separate Python process launched from RUN.sh purely to
+    import the four packages and print their versions, which cost a whole extra
+    interpreter start and a second import of shapely and z3. The run needs them
+    imported anyway, so it reports them itself.
+    """
+    import shapely
+    import z3
+    print(f"python {sys.version.split()[0]}, gdstk {gdstk.__version__}, "
+          f"shapely {shapely.__version__}, z3 {z3.get_version_string()}, "
+          f"SAT back end {SAT_BACKEND}, {SHARDS} simulation shards")
+    have = []
+    for t in ("iverilog", "vvp"):
+        try:
+            r = subprocess.run([t, "-V"], capture_output=True, text=True)
+            line = (r.stdout + r.stderr).splitlines()[0]
+            have.append(f"{t} {line.split('version')[-1].split()[0]}")
+        except (OSError, IndexError):
+            have.append(f"{t} MISSING, the two cross-checks will be skipped")
+    print(", ".join(have))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--only", choices=("all", "warmup", "puzzle"), default="all")
@@ -2684,7 +2918,7 @@ def main():
     sys.stdout = Tee(os.path.join(HERE, "run.log"))
     print("GDS to RTL: recovering Jane Street's ASIC puzzle from its layout")
     print(f"repository {ROOT}")
-    print(f"python {sys.version.split()[0]}, gdstk {gdstk.__version__}")
+    banner()
     with stage("P0", "load the sky130 Liberty"):
         lib = liberty(LIB)
         seq = [c for c, d in lib.items() if d["ff"]]

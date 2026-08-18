@@ -16,7 +16,7 @@ THE CATALOGUE
   '(* TWO STARS *)'    1       22 True   True   True      0
   'BIG BANG'           0      121 False  False  False     420
   'EMPTY SKY'          0        0 False  False  False     0
-  'TRY AGAIN'          0       97 False  False  False     310
+  'TRY AGAIN'          0        1 False  False  False     0
   'TWO NOT TOUCH'      0       22 True   True   True      11
 
 WHAT TRIGGERS EACH ONE
@@ -68,31 +68,31 @@ AN EXAMPLE GRID FOR EACH
      . . . . . . . . . . .
      . . . . . . . . . . .
 
-  TRY AGAIN   (97 stars)
-     * * * * * * * * * * *
-     * * * * * * * * * * *
-     * * * * * * * * * * *
-     * * * * * * * * * * *
-     * * * * * * * * * * *
-     * * * * * * * * * * *
-     * * * * * * * * * * .
-     * * * * * * * * * * *
-     * . * * . . . . * * .
+  TRY AGAIN   (1 stars)
      . . . . . . . . . . .
-     * . . . * * * . * . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . .
+     . . . . . . . . . . *
 
   TWO NOT TOUCH   (22 stars)
-     . . . . * . . . * . .
-     . . . . . . * * . . .
-     . . . . . * . . . * .
-     . * * . . . . . . . .
-     . . . . . * . * . . .
-     * . . . . . . . . . *
-     * . . . . . . . . . *
+     . . . * . . . . * . .
      . . . . * . * . . . .
-     . . . * . . . . . * .
-     . . * . . . . . * . .
-     . * . * . . . . . . .
+     . . . . . . . * . * .
+     . . * . . . . * . . .
+     * . . . . * . . . . .
+     . . . . . . . . * * .
+     . . . . . . * . . . *
+     . * . . . * . . . . .
+     * . . . . . . . . . *
+     . * . . * . . . . . .
+     . . * * . . . . . . .
 
 TWO NOT TOUCH is the other name of Star Battle. The chip prints it only
 when every count is correct and the no-touch rule is the one broken, which

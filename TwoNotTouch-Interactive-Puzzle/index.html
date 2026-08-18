@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Two Not Touch, the puzzle inside puzzle.gds</title>
+<meta name="description" content="Play the 11x11 Star Battle that 728 standard cells on a stripped GDSII layout were built to check.">
+<style>
+  :root{
+    --bg:#f4f2ee; --panel:#ffffff; --ink:#1a1a1a; --muted:#6b6b6b;
+    --board:#20222a; --line:#4a4d58; --wall:#ffffff; --star:#ffd45e;
+    --dot:#8a8f9c; --ok:#1f7a4d; --warn:#a8481f; --edge:#d9d5cd;
+    --chip:#eceae5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#131417; --panel:#1c1e23; --ink:#eceef2; --muted:#9aa0ab;
+      --board:#0d0e11; --line:#3a3d47; --wall:#f2f4f8; --star:#ffd45e;
+      --dot:#767c88; --ok:#5ad294; --warn:#ff9a6b; --edge:#2a2d34;
+      --chip:#24272e;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#131417; --panel:#1c1e23; --ink:#eceef2; --muted:#9aa0ab;
+    --board:#0d0e11; --line:#3a3d47; --wall:#f2f4f8; --star:#ffd45e;
+    --dot:#767c88; --ok:#5ad294; --warn:#ff9a6b; --edge:#2a2d34;
+    --chip:#24272e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.5 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    padding:24px 16px 48px; min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  header{text-align:center; max-width:640px; margin-bottom:20px}
+  h1{font-size:22px; margin:0 0 6px; letter-spacing:.2px}
+  header p{margin:0; color:var(--muted); font-size:14px}
+  header a{color:inherit}
+  .wrap{
+    background:var(--panel); border:1px solid var(--edge); border-radius:14px;
+    padding:18px; box-shadow:0 1px 3px rgba(0,0,0,.06);
+    max-width:100%; overflow-x:auto;
+  }
+  svg{display:block; touch-action:manipulation; max-width:100%; height:auto}
+  .verdict{
+    margin-top:16px; text-align:center;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:19px; letter-spacing:2px; min-height:28px;
+  }
+  .verdict.good{color:var(--ok)}
+  .verdict.near{color:var(--warn)}
+  .stat{
+    display:flex; gap:18px; justify-content:center; flex-wrap:wrap;
+    margin-top:10px; color:var(--muted); font-size:13px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  .stat b{font-weight:600; color:var(--ink)}
+  .bar{display:flex; gap:8px; justify-content:center; margin-top:16px; flex-wrap:wrap}
+  button{
+    font:inherit; font-size:14px; color:var(--ink); background:var(--chip);
+    border:1px solid var(--edge); border-radius:8px; padding:7px 14px; cursor:pointer;
+  }
+  button:hover{border-color:var(--muted)}
+  .rules{
+    max-width:620px; margin-top:26px; color:var(--muted); font-size:14px;
+  }
+  .rules h2{font-size:15px; color:var(--ink); margin:0 0 8px}
+  .rules ul{margin:0 0 14px; padding-left:20px}
+  .rules code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:var(--chip); padding:1px 5px; border-radius:4px; font-size:13px;
+  }
+  #done{
+    position:fixed; inset:0; display:none; place-items:center;
+    background:rgba(0,0,0,.72); z-index:9; padding:20px;
+  }
+  #done .card{
+    background:var(--panel); border-radius:14px; padding:30px 34px; text-align:center;
+    max-width:440px;
+  }
+  #done h2{
+    margin:0 0 10px; font-size:22px; color:var(--ok);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; letter-spacing:1px;
+  }
+  #done p{margin:0 0 6px; color:var(--muted); font-size:14px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Two Not Touch</h1>
+  <p>The 11 x 11 Star Battle that 728 standard cells on a stripped GDSII layout
+     were built to check. The regions below were read out of the silicon, one
+     grid cell at a time.</p>
+</header>
+
+<div class="wrap">
+  <svg id="board" viewBox="0 0 620 620" width="620" height="620"
+       role="application" aria-label="Star Battle board, 11 by 11"></svg>
+</div>
+
+<div class="verdict" id="verdict"></div>
+<div class="stat" id="stat"></div>
+
+<div class="bar">
+  <button id="clear">Clear</button>
+  <button id="dots">Fill obvious dots</button>
+  <button id="theme">Theme</button>
+</div>
+
+<div class="rules">
+  <h2>How to play</h2>
+  <ul>
+    <li><b>Click</b> a cell to mark it with a dot: cannot be a star.</li>
+    <li><b>Double-click</b>, or <b>right-click</b>, or <b>long-press</b> on a
+        phone, to place a star.</li>
+    <li>Click a marked cell again to clear it.</li>
+  </ul>
+  <h2>The rule the chip checks</h2>
+  <ul>
+    <li>Exactly two stars in every <b>row</b>.</li>
+    <li>Exactly two stars in every <b>column</b>.</li>
+    <li>Exactly two stars in every <b>outlined region</b>.</li>
+    <li>No two stars touch, <b>not even diagonally</b>.</li>
+  </ul>
+  <p>The line under the board is what the real chip prints on <code>O[7:0]</code>
+     for the grid you have placed. It has five things it can say and this page
+     reproduces all five, including <code>TWO NOT TOUCH</code>, which only appears
+     when every count is right and the only rule broken is the no-touch one.
+     There is exactly one grid it answers <code>(* TWO STARS *)</code> to, and
+     that was proved unique at the gate level.</p>
+</div>
+
+<div id="done"><div class="card">
+  <h2 id="donemsg">(* TWO STARS *)</h2>
+  <p>That is the one grid out of 2<sup>121</sup> the chip accepts.</p>
+  <p id="countdown">Closing this tab in 5...</p>
+</div></div>
+
+<script>
+"use strict";
+
+// The region map, read out of puzzle.gds by driving one star into the chip at a
+// time and watching which counter moved. It is the same table that appears in
+// puzzle-solution/06_region_map.txt.
+const REGIONS = [
+  "AAAAABBCDDE",
+  "AAFAABCCDDE",
+  "AAFBBBBCCDE",
+  "AAFBGGGECCE",
+  "FAFBGEEEEEE",
+  "FFFBGGGEHHH",
+  "BBBBBBGEHII",
+  "BJJJGGGEHII",
+  "BJJKEEEEHII",
+  "BBJKKEEEHHH",
+  "BJJKEEEEEEE"
+];
+
+const N = 11, STARS = 2;
+const PAD = 34, CELL = 50;
+const EMPTY = 0, DOT = 1, STAR = 2;
+
+const svg = document.getElementById("board");
+const NS = "http://www.w3.org/2000/svg";
+let state = Array.from({length: N}, () => new Array(N).fill(EMPTY));
+let solved = false;
+
+function el(name, attrs, parent){
+  const n = document.createElementNS(NS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  (parent || svg).appendChild(n);
+  return n;
+}
+
+function starPath(cx, cy, ro, ri){
+  const pts = [];
+  for (let i = 0; i < 10; i++){
+    const a = -Math.PI/2 + i * Math.PI/5;
+    const r = (i % 2 === 0) ? ro : ri;
+    pts.push((cx + r*Math.cos(a)).toFixed(2) + "," + (cy + r*Math.sin(a)).toFixed(2));
+  }
+  return pts.join(" ");
+}
+
+function draw(){
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = N * CELL;
+
+  el("rect", {x:PAD, y:PAD, width:W, height:W, fill:"var(--board)", rx:3});
+
+  for (let i = 1; i < N; i++){
+    el("line", {x1:PAD, y1:PAD+i*CELL, x2:PAD+W, y2:PAD+i*CELL,
+                stroke:"var(--line)", "stroke-width":1});
+    el("line", {x1:PAD+i*CELL, y1:PAD, x2:PAD+i*CELL, y2:PAD+W,
+                stroke:"var(--line)", "stroke-width":1});
+  }
+
+  for (let r = 0; r < N; r++){
+    for (let c = 0; c < N; c++){
+      if (c < N-1 && REGIONS[r][c] !== REGIONS[r][c+1])
+        el("line", {x1:PAD+(c+1)*CELL, y1:PAD+r*CELL,
+                    x2:PAD+(c+1)*CELL, y2:PAD+(r+1)*CELL,
+                    stroke:"var(--wall)", "stroke-width":4, "stroke-linecap":"square"});
+      if (r < N-1 && REGIONS[r][c] !== REGIONS[r+1][c])
+        el("line", {x1:PAD+c*CELL, y1:PAD+(r+1)*CELL,
+                    x2:PAD+(c+1)*CELL, y2:PAD+(r+1)*CELL,
+                    stroke:"var(--wall)", "stroke-width":4, "stroke-linecap":"square"});
+    }
+  }
+  el("rect", {x:PAD, y:PAD, width:W, height:W, fill:"none",
+              stroke:"var(--wall)", "stroke-width":5, rx:3});
+
+  for (let i = 0; i < N; i++){
+    el("text", {x:PAD+i*CELL+CELL/2, y:PAD-12, fill:"var(--muted)",
+                "font-size":12, "text-anchor":"middle",
+                "font-family":"ui-monospace,monospace"}).textContent = i;
+    el("text", {x:PAD-14, y:PAD+i*CELL+CELL/2+4, fill:"var(--muted)",
+                "font-size":12, "text-anchor":"middle",
+                "font-family":"ui-monospace,monospace"}).textContent = i;
+  }
+
+  for (let r = 0; r < N; r++){
+    for (let c = 0; c < N; c++){
+      const cx = PAD + c*CELL + CELL/2, cy = PAD + r*CELL + CELL/2;
+      if (state[r][c] === DOT)
+        el("circle", {cx:cx, cy:cy, r:4, fill:"var(--dot)"});
+      else if (state[r][c] === STAR)
+        el("polygon", {points:starPath(cx, cy, 17, 7), fill:"var(--star)"});
+      el("rect", {x:PAD+c*CELL, y:PAD+r*CELL, width:CELL, height:CELL,
+                  fill:"transparent", "data-r":r, "data-c":c,
+                  style:"cursor:pointer"});
+    }
+  }
+}
+
+// -- the chip's own verdict, reproduced ------------------------------------
+// Same five branches the output ROM in the recovered RTL selects between.
+function verdict(){
+  const stars = [];
+  let n = 0;
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++)
+      if (state[r][c] === STAR){ stars.push([r,c]); n++; }
+
+  const rows = new Array(N).fill(0), cols = new Array(N).fill(0), reg = {};
+  for (const [r,c] of stars){
+    rows[r]++; cols[c]++;
+    reg[REGIONS[r][c]] = (reg[REGIONS[r][c]] || 0) + 1;
+  }
+  const letters = new Set();
+  for (const row of REGIONS) for (const ch of row) letters.add(ch);
+
+  const rowsOk = rows.every(v => v === STARS);
+  const colsOk = cols.every(v => v === STARS);
+  const regOk  = [...letters].every(L => (reg[L] || 0) === STARS);
+
+  let touch = 0;
+  for (const [r,c] of stars)
+    for (const [dr,dc] of [[0,1],[1,-1],[1,0],[1,1]])
+      if (r+dr < N && c+dc >= 0 && c+dc < N && state[r+dr][c+dc] === STAR) touch++;
+
+  // Dots are the player's own bookkeeping. The chip only ever sees the stars,
+  // so they are the only thing the verdict may depend on.
+  let msg, cls = "";
+  if (n === 0)          { msg = "EMPTY SKY"; }
+  else if (n === N*N)   { msg = "BIG BANG"; }
+  else if (rowsOk && colsOk && regOk && touch === 0) { msg = "(* TWO STARS *)"; cls = "good"; }
+  else if (rowsOk && colsOk && regOk) { msg = "TWO NOT TOUCH"; cls = "near"; }
+  else                               { msg = "TRY AGAIN"; }
+
+  const v = document.getElementById("verdict");
+  v.textContent = msg;
+  v.className = "verdict " + cls;
+
+  document.getElementById("stat").innerHTML =
+    "stars <b>" + n + "</b> / 22 &nbsp;&nbsp; rows <b>" + (rowsOk ? "ok" : "no") +
+    "</b> &nbsp;&nbsp; columns <b>" + (colsOk ? "ok" : "no") +
+    "</b> &nbsp;&nbsp; regions <b>" + (regOk ? "ok" : "no") +
+    "</b> &nbsp;&nbsp; touching pairs <b>" + touch + "</b>";
+
+  if (cls === "good" && !solved){ solved = true; finish(msg); }
+}
+
+function finish(msg){
+  document.getElementById("donemsg").textContent = msg;
+  document.getElementById("done").style.display = "grid";
+  let left = 5;
+  const line = document.getElementById("countdown");
+  const tick = setInterval(() => {
+    left--;
+    if (left > 0){ line.textContent = "Closing this tab in " + left + "..."; return; }
+    clearInterval(tick);
+    window.close();
+    // A tab the browser did not open from a script cannot close itself, so say
+    // so rather than leaving the countdown sitting at zero.
+    setTimeout(() => { line.textContent =
+      "Your browser will not let a page close a tab it did not open. Close it yourself."; }, 250);
+  }, 1000);
+}
+
+function cycle(r, c, toStar){
+  if (solved) return;
+  if (toStar) state[r][c] = (state[r][c] === STAR) ? EMPTY : STAR;
+  else        state[r][c] = (state[r][c] === EMPTY) ? DOT : EMPTY;
+  draw(); verdict();
+}
+
+// -- input ------------------------------------------------------------------
+let pending = null, held = null;
+
+function cellAt(ev){
+  const t = ev.target;
+  if (!t || t.dataset.r === undefined) return null;
+  return [ +t.dataset.r, +t.dataset.c ];
+}
+
+svg.addEventListener("click", ev => {
+  const cell = cellAt(ev); if (!cell) return;
+  if (pending) clearTimeout(pending);
+  pending = setTimeout(() => { pending = null; cycle(cell[0], cell[1], false); }, 220);
+});
+svg.addEventListener("dblclick", ev => {
+  const cell = cellAt(ev); if (!cell) return;
+  if (pending){ clearTimeout(pending); pending = null; }
+  cycle(cell[0], cell[1], true);
+});
+svg.addEventListener("contextmenu", ev => {
+  const cell = cellAt(ev); if (!cell) return;
+  ev.preventDefault();
+  cycle(cell[0], cell[1], true);
+});
+svg.addEventListener("touchstart", ev => {
+  const cell = cellAt(ev); if (!cell) return;
+  held = setTimeout(() => {
+    held = null;
+    if (pending){ clearTimeout(pending); pending = null; }
+    cycle(cell[0], cell[1], true);
+  }, 420);
+}, {passive:true});
+svg.addEventListener("touchend", () => { if (held){ clearTimeout(held); held = null; } });
+
+document.getElementById("clear").onclick = () => {
+  state = Array.from({length:N}, () => new Array(N).fill(EMPTY));
+  solved = false;
+  document.getElementById("done").style.display = "none";
+  draw(); verdict();
+};
+
+// Everything a placed star rules out: its eight neighbours, plus the rest of any
+// row, column or region that already holds two. Pure bookkeeping, no search.
+document.getElementById("dots").onclick = () => {
+  const rows = new Array(N).fill(0), cols = new Array(N).fill(0), reg = {};
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++)
+    if (state[r][c] === STAR){
+      rows[r]++; cols[c]++; reg[REGIONS[r][c]] = (reg[REGIONS[r][c]] || 0) + 1;
+    }
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+    if (state[r][c] !== EMPTY) continue;
+    let out = rows[r] >= STARS || cols[c] >= STARS ||
+              (reg[REGIONS[r][c]] || 0) >= STARS;
+    for (let dr = -1; dr <= 1 && !out; dr++)
+      for (let dc = -1; dc <= 1 && !out; dc++){
+        const nr = r+dr, nc = c+dc;
+        if ((dr || dc) && nr >= 0 && nr < N && nc >= 0 && nc < N &&
+            state[nr][nc] === STAR) out = true;
+      }
+    if (out) state[r][c] = DOT;
+  }
+  draw(); verdict();
+};
+
+document.getElementById("theme").onclick = () => {
+  const now = document.documentElement.getAttribute("data-theme");
+  const dark = now ? now === "dark"
+    : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+};
+
+draw(); verdict();
+</script>
+</body>
+</html>

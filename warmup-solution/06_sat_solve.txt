@@ -5,13 +5,15 @@ No hand tracing and no reading of 00_source.v. The gates are unrolled
 over K clock edges, Tseitin encoded, and asked one question: is there
 an input sequence that drives S high?
 
+  one unrolling to 11 edges: 362 variables, 1012 clauses
+
   K =  6 edges   UNSAT
   K =  7 edges   UNSAT
   K =  8 edges   SAT
 
 minimum depth      8 clock edges
-A, first 8 edges   11110010 = 242
-B, first 8 edges   11111110 = 254
+A, first 8 edges   11111000 = 248
+B, first 8 edges   11111000 = 248
 A + B              496
 
 496 is the third perfect number: 1+2+4+8+16+31+62+124+248 = 496.

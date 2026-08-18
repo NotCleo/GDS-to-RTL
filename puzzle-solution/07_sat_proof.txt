@@ -14,8 +14,13 @@ clause added: success = 1.
 cone of influence of success: 471 of 738 nets.
 The output generator drops out here, which is why this is cheap.
 
-  K = 121 edges   129325 variables   387595 clauses   UNSAT
-  K = 122 edges   130385 variables   390772 clauses   SAT
+  one unrolling to 122 edges   14498 variables   43111 clauses
+  113959 gates folded to a literal, 1928 shared
+  A K-edge question is that same formula with the success literal
+  asserted one step earlier, so the shorter depth needs no re-encoding.
+
+  K = 121 edges   UNSAT
+  K = 122 edges   SAT
 
 minimum depth      122 clock edges. At 121 the netlist provably
                    cannot be satisfied, so 121 cells in and the

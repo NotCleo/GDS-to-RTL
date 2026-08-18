@@ -1,7 +1,7 @@
 # The pipeline, stage by stage
 
 One file, `gds_to_rtl.py`. It runs the warm-up first to prove the tools, then
-the puzzle. Total runtime about **15 seconds**. The full terminal output of the
+the puzzle. Total runtime about **5 seconds**. The full terminal output of the
 run this page describes is in [`run.log`](run.log).
 
 ```
@@ -21,14 +21,16 @@ the sky130 PDK in `pdk/`. Nothing else is read. Everything in
 The first version of this was twenty numbered scripts calling out to `yosys` and
 `iverilog` for every question, and it took about four minutes. Almost all of
 that was process startup and Verilog elaboration, repeated hundreds of times to
-ask hundreds of nearly identical questions.
+ask hundreds of nearly identical questions. Folding it into one file that keeps
+its state in memory took it to 17 seconds. Measuring where those went took it to
+**5**.
 
-The whole pipeline now rests on two things instead.
+The whole pipeline rests on two things.
 
 | | what it replaced |
 |---|---|
 | **A bit-parallel simulator for the recovered gates.** Every net is one Python integer; bit *k* of that integer is the net's value in trial *k*. A NAND across 564 independent grids is one machine AND and one XOR, so 564 grids cost the same as one. The combinational block is compiled once into a straight-line Python function, 830 lines for the puzzle. | 121 separate `iverilog` runs for the cell probe, 25 more for the hypothesis test, and a `vvp` run per message class |
-| **A Tseitin encoder over the same parsed cell functions.** The netlist unrolls into CNF and goes to CaDiCaL. 390,772 clauses over 130,385 variables, answered in 0.44 s. | `yosys ... sat -seq K`, about 40 s per depth, and no way to ask for uniqueness |
+| **A Tseitin encoder over the same parsed cell functions.** The netlist unrolls into CNF once, at the deepest depth needed, and a shallower depth is the same formula with the goal literal asserted a step earlier. 43,111 clauses over 14,498 variables, both depths and the uniqueness proof answered in 0.17 s. | `yosys ... sat -seq K`, about 40 s per depth, and no way to ask for uniqueness |
 
 Both read cell behaviour from the same place: the `function` and `ff` entries in
 the sky130 Liberty file. No cell truth table is written by hand anywhere, and the
@@ -37,6 +39,49 @@ circuit that gets simulated is the same object that gets handed to the solver.
 `iverilog` is still used, exactly twice, as an independent second opinion: once
 on the warm-up against the golden netlist, once on the puzzle against the
 recovered RTL. `yosys` is no longer needed at all.
+
+### Where the time goes now
+
+| stage | before | after | what changed |
+|---|---|---|---|
+| W2 + P2, geometry to netlist | 5.50 s | **1.07 s** | connected components taken directly over the raw polygons instead of unioning them first, all coordinate transforms in one numpy pass, union-find over integers |
+| P8, depth and uniqueness | 1.15 s | **0.18 s** | one encoding for both depths, constant folding and structural sharing while encoding, one solver instead of three |
+| P10, message enumeration | 1.82 s | **0.41 s** | the same encoder changes, plus the back end picked by measurement |
+| P11, the 564-grid equivalence | 6.40 s | **2.15 s** | the simulation sharded across cores, collected in shard order so the transcript does not depend on the core count |
+| the tool version banner | 0.5 s | **0** | it was a second Python process that existed to import four packages and print their versions |
+| **total** | **17.0 s** | **4.9 s** | |
+
+Dropping `shapely.unary_union` is the single largest item and it needs a word,
+because it looks like a shortcut and is not one. What that call computes is an
+exact merged outline, which nothing downstream reads. What is wanted is the
+connected components of "these two polygons touch", and running that relation
+over the raw polygons gives the identical partition, because the distance from a
+point to a union of shapes is the smallest of the distances to its members.
+Measured on `puzzle.gds` the two agree island for island on all six layers, and
+the direct version is eleven times faster.
+
+### The SAT back end
+
+`python-sat` bundles several CDCL solvers. Rather than pick one on reputation,
+all of them were timed on this design's own two workloads, best of three, same
+formula, same machine:
+
+| back end | P8 depth question | P10 enumeration | total |
+|---|---|---|---|
+| **CaDiCaL 3.0** | 0.031 s | **0.419 s** | **0.449 s** |
+| CaDiCaL 1.5.3 | 0.021 s | 0.630 s | 0.651 s |
+| MiniSat 2.2 | 0.019 s | 0.642 s | 0.661 s |
+| MiniSat-GH | 0.021 s | 0.650 s | 0.672 s |
+| CaDiCaL 1.9.5 | 0.026 s | 0.658 s | 0.683 s |
+| Glucose 4.2 | 0.022 s | 0.695 s | 0.717 s |
+| Mergesat 3 | 0.028 s | 1.872 s | 1.900 s |
+| Lingeling | 0.050 s | 2.046 s | 2.096 s |
+| MapleCM | 0.218 s | 3.148 s | 3.366 s |
+
+P8 is too small to separate them. P10 is fourteen incremental queries against a
+solver that has to keep and reuse what it learned between them, and that is where
+CDCL implementations differ. `SAT_BACKEND` at the top of `gds_to_rtl.py` is the
+only line that has to change to swap it.
 
 ---
 
@@ -53,7 +98,7 @@ correct result.
 | **W3** | Check against the shipped DEF and netlist | **79 of 79** placements matched, **84 exact net matches, 0 mismatches** against a golden netlist of 84 nets | `04_golden_crosscheck.txt`, `07_name_map.json` |
 | **W4** | Cell models from Liberty | 18 cells | `03_cell_models.v` |
 | **W5** | Simulate golden and extracted side by side | 3,000 random cycles, **0 mismatches**; `S` equals `A+B==496` on **200 of 200** byte pairs | `05_equivalence.txt` |
-| **W6** | Solve the warm-up from the extracted gates alone | minimum depth **8 clock edges**; `A = 242`, `B = 254`, **A + B = 496** | `06_sat_solve.txt` |
+| **W6** | Solve the warm-up from the extracted gates alone | minimum depth **8 clock edges**; `A = 248`, `B = 248`, **A + B = 496** | `06_sat_solve.txt` |
 
 ### What W3 actually proves
 
@@ -80,10 +125,11 @@ The warm-up could be read: it is 79 cells and the source is provided. It was
 solved by SAT instead, because that is the technique the puzzle needs later.
 Unroll, encode, ask one question, read the answer. No gate traced by hand.
 
-The solver returned `A = 242, B = 254`. An earlier run returned `245` and `251`.
-Both are correct: `A` and `B` are eight bits each, so `A + B = 496` has exactly
-**15** solutions, `A` from 241 to 255, and the solver is free to return any of
-them. 496 is also the third perfect number, `1+2+4+8+16+31+62+124+248`.
+The solver returned `A = 248, B = 248`, which is 496 halved. Earlier runs of
+this pipeline returned `242, 254` and `245, 251`. All three are correct: `A` and
+`B` are eight bits each, so `A + B = 496` has exactly **15** solutions, `A` from
+241 to 255, and the solver is free to return any of them. 496 is also the third
+perfect number, `1+2+4+8+16+31+62+124+248`.
 
 ---
 
@@ -102,7 +148,7 @@ cycle-equivalent to the gates.
 | **P5** | Register graph, Tarjan SCC, and decompile the one thing worth reading | 92 flops, 26 feedback groups, **23 of them two-bit pairs**. `success` is one latched flop, `u28_dfrtp_2`, and its set condition decompiles into **11 + 11** near-identical two-bit comparisons | `05_register_structure.txt` |
 | **P6** | Falsify the first hypothesis | 25 grids with two per row, two per column, none touching: **0 accepted**, all 25 answered `TRY AGAIN` | |
 | **P7** | 121 single-cell probes | **11 column counters, 11 irregular groups, 1 shared row counter**. Region sizes `14 21 7 5 28 8 11 9 6 8 4`, sum **121** | `06_region_map.txt` |
-| **P8** | Gate-exact SAT | GF(2) linearity test: **20 of 20** predictions fail, so no linear algebra shortcut exists. **K=121 UNSAT, K=122 SAT** over 390,772 clauses; blocking clause re-solve **UNSAT**, so **the key is unique** | `07_sat_proof.txt` |
+| **P8** | Gate-exact SAT | GF(2) linearity test: **20 of 20** predictions fail, so no linear algebra shortcut exists. **K=121 UNSAT, K=122 SAT** over 43,111 clauses; blocking clause re-solve **UNSAT**, so **the key is unique** | `07_sat_proof.txt` |
 | **P9** | Independent solve with z3 | **exactly 1** solution to the probed constraints, and it **equals** the SAT key | |
 | **P10** | Enumerate every string the chip can print | **5 messages**, 14 SAT queries, the last UNSAT | `10_message_catalogue.txt` |
 | **P11** | Behavioural RTL, cycle equivalence | **0 success mismatches, 0 O mismatches over 564 grids** | `08_recovered_rtl.v`, `09_equivalence.txt` |
@@ -111,17 +157,17 @@ cycle-equivalent to the gates.
 
 ### P2, the extraction, in three lines
 
-1. Flatten every conductor polygon to top-level coordinates and union it per
-   layer, so each island is one contiguous piece of metal.
-2. Every via cut joins the island below it to the island above it.
-3. Union-find over both, then look up which island covers each cell pin.
+1. Flatten every conductor polygon to top-level coordinates, then join any two on
+   the same layer that overlap, so each group is one contiguous piece of metal.
+2. Every via cut joins the metal below it to the metal above it.
+3. Union-find over both, then look up which group covers each cell pin.
 
 Same-layer overlap means connected. Different layers mean nothing without a cut
 between them. That is the whole electrical content of a GDS file.
 
-| conductor | shapes | islands |
+| conductor | shapes | conductors out |
 |---|---|---|
-| li1 | 10,819 | 5,495 |
+| li1 | 10,819 | 5,472 |
 | met1 | 12,606 | 3,001 |
 | met2 | 8,517 | 2,060 |
 | met3 | 2,560 | 811 |
@@ -178,10 +224,18 @@ the same Liberty functions the simulator uses, plus one clause: `success = 1`.
 The cone of influence of `success` is 471 of 738 nets, which drops the whole
 output generator and is why this is cheap.
 
-| K | variables | clauses | result |
-|---|---|---|---|
-| 121 | 129,325 | 387,595 | **UNSAT** |
-| 122 | 130,385 | 390,772 | **SAT** in 0.44 s |
+One unrolling to 122 edges, **14,498 variables and 43,111 clauses**, encoded in
+0.09 s. A K-edge question is that same formula with the success literal asserted
+one step earlier, so the shorter depth needs no re-encoding. The encoder folds a
+gate whose inputs are already constant (113,959 times here, mostly because
+`rst_n`, `enable` and `clk` are constants across the window) and shares a gate
+identical to one already written (1,928 times), which is what takes the formula
+down from the 130,385 variables and 390,772 clauses a naive encoding produces.
+
+| K | result |
+|---|---|
+| 121 | **UNSAT** |
+| 122 | **SAT** |
 
 122 is therefore the shortest unlock: 121 cells in, verdict on the next edge.
 Adding a blocking clause on the 121 recovered bits and re-solving returns
@@ -238,13 +292,18 @@ extended by a solver result rather than by guesswork.
 | **Combinational loops** | none. The topological sort of the gate graph completes, which is checked, not assumed |
 | **Clock tree** | every one of the 92 flop clock pins traces back through buffers to the single primary input `clk`. There is no gated clock in this design |
 | **The four un-reset flops** | `u34` to `u37` are `dfxtp_2`, no reset, so real silicon powers them up randomly. The pipeline runs the answer with them initialised low and again initialised high: `success = 1` and `(* TWO STARS *)` both times, so their power-up state is provably irrelevant to the result |
-| **The same-layer gap tolerance** | The extractor joins islands on the same layer that sit within 60 nm of each other without formally overlapping, which happens 23 times on the puzzle. I checked whether the answer depends on that number, and it does not: at 0 nm, 20 nm, 60 nm and 120 nm the recovered net partition is byte-identical on both designs, so it is not a fitting parameter |
+| **The same-layer gap tolerance** | The extractor treats two shapes on the same layer as one conductor if they come within 60 nm of each other without formally overlapping, which happens on 23 li1 groups on the puzzle and nowhere else. I checked whether the answer depends on that number, and it does not: at 0 nm, 20 nm, 60 nm and 120 nm the recovered net partition is byte-identical on both designs, so it is not a fitting parameter |
+| **Every via cut lands on metal on both sides** | 22,713 of 22,713 on the puzzle. This is the check that says the rotations and mirrors were applied correctly, and it needs no answer key, so it works on the puzzle as well as the warm-up |
 
 ## Determinism
 
 Every number on this page is byte-identical run to run. The region letters are
 assigned by sorting regions on their lowest cell index rather than on set
-iteration order, the counter pairs are sorted on instance index, and nothing in
-the pipeline depends on dictionary ordering. The one place a legitimate
-difference can appear is W6, where the warm-up has 15 valid answers and the SAT
-solver may return any of them.
+iteration order, the counter pairs are sorted on instance index, the simulation
+shards are collected in shard order rather than completion order, and nothing in
+the pipeline depends on dictionary ordering.
+
+Two places are allowed to move if the SAT back end is swapped, and only two. W6
+has 15 valid answers and the solver may return any of them. And each message in
+the P10 catalogue is illustrated by *an* example grid that produces it, where any
+grid in the class would do. Neither is a result.

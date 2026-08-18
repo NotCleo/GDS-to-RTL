@@ -9,7 +9,7 @@
 #
 #  Inputs are only the files Jane Street shipped, in puzzle/ and warmup/, plus
 #  the sky130 PDK in pdk/. Everything in puzzle-solution/ and warmup-solution/
-#  is deleted and rebuilt. Runtime is about 15 seconds.
+#  is deleted and rebuilt. Runtime is about 5 seconds.
 # =============================================================================
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -22,24 +22,6 @@ if [ ! -x "$PY" ]; then
   .venv/bin/pip install --quiet --upgrade pip
   .venv/bin/pip install --quiet -r requirements.txt
 fi
-
-echo "tools"
-printf '  %-10s %s\n' python "$($PY --version 2>&1)"
-for t in iverilog vvp; do
-  if command -v "$t" >/dev/null; then
-    printf '  %-10s %s\n' "$t" "$($t -V 2>&1 | head -1)"
-  else
-    printf '  %-10s MISSING, the two cross-checks will be skipped\n' "$t"
-  fi
-done
-$PY - <<'EOF'
-import gdstk, shapely, z3
-from pysat.solvers import Cadical153
-print(f"  {'gdstk':10s} {gdstk.__version__}")
-print(f"  {'shapely':10s} {shapely.__version__}")
-print(f"  {'z3':10s} {z3.get_version_string()}")
-print(f"  {'python-sat':10s} Cadical153 available")
-EOF
 
 rm -rf puzzle-solution warmup-solution
 $PY GDS-to-RTL/gds_to_rtl.py "$@"
