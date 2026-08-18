@@ -616,6 +616,9 @@ what a command-line tool is.
 | you want equivalence checking between two RTL descriptions | my equivalence check is gates against RTL, and iverilog does that in one simulation |
 | the design is large enough that a hand-written encoder would be slow | 728 cells is small. The encoder is 40 lines |
 
+
+The decision to move to Tseitin Encoder was from my question over Mathematics Stack Exchange, see [here](https://math.stackexchange.com/questions/5147291/how-to-formulate-this-satisfiability-problem)
+
 So I wrote the encoder.
 
 #### What a Tseitin encoder is
