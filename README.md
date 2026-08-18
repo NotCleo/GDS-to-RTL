@@ -407,6 +407,10 @@ I have documented my entire solution's implementation is this single readme file
 | (VII) Directory Layout  | Solution's File layout |
 | (VIII) Full Picture  | Complete breakdown of the solution |
 
+#### note :
+
+Finding a breakthrough != Finding an Easter Egg 
+
 ----
 
 ## (I) What were the files provided for the puzzle
