@@ -346,6 +346,31 @@ rule that was broken, and that rule is the other name of the puzzle. No random
 sweep reaches it. I found it by asking a SAT solver to enumerate every string the
 output bus can produce, over the fourteen queries that closed the list.
 
+#### Note : 
+
+In Easter Egg (3), I ran a sample RTL to see how iverilog produces a normal VCD file : 
+
+    iverilog -g2012 -o sim.out counter.v tb_counter.v
+    vvp sim.out
+    less counter.vcd          # or: cat counter.vcd
+
+To which is comes up as : 
+
+```
+$date
+	Tue Aug 18 04:49:16 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+```
+
+As you can see it prints the name of the tool and not a human message.
+
+
 #### (†) : 
 
 I thought Dec 31 2016 must be deliberate, but then came across the [closest blog](https://blog.janestreet.com/a-brief-trip-through-spacetime/) posted (Jan 9 2017) which mentions the word "space", close enough to "stars" (PLEASE TAKE THIS AS JOKE)
