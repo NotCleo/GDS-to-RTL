@@ -41,7 +41,7 @@ blocks below, and each one occupies a contiguous region of the die.
 
 | block | what it would be in RTL | cells | flops |
 |---|---|---|---|
-| scan position counter | two 4-bit up counters, `row` and `col`, plus a `running` flag | 32 | 9 |
+| scan position counter | two 4-bit up counters (†), `row` and `col`, plus a `running` flag | 32 | 9 |
 | region decoder | combinational lookup, cell index to one of eleven region ids | 147 | 0 |
 | column star counters | 11 x 2-bit saturating counter with an equality compare against 2 | 81 | 22 |
 | region star counters | 11 x the same counter, selected by the region decoder | 81 | 22 |
@@ -54,6 +54,8 @@ blocks below, and each one occupies a contiguous region of the die.
 That is 724 of the 728 cells and all 92 flops. The remaining 4 are buffers that
 drive more than one block.
 
+- (†) : 4 bits because each row and each column holds 11 cells.
+
 There is no adder here in the arithmetic sense. Every count is small, so the
 design uses 2-bit saturating counters and equality compares rather than an adder
 and a magnitude comparator. The warm-up is the design with the adder: two 8-bit
@@ -62,6 +64,260 @@ shift registers, an 8-bit adder and a comparator against 496.
 Where each block physically sits on the die, with the counts for each drawn box:
 
 ![Module map of puzzle.gds](Images/gds-module-map.png)
+
+### The RTL behind each block
+
+The same nine blocks, in the order the table lists them, with the lines of
+[`08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) that implement each
+one.
+
+#### 1. Scan position counter
+
+```verilog
+localparam N = 11;
+
+reg [3:0] col, row;
+reg       done, done_d;
+
+wire running   = enable & ~done;
+wire last_col  = (col == N-1);
+wire last_cell = last_col & (row == N-1);
+
+if (running) begin
+  if (last_col) begin
+    col <= 0;
+    row <= row + 1'b1;
+    if (last_cell) done <= 1'b1;
+  end else begin
+    col <= col + 1'b1;
+  end
+end
+```
+
+This is the only thing that knows where in the frame the chip is. `col` counts
+0 to 10 and wraps, `row` advances on each wrap, and `done` latches when cell 120
+arrives and stops the scan for good. Four flops for `col`, four for `row`, one
+for `done`. Nothing here looks at `I`, so the position and the payload are
+independent, which is what lets every other block be written as "on a star, at
+this position, do this".
+
+#### 2. Region decoder
+
+```verilog
+wire [10:0] cell_no = row * N + col;
+
+always @* begin
+  region_id = 4'd0;
+  case (cell_no)
+    11'd0:   region_id = 4'd0;
+    11'd1:   region_id = 4'd0;
+    ...
+    11'd13:  region_id = 4'd5;
+    ...
+    11'd120: region_id = 4'd4;
+  endcase
+end
+```
+
+A 121-entry constant lookup, position to region id, with no state at all. It is
+the largest purely combinational block in the design, 147 cells and zero flops,
+because synthesis flattens the case into AND and OR gates over the eight counter
+bits. The table it holds is the region map, and that map is the one piece of the
+design that could not be read out of the gates. It came from probing: one star
+at one position, 121 times, watching which counter moved.
+
+#### 3. Column star counters
+
+```verilog
+reg [1:0] ccnt [0:N-1];
+
+if (star) begin
+  if (ccnt[col] != 2'd3) ccnt[col] <= ccnt[col] + 1'b1;
+end
+
+if (ccnt[i] != 2'd2) all_ok = 1'b0;
+```
+
+Eleven counters of two bits each, 22 flops, one per column, each incremented
+when a star lands in its column. They saturate at 3 instead of wrapping, so a
+third star sticks at 3 and can never roll back around to a passing 2. Two bits
+is enough because the only question ever asked is whether the final value equals
+2, and anything above 2 is equally wrong.
+
+#### 4. Region star counters
+
+```verilog
+reg [1:0] gcnt [0:N-1];
+
+if (star) begin
+  if (gcnt[region_id] != 2'd3) gcnt[region_id] <= gcnt[region_id] + 1'b1;
+end
+
+if (gcnt[i] != 2'd2) all_ok = 1'b0;
+```
+
+Identical to the column counters, and the same 22 flops, with one difference:
+the index is `region_id` from the decoder rather than `col`. That single change
+of index is the whole reason the design needs the region decoder, and it is what
+turns a two-per-row-and-column puzzle into a Star Battle. It is also why the
+first hypothesis failed: 25 grids that were perfect on rows and columns were all
+rejected here.
+
+#### 5. Row star counter and no-touch checker
+
+```verilog
+reg [1:0]   rowcnt;
+reg [N-1:0] prev_row, cur_row;
+reg         prev_cell;
+reg         adj_err, row_err;
+
+wire above_l = (col > 0)   ? prev_row[col-1] : 1'b0;
+wire above_c =               prev_row[col];
+wire above_r = (col < N-1) ? prev_row[col+1] : 1'b0;
+wire touches = prev_cell | above_l | above_c | above_r;
+
+if (star) begin
+  if (rowcnt != 2'd3) rowcnt <= rowcnt + 1'b1;
+  cur_row[col] <= 1'b1;
+  if (touches) adj_err <= 1'b1;
+end
+prev_cell <= star;
+
+if (last_col) begin
+  if ((rowcnt + (star && rowcnt != 2'd3)) != 2'd2) row_err <= 1'b1;
+  rowcnt    <= 0;
+  prev_cell <= 0;
+  prev_row  <= cur_row | (star << col);
+  cur_row   <= 0;
+end
+```
+
+Two jobs share one block because they share the same memory of the recent past.
+
+There is one row counter rather than eleven. Only one row is ever in flight, so
+`rowcnt` is checked against 2 at the last column and cleared in the same cycle,
+which is where the 11 + 11 + 1 arrangement on the die comes from. The `(rowcnt +
+star)` term in the check exists because the eleventh star of a row arrives on the
+same edge the row is being judged.
+
+The no-touch check only ever looks backwards. When a star arrives, the four
+neighbours that have already been seen are the cell to the left and the three
+above it, so those four are all it needs; the forward neighbours will run the
+same test themselves when their turn comes. `prev_cell` holds the left one and
+`prev_row` holds the row above. In the gates this is a single 12-deep shift
+register of `I` tapped at positions 1, 10, 11 and 12, which is the same object:
+11 cells back is directly above, so 10, 11 and 12 back are the three above and 1
+back is the left. 16 flops, being 2 for `rowcnt`, 11 for `prev_row`, 1 for
+`prev_cell`, and the two error flags, which latch and never clear.
+
+#### 6. Total star counter
+
+```verilog
+reg [7:0] total;
+
+if (star) begin
+  total <= total + 1'b1;
+end
+
+(total == 8'd22)
+```
+
+Eight bits, not five, because it has to count all the way to 121 without
+wrapping. It is only ever compared for equality, against 22 for the verdict and
+against 0 and 121 for the two degenerate messages, so no magnitude comparator is
+built. This counter is redundant against the eleven column counters, which
+already force 22 stars between them, and the chip carries it anyway because the
+output stage needs to tell an empty grid from a full one.
+
+#### 7. Success logic
+
+```verilog
+reg succ_q;
+
+always @* begin
+  all_ok = 1'b1;
+  for (i = 0; i < N; i = i + 1) begin
+    if (ccnt[i] != 2'd2) all_ok = 1'b0;
+    if (gcnt[i] != 2'd2) all_ok = 1'b0;
+  end
+end
+
+if (done & ~done_d)
+  succ_q <= ~adj_err & ~row_err & (total == 8'd22) & all_ok;
+
+assign success = succ_q;
+```
+
+The 23 inputs to the AND tree are 11 column compares, 11 region compares and the
+row result, plus the total and the two error flags. `done & ~done_d` is a
+one-cycle pulse on the edge after the last cell, so the verdict is computed once,
+on edge 122 and not edge 121, and that is exactly why the SAT solver proved 121
+edges unsatisfiable and 122 satisfiable. `succ_q` is written nowhere else, so it
+holds its value for the rest of time. At gate level that shows up as the
+`| (u28.Q & ...)` term feeding the flop back into itself.
+
+#### 8. Output stage
+
+```verilog
+wire counts_ok = ~row_err & (total == 8'd22) & all_ok;
+
+always @* begin
+  if      (total == 8'd0)             j = 0;
+  else if (total == 8'd121)           j = 1;
+  else if (counts_ok & ~adj_err)      j = 2;
+  else if (counts_ok &  adj_err)      j = 4;
+  else                                j = 3;
+end
+
+always @(posedge clk or negedge rst_n) begin
+  if (!rst_n) begin
+    optr <= 0; emitting <= 0; o_q <= 8'h00;
+  end else if (done & ~done_d) begin
+    emitting <= 1'b1; optr <= 5'd1; o_q <= rom[0];
+  end else if (emitting && optr < mlen) begin
+    o_q  <= rom[optr];
+    optr <= optr + 1'b1;
+  end else begin
+    o_q <= 8'h00;
+  end
+end
+
+assign O = o_q;
+```
+
+The largest block on the die at 225 cells, and the one the provided layout image
+labels as safe to ignore. It is a five-way selector into a small ASCII ROM,
+clocked out one character per cycle starting on the same edge `success` settles.
+`j` picks the message: 0 for `EMPTY SKY`, 1 for `BIG BANG`, 2 for
+`(* TWO STARS *)`, 3 for `TRY AGAIN` and 4 for `TWO NOT TOUCH`. Index 4 is the
+one that took a solver to find, because reaching it means getting every count
+right and breaking only the adjacency rule.
+
+The 12 flops are the character pointer and the 8-bit output register. `optr` is
+declared five bits here and the gates only build four of them, since the longest
+message is 15 characters.
+
+#### 9. Clock tree
+
+```verilog
+always @(posedge clk or negedge rst_n) begin
+```
+
+There is no RTL for this block. Every sequential element in the design is on that
+one line, and the buffer tree is inserted by synthesis to drive 92 clock pins
+from a single pad. It appears in the extracted netlist as 32 buffers in three
+levels, one `clkbuf_16` at the root and `clkbuf_8` then `clkbuf_4` below it:
+
+```verilog
+sky130_fd_sc_hd__clkbuf_16 u201_clkbuf_16 (.A(clk),     .X(net_647));
+sky130_fd_sc_hd__clkbuf_8  u1_clkbuf_8    (.A(net_647), .X(net_503));
+sky130_fd_sc_hd__clkbuf_4  u0_clkbuf_4    (.A(net_503), .X(net_001));
+```
+
+Confirming that this is all it is mattered more than it sounds. Every one of the
+92 clock pins traces back through these buffers to `clk` with no gating anywhere,
+which is what makes it safe to reason about the whole chip one rising edge at a
+time.
 
 
 ----
