@@ -525,7 +525,7 @@ Star Battle is also referred to as Two Not Touch
 
 ##### Want to try the puzzle from this challenge? 
 
-- Play [here](notcleo.github.io/GDS-to-RTL/TwoNotTouch-Interactive-Puzzle/), read [here](TwoNotTouch-Interactive-Puzzle/)
+- Play [here](https://notcleo.github.io/GDS-to-RTL/TwoNotTouch-Interactive-Puzzle/), read [here](TwoNotTouch-Interactive-Puzzle/)
 
 
 ##### Want to try the puzzle?
