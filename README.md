@@ -710,6 +710,8 @@ that instead gave 79 out of 79 immediately.
 - At this stage, I could prove exactness while my extracted netlist still called everything u17 and net_412.
 
 
+----
+
 ### 1. What the layout viewer turned up: easter egg 1
 
 Before any of the extractor work, back when I was still turning layers off one at
