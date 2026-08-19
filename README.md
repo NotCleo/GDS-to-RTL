@@ -300,6 +300,8 @@ sky130_fd_sc_hd__clkbuf_4 u0_clkbuf_4 (.A(net_505), .X(net_000));
 | 7 | **496 is the third perfect number**, `1+2+4+8+16+31+62+124+248`, and `A+B=496` has exactly 15 eight-bit solutions | [warmup/00_source.v](warmup/00_source.v) | [07](Easter-Eggs/07_easter_egg.txt) |
 | 8 | **11 + 11 + 1 drawn on the die.** Every counter in one narrow vertical column, in two stacks of eleven plus a loner | [puzzle.gds](puzzle/puzzle.gds), flip-flop placement at x 114.8 to 126.3 | [08](Easter-Eggs/08_easter_egg.txt) |
 | 9 | **Five messages, not four.** `EMPTY SKY`, `BIG BANG`, `TRY AGAIN`, **`TWO NOT TOUCH`** and `(* TWO STARS *)`, the last two being the puzzle's own name and its rule in OCaml comment syntax | the output ROM (see [10_message_catalogue.txt](puzzle-solution/10_message_catalogue.txt)) | [09](Easter-Eggs/09_easter_egg.txt) |
+| 10 | **Star Search** (matches the theme of this puzzle) | [December 2016 Jane Street Puzzle](https://www.janestreet.com/puzzles/star-search-index/)  | [10](Easter-Eggs/10_easter_egg.txt)  |
+
 
 - `TWO NOT TOUCH` is the least reachable of the five.
 - The chip prints it only for a grid that gets every count right, two stars in every row, every column and every region, and then breaks exactly one rule: two stars touch.
