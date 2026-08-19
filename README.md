@@ -7,6 +7,15 @@
 
 ----
 
+## Timeline 
+
+| Day | Task |
+|---|---|
+| Aug 05-07 | Finished installations, tests, theory stuff |
+| Aug 08-10 | Got done with extractor pipeline working |
+| Aug 12-13 | Solved the puzzle (made my submission) |
+| Aug 13-20 | Documented the findings and refined the pipeline (made my second submission) |
+
 ## Summary of Results
 
 - Below table lists all final deliverable files / outputs for the Puzzle :
