@@ -52,13 +52,8 @@
 | output stage | a 4-bit character counter, a verdict lookup table and an 8-bit output register | 225 | 12 |
 | clock tree | `clkbuf_4`, `clkbuf_8`, `clkbuf_16` | 33 | 0 |
 
-- That is 724 of the 728 cells and all 92 flops.
-- The remaining 4 are buffers that drive more than one block.
 - (†) : 4 bits because each row and each column holds 11 cells.
-- There is no adder here in the arithmetic sense.
-- Every count is small, so the design uses 2-bit saturating counters and equality compares rather than an adder and a magnitude comparator.
-- The warm-up is the design with the adder: two 8-bit shift registers, an 8-bit adder and a comparator against 496.
-- Where each block physically sits on the die, with the counts for each drawn box:
+- The design uses 2-bit saturating counters to add up to check row/column/region counts
 
 ![Module map of puzzle.gds](Images/gds-module-map.png)
 
@@ -115,7 +110,7 @@ end
 - A 121-entry constant lookup, position to region id, with no state at all.
 - It is the largest purely combinational block in the design, 147 cells and zero flops, because synthesis flattens the case into AND and OR gates over the eight counter bits.
 - The table it holds is the region map, and that map is the one piece of the design that could not be read out of the gates.
-- It came from probing: one star at one position, 121 times, watching which counter moved.
+- It came from probing: one star at one position, 121 times, watching which counter incremented.
 
 #### 3. Column star counters
 
@@ -270,7 +265,6 @@ assign O = o_q;
 always @(posedge clk or negedge rst_n) begin
 ```
 
-- There is no RTL for this block.
 - Every sequential element in the design is on that one line, and the buffer tree is inserted by synthesis to drive 92 clock pins from a single pad.
 - It appears in the extracted netlist as 32 buffers in three levels, one `clkbuf_16` at the root and `clkbuf_8` then `clkbuf_4` below it:
 
@@ -280,16 +274,12 @@ sky130_fd_sc_hd__clkbuf_8 u1_clkbuf_8 (.A(net_660), .X(net_505));
 sky130_fd_sc_hd__clkbuf_4 u0_clkbuf_4 (.A(net_505), .X(net_000));
 ```
 
-- Confirming that this is all it is mattered more than it sounds.
 - Every one of the 92 clock pins traces back through these buffers to `clk` with no gating anywhere, which is what makes it safe to reason about the whole chip one rising edge at a time.
 
 
 ----
 
 ## Summary of all Easter Eggs found
-
-- Eleven of them, in the order I found them.
-- Each has its own file with what it is, where it was, how I found it and when.
 
 | # | Easter Egg | Where it was | Write-up |
 |---|---|---|---|
@@ -305,14 +295,6 @@ sky130_fd_sc_hd__clkbuf_4 u0_clkbuf_4 (.A(net_505), .X(net_000));
 | 10 | **Star Search** (matches the theme of this puzzle) | [December 2016 Jane Street Puzzle](https://www.janestreet.com/puzzles/star-search-index/)  | [10](Easter-Eggs/10_easter_egg.txt)  |
 | 11 | **A-brief-trip-through-spacetime** (matches the theme of this puzzle) | [January 2017 Jane Street Blog](https://blog.janestreet.com/a-brief-trip-through-spacetime/)  | [11](Easter-Eggs/11_easter_egg.txt)  |
 
-
-- `TWO NOT TOUCH` is the least reachable of the five.
-- The chip prints it only for a grid that gets every count right, two stars in every row, every column and every region, and then breaks exactly one rule: two stars touch.
-- So it names the rule that was broken, and that rule is the other name of the puzzle.
-- No random sweep reaches it.
-- I found it by asking a SAT solver to enumerate every string the output bus can produce, over the fourteen queries that closed the list.
-
-----
 
 #### Note : 
 
@@ -336,7 +318,7 @@ $timescale
 $end
 ```
 
-- As you can see it prints the name of the tool and not a human message.
+- you can see it prints the name of the tool and not a human message.
 
 ----
 
@@ -346,11 +328,11 @@ $end
 
     496 (1 + 2 + 4 + 8 + 16 + 31 + 62 + 124 + 248)
 
-#### Note : 
+#### Note* : 
 
 - A total of 9 Easter Eggs = number of positive proper divisors of 496 (PLEASE TAKE THIS AS A JOKE)
 
-##### Revision : The above statement was true till I found the 11th Easter Egg :(
+##### *Revision : The above statement was true till I found the 11th Easter Egg :(
     
 ----
 
@@ -360,7 +342,7 @@ $end
 
 #### Sections (I) through (VII) discuss the core findings (5 min read)
 
-#### Sections (VIII) discusses the complete implementation details (20 min read) 
+#### Sections (VIII) discusses the complete implementation details (20 min read) (start here if needed)
 
 | Title | What it is about |
 |---|---|
@@ -372,10 +354,6 @@ $end
 | (VI) How to run | Quick start / Installations |
 | (VII) Directory Layout  | Solution's File layout |
 | (VIII) Full Picture  | Complete breakdown of the solution |
-
-#### note :
-
-- Finding a breakthrough != Finding an Easter Egg
 
 ----
 
@@ -423,19 +401,11 @@ $end
 ##### Note : 
 
 - I ran the three puzzle files through exiftool for a preliminary check and found nothing interesting.
-- I ran the warmup files and you will notice the file size going from
-
-- 1.2 KB (00_source.v) 
-- 19 KB (01_netlist.v) 
-- 30 KB (02_netlist_with_power_rails.v)
-- 112 KB (03_post_place_and_route.def)
-- 306KB (04_final.gds). 
-
-
+-
 -----
 
-- Here's how the waveform (of the provided VCD file) looks like :
-- You will notice the "success" flag remains low throughout.
+- The waveform (of the puzzle's VCD file) looks like :
+- Notice the "success" flag remains low throughout.
 
 ![Surfer showing waveform of example inputs VCD file](Images/example_inputs_waveform.png)
 
@@ -457,7 +427,7 @@ $end
 
 ----
 
-## (III) What I did
+## (III) What I did (in 3 lines)
 
 - Extracted a netlist from the raw geometry present in the puzzle GDS file.
 - Proved the extractor pipeline exact against the warm-up's golden files, then validated it against the real chip's recorded outputs. 
@@ -467,7 +437,7 @@ $end
 
 ## (IV) What the puzzle turned out to be
 
-- An "11x11 Star Battle (Two Not Touch) Validator".
+- An "11x11 Star Battle (Two Not Touch) Validator". (pass in a solved puzzle and it tells you if it is right)
 - Two stars per row, per column and per region, no two touching.
 - Exactly one grid works.
 - Drive in a solved 11x11 Two Not Touch Puzzle grid serially and the chip prints:
@@ -503,8 +473,7 @@ $end
 
 ## (VI) How to run 
 
-- The whole flow is one Python file.
-- The table below is everything it needs, plus the tools I used by hand to look at things.
+- The pipeline is one Python file.
 
 | Name | Type | Why it was used |
 |---|---|---|
@@ -526,27 +495,24 @@ $end
 
 ### Update: yosys is not used any more, and this is why
 
-- The earlier version of this pipeline used **yosys** for every formal question it asked.
+- The earlier version of this pipeline used **yosys** for SAT.
 - It does not any more.
-- Neither tool is better than the other in general; they have different cost models, and the questions this design raises sit badly with one and well with the other.
+- More about earlier use of yosys below : 
 
 #### The one question, and where 122 comes from
 
 - The chip takes a 121-bit frame, one bit per enabled rising edge, and settles `success` on the edge after the last cell arrives, which is the interface stated at the top of this page.
-- 121 cells in plus one verdict edge is a **122-edge window**, and that is the unroll depth every question here needs.
-- Neither number is assumed: section (VIII) reads the frame length off the recorded waveform, confirms it by probing the gates, and then proves the depth bound from the gates alone.
-- Every question is then the same shape: over 122 copies of the circuit, is there an assignment to the 121 free `I` bits that drives some net to some value on some edge.
-- That shape has a name: **bounded model checking**.
-- Unroll a sequential circuit K edges deep into pure combinational logic, assert the property on the frame you care about, hand the result to a SAT solver, and read the inputs off the model.
+- 121 cells in plus one verdict edge is a **122-edge window**, and that is the unroll depth.
+- bounded model checking unrolls a sequential circuit K edges deep into pure combinational logic, assert the property on the frame you care about, hand the result to a SAT solver, and read the inputs off the model.
 - yosys implements exactly that as `sat -seq K`, so it is where I started.
 
 #### What yosys is
 
 - yosys is an open-source synthesis framework.
 - Its day job is the forward direction: read Verilog, elaborate it into generic gates, optimise, and map onto a real cell library.
-- `sat -seq K` is its formal side: it unrolls the elaborated design K edges deep, encodes the result, and calls a SAT solver built into the binary.
+- `sat -seq K` is its formal model checking feature: it unrolls the elaborated design K edges deep, encodes the result, and calls a SAT solver built into the binary.
 
-#### What I asked it
+#### What I did with it
 
 - Roughly this, once per depth:
 
@@ -587,7 +553,7 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
 | you want equivalence between two RTL descriptions, through `equiv_*` or `miter` + `sat` | my equivalence check is gates against behavioural RTL over 564 stimulus vectors, which is one iverilog simulation |
 | the design is big enough that a hand-written encoder would be the bottleneck | 728 cells is not. The `CNF` class is 61 lines and the unroller is 55, and the two together encode this design in 0.10 s |
 
-- The decision to move to a Tseitin encoder came out of a question I asked on Mathematics Stack Exchange, see [here](https://math.stackexchange.com/questions/5147291/how-to-formulate-this-satisfiability-problem).
+- The decision to move to a Tseitin encoder came out of a question I asked on Mathematics Stack Exchange
 - So I wrote the encoder.
 
 #### What a Tseitin encoder is
@@ -631,12 +597,7 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
 | "list everything reachable" | not expressible | the same in a loop until UNSAT |
 | Measured here | about 40 s per depth | 43,111 clauses over 14,498 variables, encoded in 0.10 s; both depths and the uniqueness proof answered inside one 0.16 s stage |
 
-- The uniqueness proof and the five-message catalogue are the two results the yosys version of this pipeline does not have, and they are missing for that reason and no other.
-
 #### Is there anything better than Tseitin, and why am I not using it
-
-- Yes, for some meanings of better.
-- None of them is better for this.
 
 | alternative | what it buys | why not here |
 |---|---|---|
@@ -663,10 +624,10 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
     sudo apt install iverilog python3-venv python3-tk tree -y
     bash RUN.sh
 
-#### macOS
 
-- I do not own a Mac, so this is written from the packages rather than tested.
-- If something here is wrong, please open an issue.
+- I do not own a Mac/Windows machine, so I made Opus 5 write this below two sections (please open an issue if it fails)
+
+#### macOS
 
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     brew install python icarus-verilog git tree python-tk
@@ -674,30 +635,11 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
     cd GDS-to-RTL
     bash RUN.sh
 
-- On Apple silicon, `pip` builds `gdstk`, `shapely` and `z3-solver` from arm64 wheels, which exist for all three.
-- `python-tk` is only for the desktop version of the interactive puzzle; the browser version needs nothing.
-
 #### Windows
-
-- Two routes.
-- I do not run Windows either, so the same caveat applies.
-- **WSL2, which is the one I would use.** It is the Ubuntu instructions unchanged:
 
     wsl --install -d Ubuntu
 
 - Then open the Ubuntu shell and follow the Ubuntu block above.
-- **Native Windows, without WSL.** Install [Python 3.10 or newer](https://www.python.org/downloads/windows/) with "Add python.exe to PATH" ticked, and [Icarus Verilog for Windows](https://bleyer.org/icarus/), and make sure `iverilog.exe` is on `PATH`.
-- Then, in PowerShell:
-
-    git clone https://github.com/NotCleo/GDS-to-RTL.git
-    cd GDS-to-RTL
-    python -m venv .venv
-    .venv\Scripts\python -m pip install -r requirements.txt
-    .venv\Scripts\python GDS-to-RTL\gds_to_rtl.py
-
-- `RUN.sh` is a bash script, so on native Windows run the Python file directly as above.
-- Everything in the pipeline is pure Python plus subprocess calls to `iverilog` and `vvp`; there is nothing platform-specific in it.
-- If Icarus is not installed, add `--no-iverilog` and the run skips the two cross-checks and still produces the answer.
 
 ----
 
@@ -714,7 +656,6 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
 
 - Every file in those two directories is listed and explained at the end of section (VIII).
 - The captured output of a full run is in [`RUN.log`](RUN.log), the pipeline's own stage-by-stage log is in [`GDS-to-RTL/run.log`](GDS-to-RTL/run.log), and every stage is described with its numbers in [`GDS-to-RTL/summary.md`](GDS-to-RTL/summary.md).
-- The pipeline is entirely headless.
 - Neither viewer below is needed to reproduce anything.
 
 #### Optional, only if you want to look at the waveforms by hand
@@ -729,7 +670,6 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
     surfer puzzle-solution/14_success_inputs.vcd
 
 - Open `O[7:0]` and set its format to ASCII.
-- That is easter egg 5: the byte stream is text.
 
 ----
 
@@ -737,15 +677,13 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
 
 - The extractor is not specific to this puzzle, so it is also packaged on its own, in [`General-GDS-to-RTL/`](General-GDS-to-RTL/).
 - Point it at any sky130 layout:
+		  
+		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds
+		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds -o out/
+		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds --def mychip.def --golden golden.v
+		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds --lef other.lef --lib other.lib
+		python3 General-GDS-to-RTL/gds_to_netlist.py --show-layers
 
-    python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds
-
-    python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds -o out/
-    python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds --def mychip.def --golden golden.v
-    python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds --lef other.lef --lib other.lib
-    python3 General-GDS-to-RTL/gds_to_netlist.py --show-layers
-
-- It imports `GDS-to-RTL/gds_to_rtl.py` rather than copying anything out of it, so the geometry code that runs is the same code proved exact against the warm-up's golden netlist.
 - The main pipeline is untouched and does not know it exists.
 
 | you get | what is in it |
@@ -759,20 +697,14 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
 | `<stem>_07_equivalence.txt` | the recovered RTL run against the recovered gates in `iverilog`, with the mismatch count |
 | `<stem>_08_crosscheck.txt` | with `--def` and `--golden`: placement matching and the net-partition comparison |
 
-- The behaviour is recovered, not guessed, and it is checked before the run ends.
 - Every cell's function comes out of the Liberty file, so a netlist of known functions is already a system of boolean equations, one per net.
 - Substituting each equation into its consumer would expand a cone into an expression exponential in its depth, which is why fully expanding a counter produces megabytes, so a net keeps its own line when more than one thing reads it, when it is a port, when it holds state, or when folding it in would pass sixteen terms, and is folded in otherwise.
 - The result is then run against the gates: exhaustively for a combinational design small enough to enumerate, over two thousand clocked cycles otherwise.
-- On a synthesised half-adder that recovers `carry = a & b` and `sum = a & ~b | ~a & b` from the polygons alone, all four input vectors checked.
-- On the 728-cell puzzle it recovers 309 equations and 20 clocked blocks and matches the gates over 2,000 cycles.
-- To be honest about the limit: that is the **behaviour**, not the intent.
-- Synthesis is not reversible.
+- Synthesis is not reversible!
 - It flattens the hierarchy, deletes every name the layout did not keep as a label, and many different sources compile to the same gates, so nothing gets the original `always` blocks back.
 - The RTL in [`puzzle-solution/08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) was written by hand from an understanding of the gates and then *proved* cycle-equivalent to them.
 - Both are equivalent to the gates.
 - Only the hand-written one says the circuit is an 11x11 Star Battle validator.
-- The proof can be automated.
-- The understanding is the work.
 - What the structure report does is tell you where to look, and [`General-GDS-to-RTL/README.md`](General-GDS-to-RTL/README.md) says how to read it.
 - For a PDK that is not sky130, `--show-layers` prints the layer table in the shape that `--layers` accepts, and you pass that PDK's own `--lef` and `--lib`.
 
@@ -802,9 +734,8 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
 
 ## (VIII) Full Picture 
 
-- This is the whole thing in the order it happened: what I had, what I ran it through, and what came back.
+- This is the whole thing, in the order it happened: what I had, what I ran it through, and what came back.
 - Every number here is printed by `GDS-to-RTL/gds_to_rtl.py` on a fresh run, and the run that produced them is in [`RUN.log`](RUN.log).
-- Each section names the pipeline stage that does the work, so any claim can be traced to the code that produces it.
 
 | | |
 |---|---|
