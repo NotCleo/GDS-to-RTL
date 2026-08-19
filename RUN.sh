@@ -9,7 +9,7 @@
 #
 #  Inputs are only the files Jane Street shipped, in puzzle/ and warmup/, plus
 #  the sky130 PDK in pdk/. Everything in puzzle-solution/ and warmup-solution/
-#  is deleted and rebuilt. Runtime is about 5 seconds.
+#  is deleted and rebuilt. Runtime is about 3 seconds.
 # =============================================================================
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -19,8 +19,15 @@ PY=.venv/bin/python
 if [ ! -x "$PY" ]; then
   echo "no .venv here yet, creating one"
   python3 -m venv .venv
-  .venv/bin/pip install --quiet --upgrade pip
-  .venv/bin/pip install --quiet -r requirements.txt
+  # Everything in requirements.txt is on PyPI and nothing here needs a newer pip
+  # than the one venv ships with. A pip.conf in the home directory can add a
+  # second index to every lookup, which is what NVIDIA's PyIndex installer
+  # writes, and when that mirror is unreachable pip retries it five times per
+  # package before falling back. Pointing PIP_CONFIG_FILE at nothing keeps this
+  # install on PyPI alone. Set GDS_PIP_ARGS if you need an internal mirror.
+  PIP_CONFIG_FILE=/dev/null .venv/bin/pip install --quiet \
+    --disable-pip-version-check --retries 2 --timeout 20 \
+    ${GDS_PIP_ARGS:-} -r requirements.txt
 fi
 
 rm -rf puzzle-solution warmup-solution

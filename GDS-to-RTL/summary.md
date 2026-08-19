@@ -1,8 +1,9 @@
 # The pipeline, stage by stage
 
-One file, `gds_to_rtl.py`. It runs the warm-up first to prove the tools, then
-the puzzle. Total runtime about **5 seconds**. The full terminal output of the
-run this page describes is in [`run.log`](run.log).
+- One file, `gds_to_rtl.py`.
+- It runs the warm-up first to prove the tools, then the puzzle.
+- Total runtime about **3 seconds**.
+- The full terminal output of the run this page describes is in [`run.log`](run.log).
 
 ```
 bash RUN.sh                 warm-up validation, then the puzzle
@@ -10,37 +11,33 @@ bash RUN.sh --only puzzle
 bash RUN.sh --no-iverilog   skip the two independent-simulator checks
 ```
 
-Inputs are only the files Jane Street shipped, in `puzzle/` and `warmup/`, plus
-the sky130 PDK in `pdk/`. Nothing else is read. Everything in
-`puzzle-solution/` and `warmup-solution/` is deleted and rebuilt every run.
+- Inputs are only the files Jane Street shipped, in `puzzle/` and `warmup/`, plus the sky130 PDK in `pdk/`.
+- Nothing else is read.
+- Everything in `puzzle-solution/` and `warmup-solution/` is deleted and rebuilt every run.
 
 ---
 
 ## Why one file, and why it is fast
 
-The first version of this was twenty numbered scripts calling out to `yosys` and
-`iverilog` for every question, and it took about four minutes. Almost all of
-that was process startup and Verilog elaboration, repeated hundreds of times to
-ask hundreds of nearly identical questions. Folding it into one file that keeps
-its state in memory took it to 17 seconds. Measuring where those went took it to
-**5**.
-
-The whole pipeline rests on two things.
+- The first version was twenty numbered scripts calling out to `yosys` and `iverilog` for every question, and it took about four minutes.
+- Almost all of that was process startup and Verilog elaboration, repeated hundreds of times to ask hundreds of nearly identical questions.
+- Folding it into one file that keeps its state in memory took it to 17 seconds.
+- Two rounds of profiling took it to **2.8**.
+- Every change was checked by diffing every file in `puzzle-solution/` and `warmup-solution/` against the previous version.
+- Both directories are byte-identical before and after all of it.
+- The whole pipeline rests on two things.
 
 | | what it replaced |
 |---|---|
 | **A bit-parallel simulator for the recovered gates.** Every net is one Python integer; bit *k* of that integer is the net's value in trial *k*. A NAND across 564 independent grids is one machine AND and one XOR, so 564 grids cost the same as one. The combinational block is compiled once into a straight-line Python function, 830 lines for the puzzle. | 121 separate `iverilog` runs for the cell probe, 25 more for the hypothesis test, and a `vvp` run per message class |
-| **A Tseitin encoder over the same parsed cell functions.** The netlist unrolls into CNF once, at the deepest depth needed, and a shallower depth is the same formula with the goal literal asserted a step earlier. 43,111 clauses over 14,498 variables, both depths and the uniqueness proof answered in 0.17 s. | `yosys ... sat -seq K`, about 40 s per depth, and no way to ask for uniqueness |
+| **A Tseitin encoder over the same parsed cell functions.** The netlist unrolls into CNF once, at the deepest depth needed, and a shallower depth is the same formula with the goal literal asserted a step earlier. 43,111 clauses over 14,498 variables, both depths and the uniqueness proof answered inside one 0.16 s stage. | `yosys ... sat -seq K`, about 40 s per depth, and no way to ask for uniqueness |
 
-Both read cell behaviour from the same place: the `function` and `ff` entries in
-the sky130 Liberty file. No cell truth table is written by hand anywhere, and the
-circuit that gets simulated is the same object that gets handed to the solver.
+- Both read cell behaviour from the same place: the `function` and `ff` entries in the sky130 Liberty file.
+- No cell truth table is written by hand anywhere, and the circuit that gets simulated is the same object that gets handed to the solver.
+- `iverilog` is still used, exactly twice, as an independent second opinion: once on the warm-up against the golden netlist, once on the puzzle against the recovered RTL.
+- `yosys` is no longer needed at all.
 
-`iverilog` is still used, exactly twice, as an independent second opinion: once
-on the warm-up against the golden netlist, once on the puzzle against the
-recovered RTL. `yosys` is no longer needed at all.
-
-### Where the time goes now
+### The first round of profiling
 
 | stage | before | after | what changed |
 |---|---|---|---|
@@ -51,20 +48,68 @@ recovered RTL. `yosys` is no longer needed at all.
 | the tool version banner | 0.5 s | **0** | it was a second Python process that existed to import four packages and print their versions |
 | **total** | **17.0 s** | **4.9 s** | |
 
-Dropping `shapely.unary_union` is the single largest item and it needs a word,
-because it looks like a shortcut and is not one. What that call computes is an
-exact merged outline, which nothing downstream reads. What is wanted is the
-connected components of "these two polygons touch", and running that relation
-over the raw polygons gives the identical partition, because the distance from a
-point to a union of shapes is the smallest of the distances to its members.
-Measured on `puzzle.gds` the two agree island for island on all six layers, and
-the direct version is eleven times faster.
+- Dropping `shapely.unary_union` was the single largest item and it needs a word, because it looks like a shortcut and is not one.
+- What that call computes is an exact merged outline, which nothing downstream reads.
+- What is wanted is the connected components of "these two polygons touch", and running that relation over the raw polygons gives the identical partition, because the distance from a point to a union of shapes is the smallest of the distances to its members.
+- Measured on `puzzle.gds` the two agree island for island on all six layers, and the direct version is eleven times faster.
+
+### The second round of profiling
+
+| stage | before | after | what changed |
+|---|---|---|---|
+| W2, extract the warm-up | 0.17 s | **0.10 s** | as P2 |
+| P2, extract the puzzle | 0.86 s | **0.47 s** | the same-layer proximity query split into a box prefilter plus one vectorised exact test, all of a cell's pin marks taken in one shapely call, the merged LEF parsed once per run instead of once per extraction |
+| P6, falsify the hypothesis | 0.30 s | **0.19 s** | z3 cardinality constraints instead of integer sums |
+| P9, the independent solve | 0.11 s | **0.05 s** | the same |
+| P10, message enumeration | 0.40 s | **0.31 s** | the five example grids simulated in one bit-parallel pass instead of five separate ones |
+| P11, the 564-grid equivalence | 1.95 s | **1.17 s** | z3 as above, and the shard count taken from physical cores rather than from `nproc` |
+| **total, measured together on a warm machine** | **4.32 s** | **2.81 s** | |
+
+- **The spatial query.** `STRtree.query(polygons, predicate="dwithin", distance=0.06)` makes the tree decide every candidate pair itself, one exact polygon-to-polygon distance at a time from inside the traversal.
+- Growing each bounding box by the tolerance, asking the tree only for pairs whose grown boxes overlap, and then running one vectorised `shapely.dwithin` over the survivors is the same question in two cheaper halves.
+- The prefilter can only return a superset, so the exact test decides and the answer cannot change.
+- Verified: **identical edge set**, 35,296 pairs, and 0.265 s becomes 0.075 s.
+- **Cardinality.** `Sum([If(b, 1, 0) for b in row]) == 2` hands z3 integer arithmetic over 121 indicator variables.
+- `AtMost` plus `AtLeast` states the same constraint inside the boolean theory.
+- Across the three z3 stages, with cheaper blocking clauses and model reads alongside, 1.38 s becomes 0.34 s.
+- **Per-cell pin geometry.** Deciding which li1 polygons a pin label sits on was `polygon.buffer(0.005).intersects(point)` per polygon per label, 4,934 buffers and 4,934 predicate calls.
+- It is now one `STRtree` per cell definition and one proximity query per cell, with the hits sorted back into the original order.
+- Interior points come from one vectorised `shapely.point_on_surface` over the whole array. 0.26 s becomes 0.03 s.
+- **Shards.** `nproc` reports 16 on this machine, which has 8 physical cores.
+- The equivalence simulation is one interpreter loop per shard and gains nothing from a sibling thread: 16 shards took 1.14 s, 8 took 1.01 s.
+- Linux publishes the sibling map under `/sys/devices/system/cpu/*/topology`, so the count comes from there where it exists.
+
+### The third round of profiling
+
+- The second round left the extraction dominated by two Python loops that walked hit tables one entry at a time.
+
+| stage | before | after | what changed |
+|---|---|---|---|
+| P2, extract the puzzle | 0.48 s | **0.37 s** | the via and pin lookups answered as arrays rather than as a dictionary keyed by tuples, and the cut bridging grouped in numpy |
+| the Python half of the run, `--no-iverilog` | 1.8 s | **1.65 s** | the above, on both designs |
+| **the whole run against what is committed** | **4.0 s** | **2.8 s** | the three rounds together, measured head to head on one machine |
+
+- **The cut lookup.** Every via and every pin mark used to come back from `locate` in a dictionary keyed by a `(key, layer)` tuple, which the caller then read back one `dict.get` at a time: about 50,000 tuple constructions to build it and 50,000 more to take it apart.
+- It now returns one integer array parallel to the marks, minus one where a mark landed on nothing, and the caller groups it with `bincount` and `unique`.
+- **A cut that landed on conductor number zero was being dropped.** The filter was `[c for c in found if c]`, and index 0 is a real conductor, so the first li1 polygon in the array was invisible to every cut that landed on it.
+- This is why the log used to read `cut mcon 17182/17188`: those six were not floating vias, they were this.
+- The partition is unchanged either way, because all six were redundant paths between nets already joined elsewhere, which is why nothing downstream ever noticed. The log now reads 17188/17188, and the warm-up 2184/2184.
+- **Net numbering is now a function of the geometry.** Components are rooted at their lowest-numbered polygon rather than at whichever node the union order happened to leave on top, so `net_041` means the same net across code changes.
+- That renumbered the anonymous nets once. The partition was verified identical net for net, 738 of 738 and 84 of 84, before and after.
+- The union-find rewrite that made this possible was worth **nothing** on the clock, about 0.02 s inside the noise. It was kept for the stable numbering, not for speed.
+
+### Tried and not kept
+
+| | |
+|---|---|
+| Flattening the encoder's expression walk into a postfix program | Measured **slower**, 0.078 s to 0.083 s on the P8 formula: a small recursive call is cheaper than an interpreted stack loop. Reverted |
+| Sharing one encoding between P8 and P10 | P8's cone is 471 nets and P10's is 699, and P8's is a subset, so one encoding would answer both and save about 0.1 s. It would also ask the depth question against a formula half again bigger than the question needs. Not worth it |
+| `scipy.sparse.csgraph.connected_components` | The component labelling is now a handful of numpy passes at no dependency cost, and it was inside the noise even before that, so scipy would buy nothing and would add a 40 MB dependency to a repository whose install is "clone it and run one script" |
 
 ### The SAT back end
 
-`python-sat` bundles several CDCL solvers. Rather than pick one on reputation,
-all of them were timed on this design's own two workloads, best of three, same
-formula, same machine:
+- `python-sat` bundles several CDCL solvers.
+- Rather than pick one on reputation, all of them were timed on this design's own two workloads, best of three, same formula, same machine:
 
 | back end | P8 depth question | P10 enumeration | total |
 |---|---|---|---|
@@ -78,18 +123,16 @@ formula, same machine:
 | Lingeling | 0.050 s | 2.046 s | 2.096 s |
 | MapleCM | 0.218 s | 3.148 s | 3.366 s |
 
-P8 is too small to separate them. P10 is fourteen incremental queries against a
-solver that has to keep and reuse what it learned between them, and that is where
-CDCL implementations differ. `SAT_BACKEND` at the top of `gds_to_rtl.py` is the
-only line that has to change to swap it.
+- P8 is too small to separate them.
+- P10 is fourteen incremental queries against a solver that has to keep and reuse what it learned between them, and that is where CDCL implementations differ.
+- `SAT_BACKEND` at the top of `gds_to_rtl.py` is the only line that has to change to swap it.
 
 ---
 
 ## Warm-up stages
 
-The warm-up ships its own answer key: source, gate netlist, placed-and-routed
-DEF, and GDS. It is the only place the extractor can be checked against a known
-correct result.
+- The warm-up ships its own answer key: source, gate netlist, placed-and-routed DEF, and GDS.
+- It is the only place the extractor can be checked against a known correct result.
 
 | stage | what it does | result | writes |
 |---|---|---|---|
@@ -102,16 +145,14 @@ correct result.
 
 ### What W3 actually proves
 
-Two netlists are the same circuit exactly when they cut the same set of pins into
-the same groups with the same ports attached. That is a statement about set
-partitions, and names play no part in it, so exactness gets proved while every
-instance is still called `u17` and every net `net_412`. The DEF match is only
-there to recover the names afterwards.
+- Two netlists are the same circuit exactly when they cut the same set of pins into the same groups with the same ports attached.
+- That is a statement about set partitions, and names play no part in it, so exactness gets proved while every instance is still called `u17` and every net `net_412`.
+- The DEF match is only there to recover the names afterwards.
 
 ### Three failure modes in W2 and W3
 
-None of them crash. All three produce a netlist that parses cleanly and describes
-a different circuit.
+- None of them crash.
+- All three produce a netlist that parses cleanly and describes a different circuit.
 
 | trap | what goes wrong | why it is silent | the fix |
 |---|---|---|---|
@@ -121,23 +162,21 @@ a different circuit.
 
 ### W6, solving the warm-up without reading its source
 
-The warm-up could be read: it is 79 cells and the source is provided. It was
-solved by SAT instead, because that is the technique the puzzle needs later.
-Unroll, encode, ask one question, read the answer. No gate traced by hand.
-
-The solver returned `A = 248, B = 248`, which is 496 halved. Earlier runs of
-this pipeline returned `242, 254` and `245, 251`. All three are correct: `A` and
-`B` are eight bits each, so `A + B = 496` has exactly **15** solutions, `A` from
-241 to 255, and the solver is free to return any of them. 496 is also the third
-perfect number, `1+2+4+8+16+31+62+124+248`.
+- The warm-up could be read: it is 79 cells and the source is provided.
+- It was solved by SAT instead, because that is the technique the puzzle needs later.
+- Unroll, encode, ask one question, read the answer.
+- No gate traced by hand.
+- The solver returned `A = 248, B = 248`, which is 496 halved.
+- Earlier runs of this pipeline returned `242, 254` and `245, 251`.
+- All three are correct: `A` and `B` are eight bits each, so `A + B = 496` has exactly **15** solutions, `A` from 241 to 255, and the solver is free to return any of them.
+- 496 is also the third perfect number, `1+2+4+8+16+31+62+124+248`.
 
 ---
 
 ## Puzzle stages
 
-Same extractor, no answer key. Validation now comes from a recording of the real
-chip, from two tools agreeing, and finally from a behavioural model proved
-cycle-equivalent to the gates.
+- Same extractor, no answer key.
+- Validation now comes from a recording of the real chip, from two tools agreeing, and finally from a behavioural model proved cycle-equivalent to the gates.
 
 | stage | what it does | result | writes |
 |---|---|---|---|
@@ -155,15 +194,16 @@ cycle-equivalent to the gates.
 | **P12** | Drive the answer in, read `O[7:0]` | **`(* TWO STARS *)`**, `success` on enabled rising edge **122** | |
 | **P13** | Render the answer and the waveform | `success` first high at t = 1,255,000 ps, rising edge 126 | `11_`, `12_`, `13_`, `14_success_inputs.vcd` |
 
-### P2, the extraction, in three lines
+### P2, the extraction, in four lines
 
-1. Flatten every conductor polygon to top-level coordinates, then join any two on
-   the same layer that overlap, so each group is one contiguous piece of metal.
-2. Every via cut joins the metal below it to the metal above it.
-3. Union-find over both, then look up which group covers each cell pin.
+1. Flatten every placement: one numpy affine pass applies each reference's rotation, mirror and translation to every polygon in the cell it places.
+2. On each conducting layer, join any two polygons that come within 60 nm of each other, so each group is one contiguous piece of metal.
+3. Every via cut joins the metal below it to the metal above it.
+4. Union-find over both, then look up which group covers each cell pin.
 
-Same-layer overlap means connected. Different layers mean nothing without a cut
-between them. That is the whole electrical content of a GDS file.
+- Same-layer overlap means connected.
+- Different layers mean nothing without a cut between them.
+- That is the whole electrical content of a GDS file.
 
 | conductor | shapes | conductors out |
 |---|---|---|
@@ -174,8 +214,7 @@ between them. That is the whole electrical content of a GDS file.
 | met4 | 867 | 45 |
 | met5 | 162 | 18 |
 
-The check that says the layer map and the coordinate transforms are right: a via
-that landed on nothing would be floating in space.
+- The check that says the layer map and the coordinate transforms are right: a via that landed on nothing would be floating in space.
 
 | cut | bridged |
 |---|---|
@@ -185,78 +224,50 @@ that landed on nothing would be floating in space.
 | via3, met3 to met4 | 687 / 687 |
 | via4, met4 to met5 | 108 / 108 |
 
-**22,713 of 22,713** cuts bridged, none floating.
+- **22,713 of 22,713** cuts bridged, none floating.
 
 ### P4, the replay against recorded silicon
 
-`example_inputs.vcd` is a recording of the real chip: known inputs, and the
-outputs it produced. Driving those inputs into a netlist built from polygon
-coordinates alone and getting the same outputs back is the strongest check
-available without an answer key, because the trace cannot have been fitted to.
-
-If P4 ever reports a mismatch the pipeline stops, because every later stage would
-be interpreting a circuit that does not exist.
+- `example_inputs.vcd` is a recording of the real chip: known inputs, and the outputs it produced.
+- Driving those inputs into a netlist built from polygon coordinates alone and getting the same outputs back is the strongest check available without an answer key, because the trace cannot have been fitted to.
+- If P4 ever reports a mismatch the pipeline stops, because every later stage would be interpreting a circuit that does not exist.
 
 ### P7, the single-cell probe
 
-Decompiling a counter's logic cone tells you it is gated on some value. It does
-not tell you what that value means physically, and the 22 counter cones expand
-into megabytes of repeated subexpression, so decompiling is not usable here.
-
-Probing instead: put a star at exactly one grid position, clock the whole frame
-through, and see which counters moved. A counter that ticks for cell (r, c) is
-watching cell (r, c). 121 trials, one bit-parallel pass, 0.04 s.
-
-Eleven columns and eleven irregular blobs come back. Eleven rows do not, for a
-reason that is useful. The row counter is cleared at every row boundary, so at
-the end of the frame it always reads zero. Sampling it in the cycle each star
-arrives instead, it moves in **110** of 121 trials, and the 11 it misses are
-exactly cells `10 21 32 43 54 65 76 87 98 109 120`, which is column 10 of every
-row: the last cell of a row, where the counter is bumped and cleared in the same
-cycle. One shared row counter only works if the grid arrives row-major at one
-cell per clock, so exactly one row is ever in flight, which gives the input
-format.
+- Decompiling a counter's logic cone tells you it is gated on some value.
+- It does not tell you what that value means physically, and the 22 counter cones expand into megabytes of repeated subexpression, so decompiling is not usable here.
+- Probing instead: put a star at exactly one grid position, clock the whole frame through, and see which counters moved.
+- A counter that ticks for cell (r, c) is watching cell (r, c). 121 trials, one bit-parallel pass, 0.04 s.
+- Eleven columns and eleven irregular blobs come back.
+- Eleven rows do not, for a reason that is useful.
+- The row counter is cleared at every row boundary, so at the end of the frame it always reads zero.
+- Sampling it in the cycle each star arrives instead, it moves in **110** of 121 trials, and the 11 it misses are exactly cells `10 21 32 43 54 65 76 87 98 109 120`, which is column 10 of every row: the last cell of a row, where the counter is bumped and cleared in the same cycle.
+- One shared row counter only works if the grid arrives row-major at one cell per clock, so exactly one row is ever in flight, which gives the input format.
 
 ### P8, solving 2^121 possibilities
 
-The netlist is unrolled over K clock edges and every gate is Tseitin encoded from
-the same Liberty functions the simulator uses, plus one clause: `success = 1`.
-The cone of influence of `success` is 471 of 738 nets, which drops the whole
-output generator and is why this is cheap.
-
-One unrolling to 122 edges, **14,498 variables and 43,111 clauses**, encoded in
-0.09 s. A K-edge question is that same formula with the success literal asserted
-one step earlier, so the shorter depth needs no re-encoding. The encoder folds a
-gate whose inputs are already constant (113,959 times here, mostly because
-`rst_n`, `enable` and `clk` are constants across the window) and shares a gate
-identical to one already written (1,928 times), which is what takes the formula
-down from the 130,385 variables and 390,772 clauses a naive encoding produces.
+- The netlist is unrolled over K clock edges and every gate is Tseitin encoded from the same Liberty functions the simulator uses, plus one clause: `success = 1`.
+- The cone of influence of `success` is 471 of 738 nets, which drops the whole output generator and is why this is cheap.
+- One unrolling to 122 edges, **14,498 variables and 43,111 clauses**, encoded in 0.10 s.
+- A K-edge question is that same formula with the success literal asserted one step earlier, so the shorter depth needs no re-encoding.
+- The encoder folds a gate whose inputs are already constant (113,959 times here, mostly because `rst_n`, `enable` and `clk` are constants across the window) and shares a gate identical to one already written (1,928 times), which takes the formula down from the 130,385 variables and 390,772 clauses a naive encoding produces.
 
 | K | result |
 |---|---|
 | 121 | **UNSAT** |
 | 122 | **SAT** |
 
-122 is therefore the shortest unlock: 121 cells in, verdict on the next edge.
-Adding a blocking clause on the 121 recovered bits and re-solving returns
-**UNSAT**, so the key is unique at gate level, not just unique under an
-assumption about what the puzzle is.
+- 122 is therefore the shortest unlock: 121 cells in, verdict on the next edge.
+- Adding a blocking clause on the 121 recovered bits and re-solving returns **UNSAT**, so the key is unique at gate level, not just unique under an assumption about what the puzzle is.
 
 ### P10, and the fifth message
 
-The old version of this pipeline drove four grid classes, read `O[7:0]`, and
-reported four messages. That was a list of the grids tried rather than a
-measurement of the ROM, and it was one message short.
-
-The replacement: unroll from reset with all 121 input bits free and let the
-solver enumerate every value the output bus can take on the first output edge,
-then every value it can take on the second given the first. Two characters
-separate every message, so when the enumeration returns UNSAT the catalogue is
-closed.
-
-Four first characters are reachable, `(`, `B`, `E`, `T`, and five two-character
-prefixes, because `T` splits. Each prefix hands back the grid that produced it,
-which then gets simulated to read the rest of the string.
+- The old version of this pipeline drove four grid classes, read `O[7:0]`, and reported four messages.
+- That was a list of the grids tried rather than a measurement of the ROM, and it was one message short.
+- The replacement: unroll from reset with all 121 input bits free and let the solver enumerate every value the output bus can take on the first output edge, then every value it can take on the second given the first.
+- Two characters separate every message, so when the enumeration returns UNSAT the catalogue is closed.
+- Four first characters are reachable, `(`, `B`, `E`, `T`, and five two-character prefixes, because `T` splits.
+- Each prefix hands back the grid that produced it, and all five are then simulated in one bit-parallel pass to read the rest of the string.
 
 | message | success | what triggers it |
 |---|---|---|
@@ -266,24 +277,18 @@ which then gets simulated to read the rest of the string.
 | **`TWO NOT TOUCH`** | 0 | every count right, two per row and per column and per region, and at least one touching pair |
 | `(* TWO STARS *)` | 1 | the one grid that satisfies every rule |
 
-`TWO NOT TOUCH` is the other name of Star Battle. The chip prints it only when
-every count is correct and the no-touch rule is the one broken, which is a class
-of grid a random sweep does not reach.
+- `TWO NOT TOUCH` is the other name of Star Battle.
+- The chip prints it only when every count is correct and the no-touch rule is the one broken, which is a class of grid a random sweep does not reach.
 
 ### P11, and why the vector set changed
 
-Finding a fifth message means the four-verdict RTL was wrong, and the old
-540-grid equivalence run passed only because none of its 540 grids reached the
-fifth case. So P11 now asks z3 for **24** grids that satisfy every count and
-touch, and adds them to the vector set: **564 grids, 0 success mismatches, 0
-output mismatches**.
-
-An equivalence run is only as good as its vectors, and these vectors were
-extended by a solver result rather than by guesswork.
+- Finding a fifth message means the four-verdict RTL was wrong, and the old 540-grid equivalence run passed only because none of its 540 grids reached the fifth case.
+- So P11 asks z3 for **24** grids that satisfy every count and touch, and adds them to the vector set: **564 grids, 0 success mismatches, 0 output mismatches**.
+- An equivalence run is only as good as its vectors, and these vectors were extended by a solver result rather than by guesswork.
 
 ---
 
-## Loose ends
+## What is checked rather than assumed
 
 | | |
 |---|---|
@@ -297,13 +302,9 @@ extended by a solver result rather than by guesswork.
 
 ## Determinism
 
-Every number on this page is byte-identical run to run. The region letters are
-assigned by sorting regions on their lowest cell index rather than on set
-iteration order, the counter pairs are sorted on instance index, the simulation
-shards are collected in shard order rather than completion order, and nothing in
-the pipeline depends on dictionary ordering.
-
-Two places are allowed to move if the SAT back end is swapped, and only two. W6
-has 15 valid answers and the solver may return any of them. And each message in
-the P10 catalogue is illustrated by *an* example grid that produces it, where any
-grid in the class would do. Neither is a result.
+- Every number on this page is byte-identical run to run.
+- The region letters are assigned by sorting regions on their lowest cell index rather than on set iteration order, the counter pairs are sorted on instance index, the simulation shards are collected in shard order rather than completion order, and nothing in the pipeline depends on dictionary ordering.
+- Two places are allowed to move if the SAT back end is swapped, and only two.
+- W6 has 15 valid answers and the solver may return any of them.
+- And each message in the P10 catalogue is illustrated by *an* example grid that produces it, where any grid in the class would do.
+- Neither is a result.

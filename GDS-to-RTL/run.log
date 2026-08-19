@@ -1,11 +1,11 @@
 GDS to RTL: recovering Jane Street's ASIC puzzle from its layout
 repository /home/amrut/GDS-to-RTL
-python 3.12.3, gdstk 1.0.1, shapely 2.1.2, z3 5.1.0, SAT back end Cadical300, 16 simulation shards
+python 3.12.3, gdstk 1.0.1, shapely 2.1.2, z3 5.1.0, SAT back end Cadical300, 8 simulation shards
 iverilog 12.0, vvp 12.0
 
 P0  load the sky130 Liberty
     428 cells, 45 sequential, from pdk/sky130_fd_sc_hd__tt_025C_1v80.lib
-    [0.05s]
+    [0.10s]
 
 W1  warm-up: inventory 04_final.gds
     top cell adder_demo, 1099 placements: 79 logic, 869 vias, 151 physical
@@ -20,7 +20,7 @@ W2  warm-up: extract a netlist from the polygons
     met4     111 shapes ->     7 islands
     met5      28 shapes ->     5 islands
     84 nets, 79 logic cells, 0 nets with a driver count other than one
-    [0.15s]
+    [0.16s]
 
 W3  warm-up: check it against the shipped DEF and netlist
     placements matched to DEF components 79/79
@@ -38,7 +38,7 @@ W5  warm-up: simulate golden and extracted side by side
     A=248 B=248 sum=496 -> S=1
     A=100 B=100 sum=200 -> S=0
     ALL CHECKS PASSED: extracted == golden, and S <=> (A+B==496)
-    [0.10s]
+    [0.14s]
 
 W6  warm-up: solve it from the extracted gates alone (SAT)
     minimum depth 8 edges
@@ -58,19 +58,19 @@ P2  puzzle: extract a netlist from the polygons
     met3    2560 shapes ->   811 islands
     met4     867 shapes ->    45 islands
     met5     162 shapes ->    18 islands
-    cut mcon   17182/17188  bridged metal on both sides
+    cut mcon   17188/17188  bridged metal on both sides
     cut via     3779/3779   bridged metal on both sides
     cut via2     951/951    bridged metal on both sides
     cut via3     687/687    bridged metal on both sides
     cut via4     108/108    bridged metal on both sides
     738 nets, 728 logic cells, 10 diodes treated as bridges
     nets with a driver count other than one: 0, undriven signal nets: 0
-    [0.87s]
+    [0.38s]
 
 P3  puzzle: cell models for this design's cell set
     66 cell models generated from the Liberty
     bit-parallel simulator: 738 nets, 642 gate outputs, 92 flops, 830 generated lines
-    [0.03s]
+    [0.02s]
 
 P4  puzzle: replay the recorded silicon waveform
     312 rising edges replayed, 624 outputs compared, 0 mismatches
@@ -86,7 +86,7 @@ P6  puzzle: falsify the rows-and-columns hypothesis
     25 grids satisfying two per row, two per column, no touching
     accepted by the netlist: 0
     what the chip said instead: {'TRY AGAIN': 25}
-    [0.29s]
+    [0.19s]
 
 P7  puzzle: read the region map out of the gates, 121 probes
     column counters 11, irregular groups 11, shared row counters 1
@@ -95,7 +95,7 @@ P7  puzzle: read the region map out of the gates, 121 probes
 
 P8  puzzle: solve the gates and prove the key unique (SAT)
     GF(2) linearity of the frame's state update: 20 of 20 random predictions failed, so it is not linear
-    one unrolling to 122 edges: 14498 variables, 43111 clauses, 0.09s to encode
+    one unrolling to 122 edges: 14498 variables, 43111 clauses, 0.10s to encode
     113959 gates folded to a literal, 1928 shared with an identical gate already encoded
     K = 121 edges: UNSAT  (0.00s)
     K = 122 edges: SAT  (0.01s)
@@ -105,7 +105,7 @@ P8  puzzle: solve the gates and prove the key unique (SAT)
 P9  puzzle: independent solve of the recovered puzzle (z3)
     solutions to the probed constraint set: 1 (that is all of them)
     matches the SAT key: True
-    [0.11s]
+    [0.05s]
 
 P10  puzzle: enumerate every string the chip can print (SAT)
     '(* TWO STARS *)'  success=1   22 stars  rows2=True  cols2=True  regions2=True  touching=0
@@ -114,14 +114,14 @@ P10  puzzle: enumerate every string the chip can print (SAT)
     'TRY AGAIN'        success=0    1 stars  rows2=False cols2=False regions2=False touching=0
     'TWO NOT TOUCH'    success=0   22 stars  rows2=True  cols2=True  regions2=True  touching=11
     14 SAT queries, the last one UNSAT: the catalogue is complete
-    [0.40s]
+    [0.34s]
 
 P11  puzzle: emit behavioural RTL and prove it equivalent
     24 grids that satisfy every count but touch, from z3, added to the vector set
     wrote puzzle-solution/08_recovered_rtl.v
     EQUIVALENCE: 0 success mismatches, 0 O mismatches over 564 grids
     RESULT: the recovered RTL is cycle-equivalent to the extracted netlist
-    [1.83s]
+    [1.29s]
 
 P12  puzzle: drive the answer in and read O[7:0]
     success=1, O[7:0] spells '(* TWO STARS *)'
@@ -142,4 +142,4 @@ KEY     000000010101000010000000000001010101000000000000101000000100000100000010
 success on enabled rising edge 122, unique at the gate level: True
 ========================================================================
 
-total 4.2s
+total 3.1s

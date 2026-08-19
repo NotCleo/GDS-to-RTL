@@ -44,7 +44,7 @@ DOT = "#AAAAAA"
 # ============================================================
 
 root = tk.Tk()
-root.title("Star Battle — 11×11")
+root.title("Star Battle: 11×11")
 root.resizable(False, False)
 
 canvas_width = GRID_X + BOARD_W + 20

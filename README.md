@@ -740,12 +740,23 @@ sat -seq 122 -set-def-inputs -set success 1 -show I
 | `<stem>_02_netlist.v` | structural Verilog, recovered from polygon overlap alone |
 | `<stem>_03_cell_models.v` | simulation models for the cell types used, generated from the Liberty |
 | `<stem>_04_structure.txt` | register graph, feedback groups, clock roots, and what each output depends on |
-| `<stem>_05_crosscheck.txt` | with `--def` and `--golden`: placement matching and the net-partition comparison |
+| `<stem>_05_recovered_rtl.v` | behavioural RTL: boolean equations for the logic, clocked blocks for the registers |
+| `<stem>_06_function.txt` | what the circuit computes, and for a combinational design the exact function of every output plus its full truth table |
+| `<stem>_07_equivalence.txt` | the recovered RTL run against the recovered gates in `iverilog`, with the mismatch count |
+| `<stem>_08_crosscheck.txt` | with `--def` and `--golden`: placement matching and the net-partition comparison |
 
-- To be honest about the limit: it recovers a **netlist**, not behavioural RTL.
+- The behaviour is recovered, not guessed, and it is checked before the run ends.
+- Every cell's function comes out of the Liberty file, so a netlist of known functions is already a system of boolean equations, one per net.
+- Substituting each equation into its consumer would expand a cone into an expression exponential in its depth, which is why fully expanding a counter produces megabytes, so a net keeps its own line when more than one thing reads it, when it is a port, when it holds state, or when folding it in would pass sixteen terms, and is folded in otherwise.
+- The result is then run against the gates: exhaustively for a combinational design small enough to enumerate, over two thousand clocked cycles otherwise.
+- On a synthesised half-adder that recovers `carry = a & b` and `sum = a & ~b | ~a & b` from the polygons alone, all four input vectors checked.
+- On the 728-cell puzzle it recovers 309 equations and 20 clocked blocks and matches the gates over 2,000 cycles.
+- To be honest about the limit: that is the **behaviour**, not the intent.
 - Synthesis is not reversible.
-- It flattens the hierarchy, deletes every name, and many different sources compile to the same gates, so nothing gets the `always` blocks back.
-- The RTL in this repository was written by hand from an understanding of the gates and then *proved* cycle-equivalent to them.
+- It flattens the hierarchy, deletes every name the layout did not keep as a label, and many different sources compile to the same gates, so nothing gets the original `always` blocks back.
+- The RTL in [`puzzle-solution/08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) was written by hand from an understanding of the gates and then *proved* cycle-equivalent to them.
+- Both are equivalent to the gates.
+- Only the hand-written one says the circuit is an 11x11 Star Battle validator.
 - The proof can be automated.
 - The understanding is the work.
 - What the structure report does is tell you where to look, and [`General-GDS-to-RTL/README.md`](General-GDS-to-RTL/README.md) says how to read it.
@@ -2063,20 +2074,50 @@ per-cell definition work   0.26 s  ->  0.03 s
 
 - Linux publishes the sibling map under `/sys/devices/system/cpu/*/topology`, so the shard count comes from that where it exists and falls back to the logical count everywhere else.
 
+#### The third round
+
+- The second round left extraction dominated by two Python loops that walked hit tables one entry at a time.
+
+| stage | before | after | what changed |
+|---|---|---|---|
+| P2, extract the puzzle | 0.48 s | **0.37 s** | the via and pin lookups answered as arrays, and the cut bridging grouped in numpy |
+| the Python half of the run, `--no-iverilog` | 1.8 s | **1.65 s** | the above, on both designs |
+| **the whole run, against what is committed** | **4.0 s** | **2.8 s** | the three rounds together, head to head on one machine |
+
+**The cut lookup.**
+
+- Every via and every pin mark used to come back from `locate` in a dictionary keyed by a `(key, layer)` tuple, which the caller then read back one `dict.get` at a time.
+- That is about 50,000 tuple constructions to build the dictionary and 50,000 more to take it apart, for a question whose answer is one integer per mark.
+- It now returns a single integer array parallel to the marks, minus one where a mark landed on nothing, and the caller groups it with `bincount` and `unique`.
+
+**A cut that landed on conductor number zero was being dropped.**
+
+- The filter was `[c for c in found if c]`, and 0 is a real conductor index, so the first li1 polygon in the array was invisible to every cut that landed on it.
+- That is what `cut mcon 17182/17188` in the old log was: not six floating vias, six that the filter threw away. The warm-up lost twenty the same way.
+- All six were redundant, joining nets that other paths already joined, so the partition is identical either way, which is why nothing downstream ever caught it.
+- The log now reads **17188/17188**, which is what this document already claimed.
+
+**Net numbering is now a function of the geometry.**
+
+- A component is rooted at its lowest-numbered polygon rather than at whichever node the union order happened to leave on top.
+- Net names are assigned by sorting on that root, so this is the difference between a numbering that is stable across code changes and one that is not.
+- It renumbered the anonymous nets once. The partition was verified identical net for net, 738 of 738 and 84 of 84, before and after, by comparing each net's set of `(instance, pin)` connections.
+- The union-find rewrite that made this possible was worth **nothing** measurable, about 0.02 s. It was kept for the stable numbering, not for the clock.
+
 #### What I tried and did not keep
 
 | | |
 |---|---|
 | Flattening the encoder's expression walk | The Tseitin encoder walks each Liberty expression tree recursively, once per step, 122 times. Compiling each expression to a postfix program once and replaying the list should have removed several hundred thousand Python calls. Measured, it was **slower**: 0.078 s to 0.083 s on the P8 formula, because a small recursive call is cheaper than an interpreted stack loop. Reverted |
 | Sharing one encoding between P8 and P10 | P8's cone is 471 nets and P10's is 699, and P8's is a subset, so one encoding at the larger cone and depth would answer both and save about 0.1 s. It would also mean the depth question is asked against a formula half again bigger than the question needs, and the two stages could no longer be read independently. Not worth 0.1 s |
-| `scipy.sparse.csgraph.connected_components` for the union-find | It would move the component labelling into C. Measured on the real edge list the Python union-find is already 0.024 s of a 0.47 s stage, so the whole win is inside the noise, and it would add a 40 MB dependency to a repository whose install is "clone it and run one script" |
+| `scipy.sparse.csgraph.connected_components` for the components | It would move the component labelling into C. It is now a handful of numpy passes at no dependency cost, and it was inside the noise even before that, about 0.02 s of a 0.47 s stage, so scipy buys nothing and would add a 40 MB dependency to a repository whose install is "clone it and run one script" |
 
 #### What I did not do, and why
 
 | | |
 |---|---|
 | Cache the extraction between runs | The whole point is that `puzzle-solution/` is deleted and rebuilt from the shipped files every time. A cache would make the reproduction claim weaker in exchange for seconds |
-| Rewrite the hot loops in C or Cython | It would add a build step to a repository whose install is "clone it and run one script". The remaining Python hot loop is the union-find, at about 0.02 s |
+| Rewrite the hot loops in C or Cython | It would add a build step to a repository whose install is "clone it and run one script". What is left in Python is the walk over the 9,875 placements, at about 0.04 s |
 | Drop iverilog and use the built-in simulator for the equivalence run | Then the equivalence check would be my simulator against my RTL, both of which I wrote. Its entire value is that it is an independent second opinion, so it stays even though it is now the slowest thing left |
 | Parallelise the two extractions | The warm-up has to pass before the puzzle is worth running, and it now takes 0.10 s |
 

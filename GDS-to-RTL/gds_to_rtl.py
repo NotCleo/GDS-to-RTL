@@ -33,7 +33,6 @@ from __future__ import annotations
 
 import argparse
 import collections
-import concurrent.futures
 import contextlib
 import json
 import math
@@ -85,10 +84,33 @@ for _l, _n in ((65, "tap"), (66, "licon1"), (67, "mcon"), (68, "via"),
 OUTPUT_PINS = {"X", "Y", "Q", "Q_N", "HI", "LO"}
 POWER_PINS = {"VPWR", "VGND", "VPB", "VNB"}
 PHYS_PREFIX = ("decap", "fill", "tapvpwrvgnd", "tap_")
+IDENTITY = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
 GAP = 0.06
 ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 SAT_BACKEND = "Cadical300"
-SHARDS = max(1, min(16, os.cpu_count() or 1))
+
+
+def _physical_cores():
+    """Cores, not hyperthreads.
+
+    The equivalence simulation is one interpreter loop per shard and gains
+    nothing from a sibling thread on the same core: on this machine sixteen
+    shards over eight physical cores measured slower than eight. Linux publishes
+    the sibling map, so the shard count comes from that where it exists and from
+    the logical count everywhere else.
+    """
+    try:
+        sibs = {open(f"/sys/devices/system/cpu/cpu{i}/topology/"
+                     "thread_siblings_list").read().strip()
+                for i in range(os.cpu_count() or 1)}
+        if sibs:
+            return len(sibs)
+    except OSError:
+        pass
+    return os.cpu_count() or 1
+
+
+SHARDS = max(1, min(16, _physical_cores()))
 
 
 # ---------------------------------------------------------------------------
@@ -369,12 +391,14 @@ def inventory(gds_path, out_path):
         short = nm.split("__")[-1]
         if nm.startswith("VIA_"):
             k = "via"
-        elif not nm.startswith("sky130_fd_sc_hd__"):
+        elif not nm.startswith("sky130"):
             k = "not a standard cell"
         elif short.startswith(PHYS_PREFIX):
             k = "physical only"
         elif short.startswith("diode"):
             k = "antenna diode"
+        elif not nm.startswith("sky130_fd_sc_hd__"):
+            k = "not a standard cell"
         else:
             k = "logic"
             rows.append((nm, ref.origin[0], ref.origin[1],
@@ -468,6 +492,9 @@ def inventory(gds_path, out_path):
 # stage 2: which pins are wired together
 # ---------------------------------------------------------------------------
 
+_LEF_CACHE = {}
+
+
 def lef_pin_rects(path):
     """Complete pin landing geometry per macro: {macro: {pin: [(layer, Polygon)]}}.
 
@@ -475,7 +502,12 @@ def lef_pin_rects(path):
     whole exercise: a label marks exactly one polygon, while a real pin is often
     several polygons in different places in the cell, any of which the router may
     land on. LEF PIN/PORT/RECT is the authoritative list, so take all of them.
+
+    The merged LEF is 5 MB and both extractions want the same answer out of it,
+    so the parse is kept and handed back the second time.
     """
+    if path in _LEF_CACHE:
+        return _LEF_CACHE[path]
     macros, m, p, lay, flat = {}, None, None, None, []
     for line in open(path):
         w = line.split()
@@ -505,6 +537,7 @@ def lef_pin_rects(path):
     boxes = shapely.box(*np.array([slot[i][1] for slot, i in flat]).T)
     for (slot, i), poly in zip(flat, boxes):
         slot[i] = (slot[i][0], poly)
+    _LEF_CACHE[path] = macros
     return macros
 
 
@@ -540,6 +573,14 @@ def _rep_xy(poly):
     return (p.x, p.y)
 
 
+def _rep_xys(polys):
+    """The same for a whole list, as one shapely call rather than one each."""
+    if not polys:
+        return []
+    return [tuple(c) for c in shapely.get_coordinates(
+        shapely.point_on_surface(np.asarray(polys, dtype=object)))]
+
+
 def _xform_polys(polys, mats):
     """Affine-transform many polygons in one numpy pass instead of one call each."""
     if not polys:
@@ -562,6 +603,38 @@ def _xform_pts(xy, mats):
     P, M = np.asarray(xy, dtype=float), np.asarray(mats, dtype=float)
     return np.column_stack((M[:, 0] * P[:, 0] + M[:, 1] * P[:, 1] + M[:, 4],
                             M[:, 2] * P[:, 0] + M[:, 3] * P[:, 1] + M[:, 5]))
+
+
+def _components(total, ea, eb):
+    """Connected components of an undirected graph, as a root per node.
+
+    This replaces a union-find with one Python call per edge. Both ends of
+    every edge are looked up in one array read, the higher root of each pair is
+    pointed at the lower in one scatter, and the forest is then flattened by
+    repeated squaring, root = root[root], until it stops changing. Because a
+    node only ever comes to point at a smaller index the process cannot cycle,
+    and a round only ends when no edge still straddles two roots, so the
+    partition it settles on is the exact one the incremental version produced.
+    The cost stops depending on the edge count and starts depending on the
+    depth of the trees, which is a handful of array passes either way.
+    """
+    root = np.arange(total, dtype=np.int64)
+    if not len(ea):
+        return root
+    ea = np.asarray(ea, dtype=np.int64)
+    eb = np.asarray(eb, dtype=np.int64)
+    while True:
+        ra, rb = root[ea], root[eb]
+        lo, hi = np.minimum(ra, rb), np.maximum(ra, rb)
+        live = lo < hi
+        if not live.any():
+            return root
+        root[hi[live]] = lo[live]
+        while True:
+            nxt = root[root]
+            if np.array_equal(nxt, root):
+                break
+            root = nxt
 
 
 def extract(gds_path, outdir, name):
@@ -587,6 +660,14 @@ def extract(gds_path, outdir, name):
     the distance from a point to a union of shapes is the smallest of the
     distances to its members. Measured on puzzle.gds the two agree island for
     island on every layer, and the direct version is about eleven times faster.
+
+    That query is asked in two halves rather than one. Handing the tree a
+    distance predicate makes it decide every candidate pair itself, one exact
+    polygon-to-polygon distance at a time from inside the traversal. Asking it
+    instead for the pairs whose bounding boxes come within the tolerance is a
+    pure box test, and the exact distances then go through in a single array
+    call over the survivors. Identical edge set, and the query drops from 0.27 s
+    to 0.07 s on the puzzle.
     """
     lib = gdstk.read_gds(gds_path)
     top = lib.top_level()[0]
@@ -605,18 +686,24 @@ def extract(gds_path, outdir, name):
             continue
         cond = {l: ps for l in CONDUCTOR for ps in [_shapes(c, l, 20)] if ps}
         pins = collections.defaultdict(list)
-        for lab in c.labels:
-            if (lab.layer, lab.texttype) == (67, 5) and lab.text not in POWER_PINS:
-                pt = Point(lab.origin)
-                pins[lab.text] += [(67, p) for p in cond.get(67, [])
-                                   if p.buffer(0.005).intersects(pt)]
+        labs = [lab for lab in c.labels if (lab.layer, lab.texttype) == (67, 5)
+                and lab.text not in POWER_PINS]
+        li1 = cond.get(67, [])
+        if labs and li1:
+            hits = STRtree(li1).query(
+                shapely.points(np.array([lab.origin for lab in labs], dtype=float)),
+                predicate="dwithin", distance=0.005)
+            order = np.lexsort((hits[1], hits[0]))
+            for a, b in zip(hits[0][order].tolist(), hits[1][order].tolist()):
+                pins[labs[a].text].append((67, li1[b]))
         for pname, rects in lefpins.get(c.name, {}).items():
             if pname not in POWER_PINS:
                 pins[pname] += rects
+        xy = iter(_rep_xys([q for v in pins.values() for _, q in v]))
         celltypes[c.name] = {
-            "pins": {p: [(l, _rep_xy(q)) for l, q in v] for p, v in pins.items()},
+            "pins": {p: [(l, next(xy)) for l, _ in v] for p, v in pins.items()},
             "cond": cond,
-            "mcon": [_rep_xy(p) for p in _shapes(c, 67, 44)],
+            "mcon": _rep_xys(_shapes(c, 67, 44)),
             "bridge": short.startswith("diode")}
 
     jobs = {l: ([], []) for l in CONDUCTOR}
@@ -660,6 +747,12 @@ def extract(gds_path, outdir, name):
                 mxy.append(xy)
                 mmat.append(A)
 
+    for l in CUTNAME:
+        for xy in _rep_xys(_shapes(top, l, 44)):
+            via_marks.append((l, [(l, len(mxy)), (l + 1, len(mxy))]))
+            mxy.append(xy)
+            mmat.append(IDENTITY)
+
     mark_pt = shapely.points(_xform_pts(mxy, mmat))
 
     metal, trees, base, stats = {}, {}, {}, []
@@ -672,111 +765,153 @@ def extract(gds_path, outdir, name):
         trees[l] = STRtree(arr) if len(arr) else None
         total += len(arr)
 
-    parent = list(range(total))
+    edge_a, edge_b = [], []
 
-    def find(a):
-        r = a
-        while parent[r] != r:
-            r = parent[r]
-        while parent[a] != r:
-            parent[a], a = r, parent[a]
-        return r
-
-    def union(a, b):
-        ra, rb = find(a), find(b)
-        if ra == rb:
-            return False
-        parent[ra] = rb
-        return True
-
-    stitched = 0
     for l in CONDUCTOR:
         if trees[l] is None:
             continue
-        hits = trees[l].query(metal[l], predicate="dwithin", distance=GAP)
+        arr = metal[l]
+        grown = shapely.box(*(shapely.bounds(arr)
+                              + np.array([-GAP, -GAP, GAP, GAP])).T)
+        hits = trees[l].query(grown)
         keep = hits[0] < hits[1]
+        a, b = hits[0][keep], hits[1][keep]
+        near = shapely.dwithin(arr[a], arr[b], GAP)
         off = base[l]
-        for i, j in zip((hits[0][keep] + off).tolist(),
-                        (hits[1][keep] + off).tolist()):
-            stitched += union(i, j)
+        edge_a.append(a[near] + off)
+        edge_b.append(b[near] + off)
+    same = _components(total, np.concatenate(edge_a) if edge_a else (),
+                       np.concatenate(edge_b) if edge_b else ())
+    stitched = total - len(np.unique(same))
     for l in CONDUCTOR:
         n = len(metal[l])
-        stats.append((LNAME[l], n,
-                      len({find(base[l] + i) for i in range(n)})))
+        stats.append((LNAME[l], n, len(np.unique(same[base[l]:base[l] + n]))))
 
-    def locate(marks):
-        """Bulk point-in-metal lookup, one STRtree query per layer."""
-        out = {}
-        bylayer = collections.defaultdict(list)
-        for k, lay, mi in marks:
-            bylayer[lay].append((k, mi))
-        for lay, items in bylayer.items():
-            if trees[lay] is None:
+    def locate(lay, mi):
+        """Bulk point-in-metal lookup, one STRtree query per layer.
+
+        The first pass asks which conductor each mark sits on. Only the marks
+        that landed on nothing go into the second, wider pass, and the conductor
+        for each mark is picked out of the hit arrays by numpy rather than by
+        walking every hit in Python. The answer comes back as one array parallel
+        to the marks, minus one where a mark landed on nothing, so the callers
+        can group it in numpy instead of through a dictionary of tuple keys.
+        """
+        got = np.full(len(lay), -1, dtype=np.int64)
+        for l in np.unique(lay).tolist():
+            if trees[l] is None:
                 continue
-            pts = mark_pt[[mi for _, mi in items]]
-            off = base[lay]
+            sel = np.flatnonzero(lay == l)
+            pts, off = mark_pt[mi[sel]], base[l]
+            res = np.full(len(sel), -1, dtype=np.int64)
             for widen in (False, True):
-                hits = trees[lay].query(shapely.buffer(pts, 0.01) if widen else pts,
-                                        predicate="intersects")
-                for a, b in zip(hits[0].tolist(), (hits[1] + off).tolist()):
-                    out.setdefault((items[a][0], lay), b)
-                if all((k, lay) in out for k, _ in items):
+                sub = np.flatnonzero(res < 0) if widen else np.arange(len(sel))
+                if not len(sub):
                     break
-        return out
+                hits = (trees[l].query(pts[sub], predicate="dwithin", distance=0.01)
+                        if widen else
+                        trees[l].query(pts[sub], predicate="intersects"))
+                if len(hits[0]):
+                    who, first = np.unique(hits[0], return_index=True)
+                    res[sub[who]] = hits[1][first] + off
+            got[sel] = res
+        return got
 
-    vloc = locate([((vi, li), lay, mi) for vi, (_, grp) in enumerate(via_marks)
-                   for li, (lay, mi) in enumerate(grp)])
+    nv = sum(len(grp) for _, grp in via_marks)
+    vwho = np.repeat(np.arange(len(via_marks), dtype=np.int64),
+                     [len(grp) for _, grp in via_marks])
+    vgot = locate(np.fromiter((l for _, grp in via_marks for l, _ in grp),
+                              np.int64, nv),
+                  np.fromiter((m for _, grp in via_marks for _, m in grp),
+                              np.int64, nv))
+    hit = vgot >= 0
+    who, land = vwho[hit], vgot[hit]
+    nhit = np.bincount(who, minlength=len(via_marks))
+    firstof = np.zeros(len(via_marks), dtype=np.int64)
+    seen, at = np.unique(who, return_index=True)
+    firstof[seen] = land[at]
+    both = nhit[who] >= 2
+    edge_a.append(firstof[who[both]])
+    edge_b.append(land[both])
+
+    vlo = np.fromiter((lo for lo, _ in via_marks), np.int64, len(via_marks))
     cuts = collections.Counter()
     bridged = collections.Counter()
-    for vi, (lo, grp) in enumerate(via_marks):
-        found = [vloc.get(((vi, li), lay)) for li, (lay, _) in enumerate(grp)]
-        found = [c for c in found if c]
-        key = CUTNAME.get(lo, f"L{lo}")
-        cuts[key] += 1
-        if len(found) >= 2:
-            bridged[key] += 1
-            for c in found[1:]:
-                union(found[0], c)
+    for l, n in zip(*np.unique(vlo, return_counts=True)):
+        cuts[CUTNAME.get(int(l), f"L{int(l)}")] += int(n)
+    for l, n in zip(*np.unique(vlo[nhit >= 2], return_counts=True)):
+        bridged[CUTNAME.get(int(l), f"L{int(l)}")] += int(n)
 
-    ploc = locate([((i, lay), lay, mi)
-                   for i, (lay, mi, _, _) in enumerate(pin_marks)])
+    pgot = locate(np.fromiter((l for l, _, _, _ in pin_marks), np.int64,
+                              len(pin_marks)),
+                  np.fromiter((m for _, m, _, _ in pin_marks), np.int64,
+                              len(pin_marks)))
+    unbound = int((pgot < 0).sum())
     by_pin = collections.defaultdict(list)
-    unbound = 0
-    for i, (lay, mi, idx, pname) in enumerate(pin_marks):
-        c = ploc.get(((i, lay), lay))
-        if c is None:
-            unbound += 1
-        else:
+    for (_, _, idx, pname), c in zip(pin_marks, pgot.tolist()):
+        if c >= 0:
             by_pin[(idx, pname)].append(c)
+    pin_a, pin_b = [], []
     for clist in by_pin.values():
         for c in clist[1:]:
-            union(clist[0], c)
+            pin_a.append(clist[0])
+            pin_b.append(c)
+    edge_a.append(np.array(pin_a, dtype=np.int64))
+    edge_b.append(np.array(pin_b, dtype=np.int64))
+    rootof = _components(total, np.concatenate(edge_a),
+                         np.concatenate(edge_b)).tolist()
+
+    def find(a):
+        return rootof[a]
+
     net_pins = collections.defaultdict(list)
     for key, clist in by_pin.items():
         net_pins[find(clist[0])].append(key)
 
-    net_ports = collections.defaultdict(set)
-    for lab in top.labels:
-        if lab.texttype == 5 and lab.layer in (70, 71, 72):
-            hits = trees[lab.layer].query(Point(lab.origin), predicate="intersects")
-            if len(hits):
-                net_ports[find(base[lab.layer] + int(hits[0]))].add(lab.text)
+    pintree = {}
+    for l in CONDUCTOR:
+        ps = _shapes(top, l, 16)
+        if ps:
+            pintree[l] = STRtree(ps)
 
-    nets = collections.defaultdict(lambda: {"pins": [], "ports": set()})
+    net_ports = collections.defaultdict(set)
+    net_named = collections.defaultdict(set)
+    for lab in top.labels:
+        if lab.texttype != 5 or trees.get(lab.layer) is None:
+            continue
+        pt = Point(lab.origin)
+        hits = trees[lab.layer].query(pt, predicate="intersects")
+        if not len(hits):
+            hits = trees[lab.layer].query(pt, predicate="dwithin", distance=0.01)
+        if not len(hits):
+            continue
+        r = find(base[lab.layer] + int(hits[0]))
+        net_named[r].add(lab.text)
+        if not pintree or (lab.layer in pintree
+                           and len(pintree[lab.layer].query(
+                               pt, predicate="dwithin", distance=0.01))):
+            net_ports[r].add(lab.text)
+
+    nets = collections.defaultdict(
+        lambda: {"pins": [], "ports": set(), "named": set()})
     for r, pl in net_pins.items():
         nets[find(r)]["pins"] += pl
     for r, po in net_ports.items():
         nets[find(r)]["ports"] |= po
+    for r, nm in net_named.items():
+        nets[find(r)]["named"] |= nm
 
     bridge_idx = {i["idx"] for i in instances if i["bridge"]}
     netlist = []
-    for i, (root, d) in enumerate(sorted(nets.items(), key=lambda kv: str(kv[0]))):
+    for i, (root, d) in enumerate(sorted(nets.items(), key=lambda kv: kv[0])):
         ports = d["ports"] - {"VPWR", "VGND"}
+        named = d["named"] - {"VPWR", "VGND"}
         pins = sorted({(ix, p) for ix, p in set(d["pins"]) if ix not in bridge_idx})
         if not pins and not ports:
             continue
         drivers = [(ix, p) for ix, p in pins if p in OUTPUT_PINS]
-        netlist.append({"name": sorted(ports)[0] if ports else f"net_{i:03d}",
+        netlist.append({"name": sorted(ports or named)[0] if (ports or named)
+                        else f"net_{i:03d}",
                         "ports": sorted(ports), "pins": pins, "drivers": drivers})
     bad = [n for n in netlist
            if len(n["drivers"]) + (1 if n["ports"] and not n["drivers"] else 0) != 1]
@@ -1812,8 +1947,9 @@ def unroll(g, steps, free_inputs, fixed, xfree=True, cone=None, initfree=False):
         return cnf.gate(k, enc(t, node[1]), enc(t, node[2]))
 
     def net(t, n):
-        if n in lit[t]:
-            return lit[t][n]
+        r = lit[t].get(n)
+        if r is not None:
+            return r
         nm = g.names[n]
         if nm in g.ports and g.ports[nm] == "input":
             if nm in fixed:
@@ -1830,10 +1966,10 @@ def unroll(g, steps, free_inputs, fixed, xfree=True, cone=None, initfree=False):
         lit[t][n] = r
         return r
 
+    work = [f for f in g.flops if f["q"] is None or f["q"] in keep]
+
     for t in range(1, steps + 1):
-        for f in g.flops:
-            if f["q"] is not None and f["q"] not in keep:
-                continue
+        for f in work:
             d = enc(t, f["d"])
             clr = enc(t, f["clr"]) if f["clr"] else FALSE
             pre = enc(t, f["pre"]) if f["pre"] else FALSE
@@ -2016,12 +2152,12 @@ def catalogue(g, label, out_path, first_edge=FRAME + 1):
     nq = queries[0]
     sat.close()
 
-    rows = []
-    for v1, v2, m in prefixes:
-        bits = "".join("1" if invars["I"][t] in m else "0"
-                       for t in sorted(invars["I"])[:FRAME])
-        succ, ob, _, _ = run_grids(g, [bits], tail=40)
-        rows.append((decode_stream(ob, 0), succ & 1, bits, grid_props(bits, label)))
+    grids = ["".join("1" if invars["I"][t] in m else "0"
+                     for t in sorted(invars["I"])[:FRAME])
+             for _, _, m in prefixes]
+    succ, ob, _, _ = run_grids(g, grids, tail=40)
+    rows = [(decode_stream(ob, k), (succ >> k) & 1, bits, grid_props(bits, label))
+            for k, bits in enumerate(grids)]
     rows.sort(key=lambda r: r[0])
 
     L = ["EVERY STRING THE CHIP CAN PRINT", "=" * 70, "",
@@ -2070,24 +2206,38 @@ def catalogue(g, label, out_path, first_edge=FRAME + 1):
     return rows, nq
 
 
+def exactly(bits, k):
+    """Exactly k of these z3 booleans are true.
+
+    Written as Sum([If(b,1,0) ...]) == k this leaves z3 solving integer
+    arithmetic over 121 indicator variables, and it is the slowest thing in the
+    three z3 stages by a wide margin. AtMost and AtLeast are the solver's own
+    cardinality constraints and stay inside the boolean theory, which is where
+    this problem lives. Same models, measured three times faster on the
+    enumerations here.
+    """
+    from z3 import And, AtLeast, AtMost
+    return And(AtMost(*bits, k), AtLeast(*bits, k))
+
+
 def touching_grids(label, n):
     """Grids that satisfy every count but put two stars next to each other.
 
     These are the vectors that separate a four-message reading of the output
     generator from the true five-message one, and no random sweep produces them.
     """
-    from z3 import And, Bool, If, Not, Or, Solver, Sum, is_true, sat
+    from z3 import And, Bool, Not, Or, Solver, is_true, sat
     G = [[Bool(f"t{r}_{c}") for c in range(N)] for r in range(N)]
     s = Solver()
     for r in range(N):
-        s.add(Sum([If(G[r][c], 1, 0) for c in range(N)]) == STARS)
+        s.add(exactly([G[r][c] for c in range(N)], STARS))
     for c in range(N):
-        s.add(Sum([If(G[r][c], 1, 0) for r in range(N)]) == STARS)
+        s.add(exactly([G[r][c] for r in range(N)], STARS))
     by = collections.defaultdict(list)
     for cell, lab in label.items():
         by[lab].append(cell)
     for cells in by.values():
-        s.add(Sum([If(G[k // N][k % N], 1, 0) for k in cells]) == STARS)
+        s.add(exactly([G[k // N][k % N] for k in cells], STARS))
     adj = []
     for r in range(N):
         for c in range(N):
@@ -2095,14 +2245,13 @@ def touching_grids(label, n):
                 if 0 <= r + dr < N and 0 <= c + dc < N:
                     adj.append(And(G[r][c], G[r + dr][c + dc]))
     s.add(Or(adj))
+    flat = [G[r][c] for r in range(N) for c in range(N)]
     out = []
     while len(out) < n and s.check() == sat:
         m = s.model()
-        bits = "".join("1" if is_true(m.evaluate(G[r][c])) else "0"
-                       for r in range(N) for c in range(N))
+        bits = "".join("1" if is_true(m[v]) else "0" for v in flat)
         out.append(bits)
-        s.add(Or([G[r][c] != (bits[r * N + c] == "1")
-                  for r in range(N) for c in range(N)]))
+        s.add(Or([Not(v) if b == "1" else v for v, b in zip(flat, bits)]))
     return out
 
 
@@ -2112,32 +2261,31 @@ def touching_grids(label, n):
 
 def star_battle(label, limit=None, regions=True):
     """Solve 2-per-row, 2-per-column, 2-per-region, no-touch with z3. All solutions."""
-    from z3 import And, Bool, If, Not, Or, Solver, Sum, sat
+    from z3 import And, Bool, Not, Or, Solver, is_true, sat
     g = [[Bool(f"g{r}_{c}") for c in range(N)] for r in range(N)]
     s = Solver()
     for r in range(N):
-        s.add(Sum([If(g[r][c], 1, 0) for c in range(N)]) == STARS)
+        s.add(exactly([g[r][c] for c in range(N)], STARS))
     for c in range(N):
-        s.add(Sum([If(g[r][c], 1, 0) for r in range(N)]) == STARS)
+        s.add(exactly([g[r][c] for r in range(N)], STARS))
     if regions:
         by = collections.defaultdict(list)
         for cell, lab in label.items():
             by[lab].append(cell)
         for cells in by.values():
-            s.add(Sum([If(g[k // N][k % N], 1, 0) for k in cells]) == STARS)
+            s.add(exactly([g[k // N][k % N] for k in cells], STARS))
     for r in range(N):
         for c in range(N):
             for dr, dc in ((0, 1), (1, -1), (1, 0), (1, 1)):
                 if 0 <= r + dr < N and 0 <= c + dc < N:
                     s.add(Not(And(g[r][c], g[r + dr][c + dc])))
+    flat = [g[r][c] for r in range(N) for c in range(N)]
     out = []
     while (limit is None or len(out) < limit) and s.check() == sat:
         m = s.model()
-        grid = "".join("1" if bool(m.evaluate(g[r][c])) else "0"
-                       for r in range(N) for c in range(N))
+        grid = "".join("1" if is_true(m[v]) else "0" for v in flat)
         out.append(grid)
-        s.add(Or([g[r][c] != (grid[r * N + c] == "1")
-                  for r in range(N) for c in range(N)]))
+        s.add(Or([Not(v) if b == "1" else v for v, b in zip(flat, grid)]))
     return out, s.check() == sat
 
 
@@ -2416,12 +2564,13 @@ endmodule
 def iverilog(sources, tag, workdir, shards=1):
     """Compile once, then run vvp.
 
-    Compiling 728 gates takes about 50 ms; simulating hundreds of 140-cycle
+    Compiling 728 gates takes about 70 ms; simulating hundreds of 140-cycle
     grids through them is what costs. A testbench that reads +shard and +shards
     can run only the trials whose number falls in its shard while still stepping
     the same random stream, so the trial list is partitioned rather than
-    resampled, and the shards go out to as many cores as the machine has. The
-    results come back in shard order, so the transcript does not depend on which
+    resampled, and the shards go out to as many cores as the machine has. Every
+    shard is launched before any of them is read, so they overlap; the results
+    are then drained in shard order, so the transcript does not depend on which
     one finished first, and the shard count never appears in it.
     """
     exe = os.path.join(workdir, tag + ".vvp")
@@ -2429,16 +2578,13 @@ def iverilog(sources, tag, workdir, shards=1):
                        capture_output=True, text=True)
     if r.returncode:
         return None, (r.stdout + r.stderr)
-    if shards <= 1:
-        runs = [subprocess.run(["vvp", exe], capture_output=True, text=True)]
-    else:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=shards) as pool:
-            runs = list(pool.map(
-                lambda k: subprocess.run(
-                    ["vvp", exe, f"+shard={k}", f"+shards={shards}"],
-                    capture_output=True, text=True), range(shards)))
+    args = [[]] if shards <= 1 else [[f"+shard={k}", f"+shards={shards}"]
+                                     for k in range(shards)]
+    procs = [subprocess.Popen(["vvp", exe] + a, stdout=subprocess.PIPE,
+                              stderr=subprocess.DEVNULL, text=True) for a in args]
+    runs = [p.communicate()[0] for p in procs]
     os.remove(exe)
-    keep = [l for run in runs for l in run.stdout.splitlines()
+    keep = [l for out in runs for l in out.splitlines()
             if "$finish called" not in l]
     return "\n".join(keep) + "\n", None
 
