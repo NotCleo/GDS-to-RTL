@@ -45,8 +45,7 @@
 
 [**notcleo.github.io/GDS-to-RTL/TwoNotTouch-Interactive-Puzzle/**](https://notcleo.github.io/GDS-to-RTL/TwoNotTouch-Interactive-Puzzle/)
 
-It is one file, [`index.html`](index.html), with no scripts loaded from anywhere,
-so it also works offline if you just open the file:
+- It is one file, [`index.html`](index.html), with no scripts loaded from anywhere, so it also works offline if you just open the file:
 
     git clone https://github.com/NotCleo/GDS-to-RTL.git
     xdg-open GDS-to-RTL/TwoNotTouch-Interactive-Puzzle/index.html
@@ -60,13 +59,10 @@ so it also works offline if you just open the file:
 | **Fill obvious dots** | marks every cell a placed star already rules out |
 | **Theme** | light or dark |
 
-Nothing waits to find out whether a second click is coming, so the board changes
-the instant you click it. The solution goes in in 22 clicks.
-
-The line under the board is the verdict the **real chip** returns for the grid you
-have placed. It reproduces all five of the messages the output ROM holds, and it
-was checked against the five grids the solver pulled out of the netlist in stage
-P10 of the pipeline, which agree on all five:
+- Nothing waits to find out whether a second click is coming, so the board changes the instant you click it.
+- The solution goes in in 22 clicks.
+- The line under the board is the verdict the **real chip** returns for the grid you have placed.
+- It reproduces all five of the messages the output ROM holds, and it was checked against the five grids the solver pulled out of the netlist in stage P10 of the pipeline, which agree on all five:
 
 | verdict | when |
 |---|---|
@@ -76,6 +72,5 @@ P10 of the pipeline, which agree on all five:
 | `TWO NOT TOUCH` | every count right, and the only rule broken is the no-touch one |
 | `(* TWO STARS *)` | the one grid the chip accepts |
 
-Solve it and the tab closes itself. A tab your browser did not open from a script
-cannot close itself, so if yours refuses, the page says so rather than sitting
-there.
+- Solve it and the tab closes itself.
+- A tab your browser did not open from a script cannot close itself, so if yours refuses, the page says so rather than sitting there.
