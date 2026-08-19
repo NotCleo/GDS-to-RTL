@@ -288,7 +288,7 @@ sky130_fd_sc_hd__clkbuf_4 u0_clkbuf_4 (.A(net_505), .X(net_000));
 
 ## Summary of all Easter Eggs found
 
-- Nine of them, in the order I found them.
+- Eleven of them, in the order I found them.
 - Each has its own file with what it is, where it was, how I found it and when.
 
 | # | Easter Egg | Where it was | Write-up |
@@ -296,13 +296,14 @@ sky130_fd_sc_hd__clkbuf_4 u0_clkbuf_4 (.A(net_505), .X(net_000));
 | 1 | The **Jane Street logo**, etched in metal 2. 1,366 floating polygons in a 17.1 um square | [puzzle.gds](puzzle/puzzle.gds), and the warm-up GDS too | [01](Easter-Eggs/01_easter_egg.txt) |
 | 2 | **"PER ARENAM AD ASTRA"** in Morse code, Latin for "through the sand, to the stars". 36 bars on a layer that is not a sky130 mask layer, below the die | [puzzle.gds](puzzle/puzzle.gds), layer 200/0 at y = -52.72 um | [02](Easter-Eggs/02_easter_egg.txt) |
 | 3 | **"Leave no stone unturned!"**, a note left for a human where a simulator would write its own name | [example_inputs.vcd](puzzle/example_inputs.vcd), the `$version` field | [03](Easter-Eggs/03_easter_egg.txt) |
-| 4 | **"Sat Dec 31 23:59:60 2016"** (†), a real leap second and the most recent one ever inserted into UTC | [example_inputs.vcd](puzzle/example_inputs.vcd), the `$date` field | [04](Easter-Eggs/04_easter_egg.txt) |
+| 4 | **"Sat Dec 31 23:59:60 2016"** , a real leap second and the most recent one ever inserted into UTC | [example_inputs.vcd](puzzle/example_inputs.vcd), the `$date` field | [04](Easter-Eggs/04_easter_egg.txt) |
 | 5 | **Read the waveform as ASCII.** The instruction that unlocks the whole output side, hidden in plain sight as a passing link | the [puzzle blog post](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/) | [05](Easter-Eggs/05_easter_egg.txt) |
 | 6 | **"The night sky awaits"**, in the *inputs*. 11 rows of 7 bits, because standard ASCII needs 7 | [example_inputs.vcd](puzzle/example_inputs.vcd), the `I` input, both frames | [06](Easter-Eggs/06_easter_egg.txt) |
 | 7 | **496 is the third perfect number**, `1+2+4+8+16+31+62+124+248`, and `A+B=496` has exactly 15 eight-bit solutions | [warmup/00_source.v](warmup/00_source.v) | [07](Easter-Eggs/07_easter_egg.txt) |
 | 8 | **11 + 11 + 1 drawn on the die.** Every counter in one narrow vertical column, in two stacks of eleven plus a loner | [puzzle.gds](puzzle/puzzle.gds), flip-flop placement at x 114.8 to 126.3 | [08](Easter-Eggs/08_easter_egg.txt) |
 | 9 | **Five messages, not four.** `EMPTY SKY`, `BIG BANG`, `TRY AGAIN`, **`TWO NOT TOUCH`** and `(* TWO STARS *)`, the last two being the puzzle's own name and its rule in OCaml comment syntax | the output ROM (see [10_message_catalogue.txt](puzzle-solution/10_message_catalogue.txt)) | [09](Easter-Eggs/09_easter_egg.txt) |
 | 10 | **Star Search** (matches the theme of this puzzle) | [December 2016 Jane Street Puzzle](https://www.janestreet.com/puzzles/star-search-index/)  | [10](Easter-Eggs/10_easter_egg.txt)  |
+| 11 | **A-brief-trip-through-spacetime** (matches the theme of this puzzle) | [January 2017 Jane Street Blog](https://blog.janestreet.com/a-brief-trip-through-spacetime/)  | [11](Easter-Eggs/11_easter_egg.txt)  |
 
 
 - `TWO NOT TOUCH` is the least reachable of the five.
@@ -310,6 +311,8 @@ sky130_fd_sc_hd__clkbuf_4 u0_clkbuf_4 (.A(net_505), .X(net_000));
 - So it names the rule that was broken, and that rule is the other name of the puzzle.
 - No random sweep reaches it.
 - I found it by asking a SAT solver to enumerate every string the output bus can produce, over the fourteen queries that closed the list.
+
+----
 
 #### Note : 
 
@@ -335,11 +338,7 @@ $end
 
 - As you can see it prints the name of the tool and not a human message.
 
-
-#### (†) : 
-
-- I thought Dec 31 2016 must be deliberate, but then came across the [closest blog](https://blog.janestreet.com/a-brief-trip-through-spacetime/) posted (Jan 9 2017) which mentions the word "space", close enough to "stars" (PLEASE TAKE THIS AS JOKE)
-
+----
 
 #### Note : 
 
