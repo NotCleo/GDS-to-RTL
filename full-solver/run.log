@@ -1,0 +1,41 @@
+building tb_full_solver
+VCD info: dumpfile full_solver.vcd opened for output.
+
+SOLVER PLUS VALIDATOR, 11x11 STAR BATTLE
+======================================================================
+
+  edge 121      region map loaded, 121 cells
+  edge 10247    solved, x = 10126 clocks (1 to set up, 10125 to search)
+  edge 10370    success high, O reads "(* TWO STARS *)"
+
+THE FRAME THE SOLVER BUILT
+----------------------------------------------------------------------
+    . . . . . . . * . * .
+    * . . . . * . . . . .
+    . . . . . . . * . * .
+    * . * . . . . . . . .
+    . . . . * . * . . . .
+    . . * . . . . . * . .
+    . . . . * . . . . . *
+    . * . . . . * . . . .
+    . . . * . . . . . . *
+    . . . . . * . . * . .
+    . * . * . . . . . . .
+
+CHECKS
+----------------------------------------------------------------------
+  two per row, two per column, two per region, nothing touching
+  the frame equals the 121 bit key SAT found in the netlist
+  success on edge 10370, which is 244 + x with x = 10126
+  O[7:0] spells (* TWO STARS *), the chip's word for a correct grid
+
+RESULT  the pipeline solves the puzzle and the chip accepts it
+
+tb_full_solver.v:260: $finish called at 103870000 (1ps)
+building tb_validator_equiv
+
+  grids compared         564
+  success mismatches     0
+  O[7:0] mismatches      0
+  RESULT  the split up validator is cycle equivalent to the gates
+tb_validator_equiv.v:144: $finish called at 800880000 (1ps)

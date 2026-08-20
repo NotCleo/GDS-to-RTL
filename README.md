@@ -7,7 +7,61 @@
 
 ----
 
-## Timeline 
+## Contents
+
+**Start here.** The result, what was provided, and how to run it.
+
+| # | Section | What it covers |
+|---|---|---|
+| 1 | [Timeline](#1-timeline) | The four weeks, day by day |
+| 2 | [What the puzzle turned out to be](#2-what-the-puzzle-turned-out-to-be) | What the chip is, the 121 bits that satisfy it, and the string it prints |
+| 3 | [What I did, in three lines](#3-what-i-did-in-three-lines) | Extract, prove, recover, solve |
+| 4 | [The files provided](#4-the-files-provided) | Both sets of provided files, and what the warm-up design is |
+| 5 | [The first breakthrough](#5-the-first-breakthrough) | Reading the sample waveform as ASCII |
+| 6 | [What the circuit turned out to be](#6-what-the-circuit-turned-out-to-be) | The nine blocks, and where each sits on the die |
+| 7 | [Quick start](#7-quick-start) | Install, one command, and what comes out |
+| 8 | [Three ways to make `success` go high](#8-three-ways-to-make-success-go-high) | Paper, SAT and RTL, side by side |
+
+**The pipeline, in the order it ran.**
+
+| # | Section | What it covers |
+|---|---|---|
+| 9 | [What is in a GDS file](#9-what-is-in-a-gds-file) | What the format stores, and what it does not |
+| 10 | [What to build first, and what to check it against](#10-what-to-build-first-and-what-to-check-it-against) | The warm-up as the reference, and what it can prove |
+| 11 | [Inventory, before any connectivity work](#11-inventory-before-any-connectivity-work) | Placements, labels and layers, counted |
+| 12 | [Turning polygons into a netlist](#12-turning-polygons-into-a-netlist) | The four-step algorithm, and why overlap is the only signal |
+| 13 | [Three bugs, each of which produced the wrong circuit](#13-three-bugs-each-of-which-produced-the-wrong-circuit) | What each bug did, and how it was caught |
+| 14 | [Proving the extractor exact](#14-proving-the-extractor-exact) | The extracted netlist against the shipped golden netlist |
+| 15 | [Solving the warm-up from its gates alone](#15-solving-the-warm-up-from-its-gates-alone) | The first SAT solve, and how the solver was chosen |
+| 16 | [The puzzle inventory, and easter egg 2](#16-the-puzzle-inventory-and-easter-egg-2) | Three rows of the inventory that do not belong in a standard-cell design |
+| 17 | [The layer map, the via census, and the puzzle netlist](#17-the-layer-map-the-via-census-and-the-puzzle-netlist) | sky130 layers, 8,221 vias, and the 728-cell netlist |
+| 18 | [Cell semantics, and what the PDK gets wrong](#18-cell-semantics-and-what-the-pdk-gets-wrong) | Where every truth table comes from, and three cells the PDK describes badly |
+| 19 | [The sample waveform: easter eggs 3, 4, 5 and 6](#19-the-sample-waveform-easter-eggs-3-4-5-and-6) | The interface, measured rather than assumed |
+| 20 | [Checking the netlist against the recorded chip](#20-checking-the-netlist-against-the-recorded-chip) | The extracted gates replayed against the recorded chip |
+| 21 | [Register-level structure](#21-register-level-structure) | The flip-flop graph, its cycles, and what survives synthesis |
+| 22 | [Where the counters sit on the die: easter egg 8](#22-where-the-counters-sit-on-the-die-easter-egg-8) | The counter floorplan, and what it gives away |
+| 23 | [The first hypothesis, and why it was wrong](#23-the-first-hypothesis-and-why-it-was-wrong) | Twenty five candidate grids, all rejected, and what that ruled out |
+| 24 | [Probing one grid cell at a time](#24-probing-one-grid-cell-at-a-time) | 121 single-cell probes, and the region map they return |
+| 25 | [Finding the 121 bits](#25-finding-the-121-bits) | The encoder, the unrolling, the depth bound and the uniqueness proof |
+| 26 | [Solving it a second time, differently](#26-solving-it-a-second-time-differently) | z3 on the region map, which never sees the netlist |
+| 27 | [Every string the chip can print: easter egg 9](#27-every-string-the-chip-can-print-easter-egg-9) | Fourteen incremental solver calls, five messages |
+| 28 | [Writing the RTL, and proving it matches the gates](#28-writing-the-rtl-and-proving-it-matches-the-gates) | 564 grids, two simulators, zero mismatches |
+| 29 | [The answer](#29-the-answer) | The key, the grid and the verdict |
+| 30 | [What the pipeline checks rather than assumes](#30-what-the-pipeline-checks-rather-than-assumes) | The list, result by result |
+| 31 | [Making it fast](#31-making-it-fast) | Three rounds of profiling, 4.0 s down to 2.8 s |
+
+**Extras and reference.**
+
+| # | Section | What it covers |
+|---|---|---|
+| 32 | [Solving it in hardware](#32-solving-it-in-hardware) | An RTL solver that drives the recovered chip, with no software in the loop |
+| 33 | [Easter eggs, collected](#33-easter-eggs-collected) | All eleven, in one table |
+| 34 | [Directory layout](#34-directory-layout) | What is in the repository |
+| 35 | [Files the run produces](#35-files-the-run-produces) | Every file `bash RUN.sh` writes |
+
+----
+
+## 1. Timeline
 
 | Day | Task |
 |---|---|
@@ -18,7 +72,35 @@
 
 ----
 
-## Summary of Results
+## 2. What the puzzle turned out to be
+
+- An "11x11 Star Battle (Two Not Touch) Validator". (pass in a solved puzzle and it tells you if it is right)
+- Two stars per row, per column and per region, no two touching.
+- Exactly one grid works.
+- Drive in a solved 11x11 Two Not Touch Puzzle grid serially and the chip prints:
+
+```
+(* TWO STARS *)
+```
+
+- It was found that to drive "success" flag high, the following input sequence was needed :
+
+    0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000
+
+![Surfer showing success high and O[7:0] spelling the verdict](Images/success-waveform.png)
+
+
+### Note
+
+- Star Battle is also referred to as Two Not Touch
+- One can read about how the puzzle works [here](https://krazydad.com/twonottouch/intro_tutorial/)
+
+### Want to try the puzzle?
+
+- Play [here](https://notcleo.github.io/GDS-to-RTL/TwoNotTouch-Interactive-Puzzle/), read [here](TwoNotTouch-Interactive-Puzzle/)
+- Check out this sample [interactive Two Not Touch Puzzle](https://krazydad.com/play/starbattle/?kind=10x10&volumeNumber=2&bookNumber=1&puzzleNumber=24)
+
+### Deliverables
 
 - Below table lists all final deliverable files / outputs for the Puzzle :
 
@@ -31,7 +113,90 @@
 | The gate netlist recovered from the layout | 728 cells, 738 nets (see [02_extracted_netlist.v](puzzle-solution/02_extracted_netlist.v)) |
 | The waveform with `success` actually high | (see [14_success_inputs.vcd](puzzle-solution/14_success_inputs.vcd)) |
 
-### What the circuit is
+----
+
+## 3. What I did, in three lines
+
+- Extracted a netlist from the raw geometry present in the puzzle GDS file.
+- Proved the extractor pipeline exact against the warm-up's golden files, then validated it against the real chip's recorded outputs. 
+- Recovered the register structure, read the design's hidden data out of the silicon by probing it 121 times, solved the resulting puzzle two independent ways, and proved a behavioural model cycle-equivalent to the gates.
+
+----
+
+## 4. The files provided
+
+- The puzzle provided the two sets of files :
+
+### Set I (Main Puzzle) 
+
+| File | What it is about | 
+|---|---|
+| [GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds) (1.4MB) | contains metal, routing, and active transistor layers, with the cell names, net names and hierarchy stripped out |
+| [Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png) (136KB)| an image of the GDS file with the I/O's labelled for reference |
+| [Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd) (8.4KB)|  driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs). |
+
+### Set II (Warmup) 
+
+| File | What it is about | 
+|---|---|
+| [RTL source file](warmup/00_source.v) (1.2KB) | The original Verilog source code of the example design |
+| [Netlist file](warmup/01_netlist.v) (19KB)| Synthesized netlist comprising of a list of standard cells and connections |
+| [Netlist file (with power rails)](warmup/02_netlist_with_power_rails.v) (30KB)| Netlist with VDD and GND rails added |
+| [post_pnr DEF file](warmup/03_post_place_and_route.def) (112KB) | Physical layout of cells and routing connections, corresponding to cell and net names. |
+|[GDS file](warmup/04_final.gds) (306KB)| The final manufacturable layout file, with many internal names removed |
+
+- The warmup puzzle is a small example design and was run through the same RTL to GDS flow, to obtain the GDS file (similar to main puzzle GDS).
+- The example design consists of two shift registers, an adder, and a comparator, outputting success if A + B == 496.
+- The whole flow was carried out using SkyWater's 130 nm PDK, see [more](https://skywater-pdk.readthedocs.io/en/main/).
+
+![The warm-up RTL](Images/rtl-warmup.png)
+
+- Two 8-bit shift registers fed from `A` and `B`, a 9-bit adder, and a comparator against 496. `en` gates the shifting and `S` falls straight out of the compare, so there is no state beyond the two registers.
+
+-----
+
+### Note : The Layout image provided reveals the following I/O,
+
+| I/O | What it is about | 
+|---|---|
+| clk (input) | drives all sequential elements (d-flop based counters) |
+| rst_n (input) | active low resets to all sequential elements |
+| enable (input) | active high enable to all sequential elements |
+| I (input) | serial 1 bit input wire (we drive the puzzle cells serially through this) |
+| O[7:0] (output) | 8 bit output vector displaying status of puzzle's state |
+| success (output) | driven high when a valid/solved puzzle was driven in |
+
+----
+
+#### Note : 
+
+- I ran the three puzzle files through exiftool for a preliminary check and found nothing interesting.
+-
+-----
+
+- The waveform (of the puzzle's VCD file) looks like :
+- Notice the "success" flag remains low throughout.
+
+![Surfer showing waveform of example inputs VCD file](Images/example_inputs_waveform.png)
+
+----
+
+## 5. The first breakthrough
+
+- Switching to ASCII (I rarely use ASCII and prefer staying in Decimal/Hexadecimal/unsigned Integer) was the first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on :
+
+![Blog Site highlighted](Images/switching-to-ascii-moment.png)
+
+----
+
+- It was at this point while viewing the waveform when I decided to switch to viewing the VCD file in ASCII.
+- Which revealed the following message "TRY AGAIN" (at 1255000 ps marker):
+
+![Surfer showing waveform displaying "TRY AGAIN"](Images/try_again_message.png)
+
+----
+
+## 6. What the circuit turned out to be
 
 - The chip is an **11 x 11 Star Battle validator**, the puzzle also known as Two Not Touch.
 - A 121-bit grid is shifted in serially on `I`, one cell per rising clock while `enable` is high, row-major.
@@ -55,11 +220,1308 @@
 - (†) : 4 bits because each row and each column holds 11 cells.
 - The design uses 2-bit saturating counters to add up to check row/column/region counts
 
+![The recovered puzzle RTL](Images/rtl-puzzle.png)
+
+- The same nine blocks as a diagram. `clk` and `rst_n` reach every block and are drawn as a note rather than as nine wires. Below is where they actually sit on the die.
+
 ![Module map of puzzle.gds](Images/gds-module-map.png)
+
+----
+
+## 7. Quick start
+
+- The pipeline is one Python file.
+
+### Install
+
+- `RUN.sh` creates `.venv` and installs `requirements.txt` on first run, so on every platform the install is: get python, get iverilog, run the script.
+- It takes about **3 seconds** end to end and rebuilds `warmup-solution/` and `puzzle-solution/` from scratch every time.
+
+#### Ubuntu / Debian
+    
+    git clone https://github.com/NotCleo/GDS-to-RTL.git
+    cd GDS-to-RTL
+    sudo apt install iverilog python3-venv python3-tk tree -y
+    bash RUN.sh
+
+
+- I do not own a Mac/Windows machine, so I made Opus 5 write this below two sections (please open an issue if it fails)
+
+#### macOS
+
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    brew install python icarus-verilog git tree python-tk
+    git clone https://github.com/NotCleo/GDS-to-RTL.git
+    cd GDS-to-RTL
+    bash RUN.sh
+
+#### Windows
+
+    wsl --install -d Ubuntu
+
+- Then open the Ubuntu shell and follow the Ubuntu block above.
+
+### Running it
+
+bash RUN.sh                   the warm-up, which validates the toolchain, then the puzzle
+    bash RUN.sh --only warmup     just the warm-up
+    bash RUN.sh --only puzzle     just the puzzle
+    bash RUN.sh --no-iverilog     skip the two independent-simulator checks
+
+#### To view the results
+
+    tree puzzle-solution warmup-solution
+
+- Every file in those two directories is listed and explained in section 35.
+- The captured output of a full run is in [`RUN.log`](RUN.log), the pipeline's own stage-by-stage log is in [`GDS-to-RTL/run.log`](GDS-to-RTL/run.log), and every stage is described with its numbers in [`GDS-to-RTL/summary.md`](GDS-to-RTL/summary.md).
+- Neither viewer below is needed to reproduce anything.
+
+#### Optional, only if you want to look at the waveforms by hand
+
+    mkdir -p ~/surfer_install && cd ~/surfer_install
+    wget "https://gitlab.com/api/v4/projects/42073614/jobs/artifacts/main/raw/surfer_linux.zip?job=linux_build" -O surfer_linux.zip
+    unzip surfer_linux.zip
+    chmod +x surfer
+    mkdir -p ~/.local/bin
+    mv surfer ~/.local/bin/
+    export PATH="$HOME/.local/bin:$PATH"
+    surfer puzzle-solution/14_success_inputs.vcd
+
+- Open `O[7:0]` and set its format to ASCII.
+
+### What it is built from
+
+| Name | Type | Why it was used |
+|---|---|---|
+| **gdstk** | Python package | GDSII parsing and hierarchy flattening: the front end of the extractor |
+| **shapely** | Python package | Polygon building, overlap testing and STRtree spatial indexing: the core of net extraction. **Requires 2.0 or newer.** 1.x has no `predicate=` keyword and returns geometries instead of integer indices, which silently builds the wrong netlist |
+| **numpy** | Python package | Every coordinate transform, every bulk polygon build and every same-layer distance test in the extractor is one array operation over all shapes at once rather than one call per shape |
+| **python-sat** | Python package | The SAT back end. It bundles several solvers behind one API; the one this pipeline loads was picked by timing them all on this design's own two workloads, and the table is in section 15. It solves the unrolled gate netlist: the 121-bit key, the minimum-depth bound, the uniqueness proof, and the enumeration of every string the output ROM holds |
+| **z3-solver** | Python package | The independent constraint solve of the recovered puzzle, and generating the grid classes used to falsify hypotheses and to stress the equivalence run |
+| **iverilog + vvp** | CLI tool | Used exactly twice, as an independent second opinion: golden versus extracted on the warm-up, and gates versus recovered RTL on the puzzle |
+| **KLayout** | GUI tool | Layout viewer, for spot-checking a coordinate |
+| **Surfer** | GUI tool | Waveform viewer. Switching a bus to ASCII is a right click, which is what easter egg 5 needs |
+| **GDS3D** | GUI tool | 3D rendering of the layer stack, separating power grid from routing and isolating poly over diffusion to see the transistors |
+| **Tiny Tapeout GDS Viewer** | Web tool | Zero-install browser view of the layout for a first look. Where I found the logo |
+| **sky130_fd_sc_hd Liberty (`.lib`)** | PDK data | Cell pin directions, the boolean `function` of every combinational output, and the `ff` group of every flop. Every truth table in this flow comes from here, none are hand written |
+| **sky130_fd_sc_hd merged LEF** | PDK data | The complete pin landing geometry, `PIN / PORT / RECT`. Reading pins from GDS text labels instead loses every pin rectangle the label does not tag |
+| **argparse, collections, contextlib, json, math, os, re, subprocess, sys** | Stdlib | Argument handling, grouping and counting, stage timing, interchange, coordinate arithmetic, Liberty and Verilog parsing, and launching the simulator shards |
+
+### If you have your own GDS
+
+- The extractor is not specific to this puzzle, so it is also packaged on its own, in [`General-GDS-to-RTL/`](General-GDS-to-RTL/).
+- Point it at any sky130 layout:
+		  
+		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds
+		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds -o out/
+		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds --def mychip.def --golden golden.v
+		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds --lef other.lef --lib other.lib
+		python3 General-GDS-to-RTL/gds_to_netlist.py --show-layers
+
+- The main pipeline is untouched and does not know it exists.
+
+| you get | what is in it |
+|---|---|
+| `<stem>_01_inventory.txt` | every placement, orientation, label and layer |
+| `<stem>_02_netlist.v` | structural Verilog, recovered from polygon overlap alone |
+| `<stem>_03_cell_models.v` | simulation models for the cell types used, generated from the Liberty |
+| `<stem>_04_structure.txt` | register graph, feedback groups, clock roots, and what each output depends on |
+| `<stem>_05_recovered_rtl.v` | behavioural RTL: boolean equations for the logic, clocked blocks for the registers |
+| `<stem>_06_function.txt` | what the circuit computes, and for a combinational design the exact function of every output plus its full truth table |
+| `<stem>_07_equivalence.txt` | the recovered RTL run against the recovered gates in `iverilog`, with the mismatch count |
+| `<stem>_08_crosscheck.txt` | with `--def` and `--golden`: placement matching and the net-partition comparison |
+
+- Every cell's function comes out of the Liberty file, so a netlist of known functions is already a system of boolean equations, one per net.
+- Substituting each equation into its consumer would expand a cone into an expression exponential in its depth, which is why fully expanding a counter produces megabytes, so a net keeps its own line when more than one thing reads it, when it is a port, when it holds state, or when folding it in would pass sixteen terms, and is folded in otherwise.
+- The result is then run against the gates: exhaustively for a combinational design small enough to enumerate, over two thousand clocked cycles otherwise.
+- Synthesis is not reversible!
+- It flattens the hierarchy, deletes every name the layout did not keep as a label, and many different sources compile to the same gates, so nothing gets the original `always` blocks back.
+- The RTL in [`puzzle-solution/08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) was written by hand from an understanding of the gates and then *proved* cycle-equivalent to them.
+- Both are equivalent to the gates.
+- Only the hand-written one says the circuit is an 11x11 Star Battle validator.
+- What the structure report does is tell you where to look, and [`General-GDS-to-RTL/README.md`](General-GDS-to-RTL/README.md) says how to read it.
+- For a PDK that is not sky130, `--show-layers` prints the layer table in the shape that `--layers` accepts, and you pass that PDK's own `--lef` and `--lib`.
+
+----
+
+## 8. Three ways to make `success` go high
+
+- The chip is a validator. It checks a grid, it does not produce one.
+- So once the RTL was recovered, the work left was to solve an 11 x 11 Star Battle and feed the answer in.
+- There are three ways to do that, and all three are in this repository.
+
+| | how the 121 bits are found | what it needs | cost |
+|---|---|---|---|
+| On paper | read the region map out of [`06_region_map.txt`](puzzle-solution/06_region_map.txt) and solve the grid by hand | a pencil | one sitting |
+| SAT | ask the gate netlist whether an input sequence exists that drives `success` high | `python-sat`, and no region map | milliseconds |
+| RTL | build a solver in hardware, feed it the region map, let it drive the chip | `iverilog`, and no software solver | 10,370 clock edges |
+
+- SAT is what the pipeline runs, and it is the strongest of the three because it never looks at the region map. The question goes to the gates, so the answer is a property of the netlist and not of my reading of it. It also returns two facts the other two cannot: that 121 edges cannot work and 122 can, and that the key is unique. Section 25 is the whole of it.
+- Paper is the route a person reaches for first. It works, and it is how the SAT answer got its first check, but it proves nothing about the circuit and it only solves the one puzzle.
+- RTL is the only one of the three that stays in hardware. No Python and no solver library, just a second module wired to the recovered one. Section 32.
+
+----
+
+- Sections 9 to 31 are the pipeline in the order it ran.
+- Every number in them is printed by `GDS-to-RTL/gds_to_rtl.py` on a fresh run, and the run that produced them is in [`RUN.log`](RUN.log).
+
+| | |
+|---|---|
+| The whole flow | one file, [`GDS-to-RTL/gds_to_rtl.py`](GDS-to-RTL/gds_to_rtl.py) |
+| Runtime | about 3 seconds |
+| Stage by stage | [`GDS-to-RTL/summary.md`](GDS-to-RTL/summary.md) |
+| Full terminal log | [`GDS-to-RTL/run.log`](GDS-to-RTL/run.log) |
+
+----
+
+## 9. What is in a GDS file
+
+- I started with `puzzle/puzzle.gds`, 1.4 MB.
+- A GDS is a geometry file and nothing else.
+- It stores polygons, each tagged with a layer number and a datatype, plus cell definitions that can be placed at a position with a rotation and an optional mirror.
+- There is no wire, no gate, no pin and no connection anywhere in the format.
+- Two pieces of metal are connected if and only if they physically overlap, and the file never records that they do.
+- It has to be computed from coordinates.
+
+| what a GDS keeps | what it does not have |
+|---|---|
+| polygons, with a layer and a datatype | any notion of a net |
+| cell definitions, and placements of them | any notion of a pin, beyond a text label someone chose to leave |
+| text labels, if the flow did not strip them | signal names, module boundaries, hierarchy above the cell |
+| a hierarchy of references, with rotation and mirror | anything at all about intent |
+
+- One thing survived, and it mattered enormously: **the standard cells are still named**.
+- `sky130_fd_sc_hd__nand3_2` says exactly what that cell does, because the PDK that defines it is public.
+- What the flow stripped is everything above the cell: which instance is which, what the nets were called, and how the design was organised.
+- Before writing any code I opened it in the **Tiny Tapeout online GDS viewer**, which needs no install and renders every layer at once.
+- Staring at it explained nothing about the circuit. 9,875 placements with no labels look like 9,875 placements with no labels.
+- It did show one thing, in the default view, without turning a single layer off: a pale rectangular block low on the die that does not look like routing.
+- I switched to **GDS3D** to isolate it, because GDS3D can hide the power grid and separate the metal stack, and the block is on met2 with nothing under it.
+
+### Easter egg 1: the logo in metal 2
+
+- Routing on a metal layer is long power straps and short jogs between vias.
+- This was neither.
+- **1,366 sub-micron polygons packed into a 17.10 x 17.10 um square, connected to nothing at all**, over a piece of die with no cells beneath it.
+- It is the Jane Street logo, drawn in real mask geometry, and the warm-up GDS carries it too at a different corner.
+- Details and the rasterised version: [`Easter-Eggs/01_easter_egg.txt`](Easter-Eggs/01_easter_egg.txt).
+- That is everything looking at the layout produced.
+- Everything after this is computed.
+
+----
+
+## 10. What to build first, and what to check it against
+
+- The challenge asks for a netlist extractor, so one has to be written.
+- The problem that comes with it: suppose I write it, point it at `puzzle.gds`, and it emits a netlist.
+- **How would I know that netlist is right?**
+- A netlist can parse cleanly, have every pin connected, have exactly one driver per net, and still describe a different circuit, because one missed overlap splits one net into two and nothing anywhere reports an error.
+- The puzzle ships a warm-up, and the warm-up ships golden references, which is the only ground truth available anywhere in this exercise.
+
+| `warmup/` contains | which is |
+|---|---|
+| `00_source.v` | the Verilog someone wrote |
+| `01_netlist.v` | the gate netlist synthesis produced from it |
+| `03_post_place_and_route.def` | where every one of those gates was placed |
+| `04_final.gds` | the geometry, which is the only thing the puzzle gives me for the real chip |
+
+| order | what it buys |
+|---|---|
+| build the extractor against the warm-up first | its output can be compared to the golden netlist net by net, and to the DEF placement by placement |
+| only then point the same code at the puzzle | any disagreement after that is about the puzzle, not about my pipeline |
+
+----
+
+## 11. Inventory, before any connectivity work
+
+- **Stage W1 and P1.** `gdstk` reads the GDS into a cell hierarchy; the code walks `top.references`, buckets each placement by its cell name, and dumps every label with its layer and coordinate.
+- No geometry is interpreted here and nothing is connected.
+- It is counting, so that I know what is in the file before deciding what to do with it.
+- Output: `01_gds_inventory.txt` in each solution directory.
+
+| | puzzle | warm-up |
+|---|---|---|
+| structures in the file | 81 | 27 |
+| bounding box | (0, -52.72) .. (200, 300) um | (0, 0) .. (100, 100) um |
+| total placements | 9,875 | 1,099 |
+| logic cells | **728** | **79** |
+| distinct logic cell types | 66 | 16 |
+| flip-flops | **92** | 16 |
+| vias | 8,221 | 869 |
+| well taps and decoupling caps | 880 | 151 |
+| antenna diodes | 10 | 0 |
+| structures that are not standard cells | **36** | 0 |
+| pin labels inside cell definitions | 876 | 186 |
+| top-level text labels | 17 | 10 |
+
+- The warm-up is 79 logic cells: two shift registers, an adder, a comparator and three clock buffers, which is small enough to read by hand.
+- That is the point of it.
+- The 17 top-level labels on the puzzle are the ports, and they are the last real names left anywhere in the file:
+
+```
+'I'        on layer 70/5 at (  0.30,  79.22)
+'clk'      on layer 70/5 at (  0.30, 238.34)
+'rst_n'    on layer 70/5 at (  0.30, 185.30)
+'enable'   on layer 70/5 at (  0.30, 132.26)
+'O[0]'     on layer 70/5 at (199.70, 204.34)   ... through O[7]
+'success'  on layer 70/5 at (199.70, 285.94)
+```
+
+- Inputs down the left edge, outputs down the right, exactly as the hint image in section 12 draws them.
+
+----
+
+## 12. Turning polygons into a netlist
+
+- **Stage W2 and P2.** The tools are `gdstk` for the hierarchy, `shapely` for polygons and its `STRtree` R-tree index for spatial lookup, `numpy` for the coordinate arithmetic, and a union-find over integer node ids.
+- The algorithm is four steps.
+
+| step | what happens | what does it |
+|---|---|---|
+| 1 | Flatten every placement: apply each reference's rotation, mirror and translation to every polygon in the cell it places | one numpy affine pass over all 31,844 polygon coordinate arrays at once |
+| 2 | On each conducting layer, join any two polygons that touch. Each resulting group is one contiguous piece of conductor | one `STRtree` per layer, one bounding-box query, then one vectorised exact distance test, then union-find |
+| 3 | Walk the via layers. A cut touching conductor X below and conductor Y above means X and Y are the same electrical node | one interior point per cut, looked up in the tree of the layer below and the layer above |
+| 4 | For each placed cell, look up which conductor covers each of its pin rectangles, group pins by conductor, emit Verilog | pin geometry from the PDK LEF, one tree query per layer |
+
+- Step 2 is the whole cost: it is an all-pairs proximity question over 35,531 polygons, and without a spatial index it is quadratic and unusable.
+- Two polygons on the same layer are treated as one conductor if they come within **60 nm** of each other.
+- Section 21 shows the recovered partition does not depend on that number.
+- Output: `02_extracted_netlist.v`.
+
+> **Note on shapely.** 2.0 changed `STRtree.query` to take a `predicate` argument and to return integer indices rather than geometries. On shapely 1.8 that call signature does not exist, and the code silently builds a different netlist rather than failing. **2.0 is a hard floor**, and `requirements.txt` pins it.
+
+----
+
+## 13. Three bugs, each of which produced the wrong circuit
+
+- None of the three crashed.
+- All three produced a netlist that parsed, had no dangling pins, had exactly one driver per net, and described a circuit that is not on the die.
+- Each was caught by the warm-up comparison in section 14 and by nothing else.
+
+| bug | what I did wrong | why it broke silently | the fix |
+|---|---|---|---|
+| **Pin geometry** | Used the GDS text labels to decide which polygon is which pin | A label tags exactly one polygon. A real pin is often several polygons in different places in the cell, and the router may land on any of them. Pins went missing, and nets that should have been joined stayed separate | Read the pin rectangles out of the PDK's LEF. `PIN ... PORT ... RECT` is the authoritative geometry and lists every rectangle belonging to each pin |
+| **Antenna diodes** | Treated `diode_2` as an inert protection device and skipped it | The router uses a diode as a convenient place to jump layers and lands on it twice. Skipping it tears one real net into two halves that never reconnect | Treat it as an electrical bridge: its two connections are the same net |
+| **Cell outlines** | Matched my placements to the DEF using each cell's geometric bounding box | The nwell implant overhangs the cell outline, so every box was consistently too big and every lower-left corner was wrong by the same small amount. **0 of 79** placements matched | sky130 draws the real abutment box on its own layer, **81/4**. Reading that instead gave **79 of 79** immediately |
+
+- The pin one is not a rare edge case.
+- Among the 66 cell types the puzzle uses, 172 of 285 signal pins are a single rectangle, so the naive reading works most of the time and fails exactly where it hurts.
+
+| cell | pin | rectangles in LEF |
+|---|---|---|
+| `clkbuf_16` | `X` | **20** |
+| `clkbuf_8` | `X` | 11 |
+| `a2111oi_2` | `Y` | 11 |
+| `dfrtp_2` | `RESET_B` | 9 |
+
+- `clkbuf_16` is the root of the entire clock tree, and its output pin is 20 separate rectangles.
+- The diode one only surfaces with ground truth.
+- The netlist without diode bridging had the right cell count, no dangling pins and no visible defect anywhere.
+- It just described a different circuit.
+
+----
+
+## 14. Proving the extractor exact
+
+- **Stage W3 and W5.** W3 compares my extraction against the shipped DEF and golden netlist directly; W5 compiles the golden netlist and my extracted netlist together with `iverilog` and simulates them side by side under `vvp`.
+- Outputs: `04_golden_crosscheck.txt` and `05_equivalence.txt`.
+
+| check | what it proves | result |
+|---|---|---|
+| Every net has exactly one driver | No shorts, no floating outputs, no gate driving into another gate's output | 84 nets, **0 violations** |
+| Every GDS placement matches a DEF component on cell type, corner and orientation | The coordinate transforms are right | **79 of 79** |
+| Net partition matches the golden netlist | The two are literally the same circuit | **84 exact matches, 0 mismatches** |
+| Simulate both netlists side by side, 3,000 random cycles, then 200 byte pairs | They behave identically, and `S` really is `A+B==496` | **0 mismatches**, 200 of 200 |
+
+- The third row is what settles it, and here is why it works.
+- **Two netlists are the same circuit exactly when they cut the same set of pins into the same groups, with the same ports attached to the same groups.**
+- That is a statement about set partitions, and names play no part in it.
+- So the extraction can be proved exact while every instance in it is still called `u17` and every net `net_412`.
+- The DEF match is not part of that proof.
+- It is there to put the names back afterwards, which is what `07_name_map.json` holds.
+- At this point the extractor is finished and validated, and the warm-up has one job left.
+
+----
+
+## 15. Solving the warm-up from its gates alone
+
+- **Stage W6.** The extractor has been proved exact, but nothing yet says what the circuit *does*, and working that out from gates is the part that has to carry over to the puzzle.
+- `warmup/00_source.v` is sitting there with the answer in it.
+- This is the one chance to try a technique on a problem whose answer can be checked afterwards, so that file is not opened.
+- The question: **is there an input sequence that drives `S` high, and what is the shortest one?**
+
+### Why a solver
+
+| approach | how it works | how it fits |
+|---|---|---|
+| **Exhaustive search** | Simulate every input sequence up to length K and look for one that works | Works here: `A` and `B` are eight bits each, so 65,536 pairs. It is exponential in the number of free input bits, and the real design is nine times the cell count, so it does not carry over |
+| **Invert it algebraically** | If the state update were affine over GF(2) the circuit is an LFSR or a CRC, and Gaussian elimination inverts it in milliseconds | Worth testing rather than assuming. The pipeline tests it on the real design in section 25 |
+| **Ask a solver for a witness** | State the circuit and the goal as constraints, and let a CDCL search engine find an assignment or prove none exists | This is the one that scales, and the "or prove none exists" half is what turns a shortest-sequence guess into a bound |
+
+- The third also answers something the other two cannot.
+- **UNSAT is a proof.** "No input of K edges works" is not "I did not find one", it is "there is not one".
+
+### What kind of SAT this is
+
+- Not plain combinational SAT.
+- The warm-up has 16 flip-flops and the puzzle has 92, so what the circuit does depends on what it has already been shown.
+- The technique is **bounded model checking**, and section 25 covers the encoding it rests on.
+
+| | |
+|---|---|
+| Take the circuit | a netlist of gates and flops |
+| Unroll it over K clock edges | K copies of the combinational logic, with copy `t`'s flop outputs wired into copy `t+1`'s inputs |
+| Encode every gate in every copy | Tseitin, one variable per gate output, 3 or 4 clauses each |
+| Add the goal | the unit clause `S = 1` at step K |
+| Ask | SAT means a K-edge input sequence exists and the solver hands it over; UNSAT means one provably does not |
+| Sweep K upward | the smallest K that is SAT is the minimum depth |
+
+- Two things make the sweep cheap rather than expensive.
+- The formula for depth K is a **prefix** of the formula for K+1, so the pipeline encodes once at the largest depth it needs and asks the shorter questions by asserting the goal literal one step earlier, as an assumption.
+- The encoder folds any gate whose inputs are already constant, and after reset most of the design is constant for the first several steps.
+
+### Which solver
+
+- `python-sat` bundles several CDCL solvers behind one interface.
+- Rather than pick one on reputation I timed all of them on this design's own two workloads, the depth question and the fourteen incremental enumeration queries of section 27, and took the fastest total.
+- Same formula, same machine, best of three.
+
+| back end | depth question | enumeration | total |
+|---|---|---|---|
+| **CaDiCaL 3.0** | 0.031 s | **0.419 s** | **0.449 s** |
+| CaDiCaL 1.5.3 | 0.021 s | 0.630 s | 0.651 s |
+| MiniSat 2.2 | 0.019 s | 0.642 s | 0.661 s |
+| MiniSat-GH | 0.021 s | 0.650 s | 0.672 s |
+| CaDiCaL 1.9.5 | 0.026 s | 0.658 s | 0.683 s |
+| Glucose 4.2 | 0.022 s | 0.695 s | 0.717 s |
+| Mergesat 3 | 0.028 s | 1.872 s | 1.900 s |
+| Lingeling | 0.050 s | 2.046 s | 2.096 s |
+| MapleCM | 0.218 s | 3.148 s | 3.366 s |
+
+- The depth question is small enough that every one of them is inside a rounding error of the others.
+- The enumeration separates them, because it is fourteen incremental queries against a solver that has to keep and reuse what it learned between them, and that is where CDCL implementations differ.
+- CaDiCaL 3.0 wins, so that is what `SAT_BACKEND` names in the pipeline, and it is the only line that has to change to swap it.
+
+### What came back
+
+- Unroll the extracted warm-up gates, encode, ask, sweep K:
+
+```
+one unrolling to 11 edges: 362 variables, 1012 clauses
+
+K =  6 edges   UNSAT
+K =  7 edges   UNSAT
+K =  8 edges   SAT
+A = 11111000 = 248
+B = 11111000 = 248
+A + B = 496
+```
+
+- Eight edges, because the warm-up shifts in eight bits.
+- No gate was traced by hand and `00_source.v` was never opened.
+- Output: [`warmup-solution/06_sat_solve.txt`](warmup-solution/06_sat_solve.txt).
+
+### Easter egg 7, which is the constant it came back with
+
+- The warm-up raises `success` when `A + B == 496`, and 496 is not arbitrary.
+- It is the **third perfect number**, equal to the sum of its own proper divisors:
+
+```
+496 = 1 + 2 + 4 + 8 + 16 + 31 + 62 + 124 + 248
+```
+
+- It is also `2^4 x (2^5 - 1) = 16 x 31`, which is Euclid's form `2^(p-1) x (2^p - 1)` with `p = 5`.
+- And it is a well chosen constant for an eight-bit adder: `A + B` ranges over 0 to 510, and `A + B = 496` has exactly **15** solutions, `A` from 241 to 255, out of 65,536 input pairs.
+- The solver returned `A = B = 248`, the largest proper divisor of 496 and the middle of those 15.
+- Any of the 15 would have been correct, and an earlier run of this pipeline returned 242 and 254, so the specific pair is the solver's choice and not a property of the circuit.
+- That is the one number on this page that is allowed to move between runs.
+
+----
+
+## 16. The puzzle inventory, and easter egg 2
+
+- Same extractor, no changes, pointed at `puzzle.gds`.
+- Three rows of the inventory table in section 11 do not belong in a standard-cell design, and all three point at the same place.
+- **The bounding box came back as `(0.00, -52.72) ..
+- (200.00, 300.00)`.** The placement rows of a standard cell design start at y = 0, so something is drawn 52.72 um below the chip.
+- **The placement histogram buckets anything that is neither a standard cell nor a via, and on the puzzle that bucket is not empty:**
+
+```
+21 x INTERNAL_3
+15 x INTERNAL_7
+```
+
+- 36 placements of two structures with no pins, no transistors, and names no PDK uses.
+- **The layer histogram, checked against the sky130 layer map, flagged one layer the map does not know: 200/0**, carrying two polygons, one inside each of those two structures.
+- Diffing the puzzle's layer set against the warm-up's narrows it further, since both went through the same flow.
+- Three layers appear in the puzzle and not the warm-up.
+- Two are boring: 66/15 and 81/23 live only inside standard cells, so they are present because the puzzle instantiates `conb_1` and `diode_2` and the warm-up has neither.
+- Only 200/0 is drawn outside every cell, so only 200/0 was added by hand.
+- 36 bars, two widths, 1.38 um and 4.14 um, exactly 1:3, all at y = -52.72, spanning x = 1.33 to 198.67.
+- Dividing the gaps by the narrow width, every gap is 1, 3 or 7:
+
+```
+widths : . - - . . . - . . - . - . . - . . - - - . - - . . . - . . . - . - . . -
+gaps   : 1 1 1 3 3 1 1 7 1 3 1 1 3 3 1 3 1 3 1 7 1 3 1 1 7 1 3 1 1 3 3 1 1 3 1
+```
+
+- Short mark, long mark at 3, gap 1 inside a letter, 3 between letters, 7 between words.
+- That is International Morse timing exactly, and it decodes with no ambiguity to:
+
+```
+PER ARENAM AD ASTRA
+```
+
+- Latin, roughly "through the sand, to the stars", a play on *per aspera ad astra*.
+- Full decode: [`Easter-Eggs/02_easter_egg.txt`](Easter-Eggs/02_easter_egg.txt).
+
+----
+
+## 17. The layer map, the via census, and the puzzle netlist
+
+- **Stage P2.** The four-step algorithm in section 12 needs one thing before it can run: which GDS layers are conductors, which are cuts, and which are neither. sky130's layer map answers that.
+
+| layer | GDS | what it is | how the extractor uses it |
+|---|---|---|---|
+| li1 | 67/20 | local interconnect, inside and between cells | conductor |
+| met1 | 68/20 | first routing metal | conductor |
+| met2 | 69/20 | second routing metal | conductor |
+| met3 | 70/20 | third routing metal, also carries the port labels on 70/5 | conductor |
+| met4 | 71/20 | fourth routing metal, power straps | conductor |
+| met5 | 72/20 | fifth routing metal, power straps | conductor |
+| mcon | 67/44 | cut, li1 to met1 | bridge |
+| via | 68/44 | cut, met1 to met2 | bridge |
+| via2 | 69/44 | cut, met2 to met3 | bridge |
+| via3 | 70/44 | cut, met3 to met4 | bridge |
+| via4 | 71/44 | cut, met4 to met5 | bridge |
+| nwell, diff, poly, licon1, nsdm, psdm, npc, hvtp | 64, 65, 66, 93, 94, 95, 78 | transistors and implants | ignored, they carry no inter-cell signal |
+| areaid.standardc | 81/4 | the real cell abutment box | used to match placements to the DEF |
+
+- Grouping the overlapping shapes per conductor layer on the puzzle:
+
+| conductor | shapes in | conductors out |
+|---|---|---|
+| li1 | 10,819 | 5,472 |
+| met1 | 12,606 | 3,001 |
+| met2 | 8,517 | 2,060 |
+| met3 | 2,560 | 811 |
+| met4 | 867 | 45 |
+| met5 | 162 | 18 |
+
+- **Checking the coordinate transforms without an answer key.** Every via cut has to land on metal on **both** sides.
+- If a rotation or a mirror were applied wrongly, cuts would sit with metal on one side only.
+- This check needs no golden file, so unlike section 14 it works on the puzzle too:
+
+```
+cut mcon   li1  -> met1 : 17188/17188 bridged
+cut via    met1 -> met2 :  3779/3779  bridged
+cut via2   met2 -> met3 :   951/951   bridged
+cut via3   met3 -> met4 :   687/687   bridged
+cut via4   met4 -> met5 :   108/108   bridged
+```
+
+- **22,713 of 22,713** cuts bridged, none floating.
+- The design that came out:
+
+| | |
+|---|---|
+| logic cells | 728, in 66 types |
+| nets | **738** |
+| flip-flops | 92, being 84 `dfrtp_2`, 4 `dfstp_2`, 4 `dfxtp_2` |
+| nets with a driver count other than one | **0** |
+| nets with no driver at all | **0** |
+| combinational loops | **0** |
+| clock roots | one, `clk` |
+
+- Zero shorts, zero floating outputs and zero undriven nets on both designs.
+- That last row matters because a single unrecovered connection splits one net into two, and the circuit becomes a different circuit with no error reported anywhere.
+- The result is a plain structural Verilog netlist, [`puzzle-solution/02_extracted_netlist.v`](puzzle-solution/02_extracted_netlist.v):
+
+```verilog
+// Recovered from puzzle/puzzle.gds by geometry alone.
+// No netlist, DEF or source file was read to produce this.
+// 728 logic cells, 738 nets, 0 nets with a driver count other than one.
+module puzzle_extracted (I, clk, enable, rst_n, success, O);
+  input  I;
+  ...
+  sky130_fd_sc_hd__xor2_2  u12_xor2_2  (.A(net_268), .B(net_256), .X(net_260));
+  sky130_fd_sc_hd__a21oi_2 u13_a21oi_2 (.A1(net_244), .A2(net_245), .B1(net_240), .Y(net_246));
+  sky130_fd_sc_hd__nand2_2 u14_nand2_2 (.A(net_200), .B(net_649), .Y(net_255));
+  sky130_fd_sc_hd__a22o_2  u15_a22o_2  (.A1(net_051), .A2(net_653), .B1(net_272), .B2(net_296), .X(net_276));
+  ...
+  sky130_fd_sc_hd__and3_2  u23_and3_2  (.A(net_139), .B(net_140), .C(net_135), .X(O[0]));
+endmodule
+```
+
+- 728 instances and 738 nets, with no meaningful names in it, which is exactly as far as geometry can take anyone.
+
+----
+
+## 18. Cell semantics, and what the PDK gets wrong
+
+- **Stage W4 and P3.** A netlist of cell names is useless without knowing what the cells do.
+- That comes from the sky130 Liberty file, which is the same file the synthesiser read when it built this design in the first place.
+- The pipeline parses it and generates simulation models: `03_cell_models.v`.
+- For combinational cells, each output pin carries a boolean `function`:
+
+```
+cell ("sky130_fd_sc_hd__xor2_2") {
+    pin ("X") { direction : "output";  function : "(A&!B) | (!A&B)"; }
+}
+```
+
+- For sequential cells, an `ff` group names the state pair, its clock, its next state, and its level-sensitive clear or preset:
+
+```
+cell ("sky130_fd_sc_hd__dfstp_2") {
+    ff ("IQ","IQ_N") { clocked_on : "CLK";  next_state : "D";  preset : "!SET_B"; }
+    pin ("Q") { direction : "output";  function : "IQ"; }
+}
+```
+
+- That is enough to derive every cell, so **no truth table is written by hand anywhere in this repository**.
+- The same parsed functions are used by the simulator and by the SAT encoder, which keeps the simulated circuit and the solved circuit literally the same object rather than two descriptions that have to agree.
+- It also settles reset polarity, and that one is load-bearing: `dfrtp` has a `clear` and resets **low**, `dfstp` has a `preset` and resets **high**.
+- This design has four `dfstp_2`, so any tool option that zeroes every flop at reset turns it into a circuit with no solution at all.
+- Four things in the PDK are worth flagging, because each has a reading that parses cleanly and is wrong.
+
+| what | what it looks like | what goes wrong if you miss it |
+|---|---|---|
+| **The output pin name depends on inversion** | Among the 66 cell types here, 36 call their output `X`, **26 call it `Y`**, three flops call it `Q`, and `conb_1` calls its two outputs `HI` and `LO` | The rule is that an inverting cell's output is `Y`. A reader that looks for `X` silently drops every NAND, NOR, inverter and AOI in the design, which is 26 of the 66 types here. The pipeline takes the output set from Liberty's `direction : "output"` rather than from a list of names it hoped was complete |
+| **One pin, two layers** | `dfrtp_2.RESET_B`, `dfstp_2.SET_B` and `xor2_2.B` each have rectangles on **both li1 and met1** | If you index pin geometry per layer and only look on the layer you expected, the router lands on the other one and the pin binds to nothing. The extractor looks up every rectangle on whatever layer it was declared on |
+| **`conb_1` has no inputs at all** | Its entire pin list is two outputs, `HI` with `function : "1"` and `LO` with `function : "0"` | It is how the synthesiser ties a net to a constant. Code that assumes every cell has at least one input, or that every output is a function of inputs, falls over on it. It is also one of the two cells the warm-up does not contain, which is how it turned up in the layer diff in section 16 |
+| **The file uses three operator dialects** | `function` is written with `&` and `\|`. `state_function` on the clock-gate cells uses `*` for AND. `power_down_function` uses `+` for OR and refers to the power rails by name | An expression parser pointed at every attribute ending in `_function`, which is the obvious thing to write, reads `power_down_function` in the wrong dialect and then treats `VPWR` and `VGND` as ordinary signals. The output of the cell becomes a function of the power rails and the netlist becomes nonsense. The parser here reads `function`, `next_state`, `clear` and `preset`, and nothing else |
+
+- A secondary one, less interesting but worth knowing: the human-readable equations in the comment headers of the PDK's own Verilog models do not always agree with the cell they sit above.
+- The machine-generated Liberty `function` strings are consistent, so those are what I parse, and I never read the comments.
+- Generated models: [`puzzle-solution/03_cell_models.v`](puzzle-solution/03_cell_models.v).
+
+----
+
+## 19. The sample waveform: easter eggs 3, 4, 5 and 6
+
+- With a netlist and no description of its behaviour, I went back to the one file I had been ignoring: `puzzle/example_inputs.vcd`.
+- First in a text editor, which I had not done.
+- The first nine lines hold two easter eggs.
+- **Easter egg 3**, the `$version` field:
+
+```
+Leave no stone unturned! But for this file, consider looking at it in a
+waveform viewer instead.
+```
+
+- No simulator writes that. iverilog writes "Icarus Verilog", so the line was put there by hand.
+- **Easter egg 4**, two lines above it, the `$date` field:
+
+```
+Sat Dec 31 23:59:60 2016
+```
+
+- A second numbered 60, which most date parsers reject because most date libraries assume a minute has 60 seconds numbered 0 to 59.
+- It is a leap second, and a real one: 2016-12-31 23:59:60 UTC is the most recent leap second inserted, so that minute had 61 seconds.
+- It was a Saturday.
+- Then the same file in **Surfer**, which gave nothing useful.
+- `success` is low for the whole trace.
+- `O[7:0]` sits at zero, changes nine times in a burst near the end, and goes back to zero.
+- As hex that burst is `54 52 59 20 41 47 41 49 4e`, which says nothing as a number.
+- I read it in decimal, hex and binary, got nothing, and moved on.
+- **Easter egg 5** is what fixed that, and it is not in any file.
+- Re-reading the puzzle statement, the blog post links in passing to [another Jane Street post about using ASCII waveforms to test hardware designs](https://blog.janestreet.com/using-ascii-waveforms-to-test-hardware-designs/).
+- Read as a curiosity it is a curiosity.
+- Read as an instruction it is what makes the output side readable.
+- I do not normally display a bus as ASCII.
+- One right click later, those same nine bytes read:
+
+```
+T R Y   A G A I N
+```
+
+- So the chip does not return a status code, it returns text.
+- The block the hint image says to ignore is a ROM of English sentences, and the sample waveform is a recording of a wrong grid being rejected.
+- That pointed the same question at the input side, and the input side is **easter egg 6**.
+- Two counts point at it before any decoding: both frames of the sample contain exactly **38** ones, identical rather than similar, and in both frames columns 7 through 10 are empty in **every** row, a perfectly rectangular block of 44 dead cells.
+- Eleven rows, seven usable columns each.
+- Standard ASCII needs seven bits.
+- So group the bits in sevens, one row per character, least significant bit first:
+
+```
+. . 1 . 1 . 1 . . . .   0010101 ->  84 -> 'T'
+. . . 1 . 1 1 . . . .   0001011 -> 104 -> 'h'
+1 . 1 . . 1 1 . . . .   1010011 -> 101 -> 'e'
+```
+
+- Frame 0 gives `The night s`, frame 1 gives `ky awaits  `.
+
+```
+The night sky awaits
+```
+
+- The file I had written off on day one carries the theme in its inputs.
+- Full decode, all 22 rows: [`Easter-Eggs/06_easter_egg.txt`](Easter-Eggs/06_easter_egg.txt).
+
+### The interface, measured rather than assumed
+
+- The same file settles the protocol, which up to here I had been guessing at.
+- The method is counting rising edges of `clk` in the recorded trace and reading what each signal does on each one.
+
+| edges | what happens |
+|---|---|
+| 1 to 3 | `rst_n` = 0, reset |
+| 4 | `rst_n` = 1 |
+| 5 to 125 | `enable` = 1, **121 bits shifted in on `I`** |
+| 126 | `enable` = 0, and `O` becomes `'T'` on the same edge: the message starts immediately |
+| 126 to 134 | `T R Y space A G A I N` |
+| 135 | `O` back to 0 |
+| 157 to 159 | `rst_n` = 0 again, second frame |
+| 161 to 281 | another 121 bits |
+| 282 | `'T'` again |
+
+- **121 = 11 x 11.** So it is a fixed 121-cell frame, not a free-running stream, and the verdict begins on the edge immediately after the frame ends.
+- That is where the 121-bit frame and the 122-edge window come from, and both get proved from the gates in section 25 rather than left as a reading of one trace.
+
+----
+
+## 20. Checking the netlist against the recorded chip
+
+- The sample waveform is a recording of the real chip: known inputs, known outputs.
+- That makes it a test the extracted netlist has to pass, and one that could not have been fitted to, because the trace existed before my extractor did.
+- **Stage P4.** The pipeline's own bit-parallel simulator replays the recorded inputs into the extracted netlist and compares every output at every rising edge:
+
+```
+312 rising edges replayed, 624 outputs compared, 0 mismatches
+```
+
+- A netlist built from polygon coordinates alone reproduces the recorded silicon at every edge.
+- From here on, wherever the netlist and a hypothesis disagree, the netlist is taken as correct.
+- If P4 ever reports a mismatch the pipeline stops, because every later stage would be interpreting a circuit that does not exist.
+- Output: [`puzzle-solution/04_vcd_replay.txt`](puzzle-solution/04_vcd_replay.txt).
+- The same stage checks the clock tree, which would otherwise be an assumption.
+- There are 32 clock buffers in three levels, one `clkbuf_16` feeding 16 `clkbuf_8` feeding 15 `clkbuf_4`, and every one of the 92 flip-flop clock pins traces back through them to the single primary input `clk`.
+- There is no gated clock anywhere in this design, so the whole thing can be reasoned about one rising edge at a time, which every later stage relies on.
+
+----
+
+## 21. Register-level structure
+
+- 728 anonymous cells, known correct, and not understood at all.
+- Reading them gate by gate does not work, for a specific reason rather than a vague one.
+- Combinational logic does not survive synthesis in any recognisable form.
+- The optimiser is free to rewrite any acyclic block of gates into any other block with the same truth table, and it does, so the shape on the die is the shape the optimiser preferred, not the shape anyone wrote.
+- Net `net_412` corresponds to nothing in anybody's source file.
+- **Flip-flops are different.** A flop is a physical cell with a name in the library, it holds a value across a clock edge, and no optimiser can make it not do that.
+- So the flops are real objects, and the useful question is not what each gate does but **which flops feed which**.
+
+### The graph
+
+- **Stage P5.** Build a directed graph with one node per flip-flop, and an edge from `a` to `b` when `a`'s output reaches `b`'s data, clear or preset input **through combinational logic only**, not through some third flop.
+- Constructing it means walking backwards from each flop's `D` through the gate cone and stopping the moment a flop output or a primary input is reached.
+- 92 nodes.
+- Cheap to build, and it throws away exactly the part that was not meaningful.
+
+### Why cycles are the thing to look for
+
+- A cycle in that graph means a flop's next value depends on its own current value.
+- That is precisely the difference between **state that accumulates** and **state that merely delays**.
+- A shift register is a chain, so it is a path and has no cycle.
+- A counter has to look at its own value to know what to count to next, so it has one.
+- Same for accumulators, and for any state machine whose next state depends on its current state.
+- The reason this is worth building a graph for, rather than being a preference, is that **a synthesiser cannot remove a cycle**.
+- It can retime a loop, re-encode it, or merge flops inside it, but it cannot turn it into a directed acyclic graph, because a DAG has a bounded memory of the past and a loop does not.
+- Feedback is a behavioural property, not a syntactic one.
+- So the cycles in the register graph are the one structural feature of the original design guaranteed to still be there after everything else was optimised away.
+
+### Why Tarjan
+
+- What I want is not "is there a cycle" but "what are the maximal groups of flops that can all reach each other".
+- That is the definition of a **strongly connected component**, and Tarjan's algorithm computes all of them in a single depth-first traversal, in time linear in nodes plus edges.
+
+| alternative | why not |
+|---|---|
+| Test every pair for mutual reachability | 92 nodes is small enough that this finishes, but it is quadratic in the number of nodes for no benefit |
+| Kosaraju's algorithm | Correct and simpler to explain, but it needs two full passes and the reverse graph |
+| Just look for self-loops | Finds a flop that feeds itself and nothing else. Misses every counter of two bits or more, which is 26 of the 26 groups here |
+
+- Tarjan gives the answer in one pass and the implementation is 30 lines.
+- Output: [`puzzle-solution/05_register_structure.txt`](puzzle-solution/05_register_structure.txt).
+
+### What came back
+
+| | |
+|---|---|
+| flip-flops | 92 |
+| feedback groups of size 2 or more | 26 |
+| of size 2 | **23** |
+| of size 9 | 1, external inputs `enable` and `rst_n` |
+| of size 8 | 1, external inputs `I`, `enable` and `rst_n` |
+| of size 4 | 1, no external inputs at all |
+
+- **Twenty-three groups of exactly two flops.** Two bits of state that update together and look at each other, which is a two-bit counter, twenty-three times over.
+- Simulating them later confirms it, and confirms something a little unusual: they saturate at 3 rather than wrapping, so each one counts up to two and then records that it overflowed instead of rolling back to zero.
+- That is why there is no magnitude comparator anywhere on this die.
+- Counting to exactly two and comparing for equality is cheaper than counting properly and comparing for greater-than.
+- **One group of nine, whose external inputs are `enable` and `rst_n` but not `I`.** Nine bits of feedback state that never look at the data, so something that tracks where you are in the frame rather than what is in it.
+- **One group of eight, whose external inputs include `I`.** Eight bits driven by the data, so a byte-wide accumulator of some sort.
+- **One group of four with no external inputs whatsoever.** Four flops that talk only to each other and to nothing outside, so something that free-runs once started.
+- Those four are also the four `dfxtp_2`, the only flops in the design with no reset at all, which is why section 30 has to prove their power-up state does not matter.
+
+### The one thing worth decompiling
+
+- `success` is a single flip-flop, `u28_dfrtp_2`, and it is not in the list above because its feedback group has size one: it feeds only itself.
+- Its set condition is a wide AND tree, and unlike the counters that tree is worth expanding through the combinational logic and printing, stopping at flop outputs and ports:
+
+```
+D = (((!u390.Q & (!u419.Q & (((u451.Q & u449.Q) & u460.Q) & ((!u459.Q & !u461.Q)
+  & !(((u453.Q | u447.Q) | u454.Q)))))) & (((!u26.Q & u350.Q) & ((((((
+  !u622.Q & u600.Q) & (u596.Q & !u614.Q)) & (!u232.Q & u601.Q)) & (!u625.Q
+  & u597.Q)) & ((((u647.Q & !u651.Q) & (!u661.Q & u595.Q)) & (!u603.Q &
+  u634.Q)) & (u635.Q & !u602.Q))) & (((!u215.Q & u197.Q) & (u233.Q &
+  !u231.Q)) & (!u226.Q & u198.Q)))) & ((((((!u106.Q & u178.Q) & (u107.Q &
+  !u179.Q)) & (!u121.Q & u153.Q)) & (!u108.Q & u180.Q)) & ((((u190.Q &
+  !u118.Q) & (!u194.Q & u209.Q)) & (!u126.Q & u188.Q)) & (u117.Q & !u189.Q
+  ))) & (((!u122.Q & u141.Q) & (u142.Q & !u124.Q)) & (!u123.Q & u143.Q))))
+  ) | (u28.Q & (u26.Q | !u350.Q)))
+```
+
+- Read for structure rather than detail, there is one group of **eleven** near-identical two-bit comparisons, `(!u622.Q & u600.Q)`, `(u596.Q & !u614.Q)` and so on.
+- Then a second group of **eleven** more of exactly the same form.
+- Then one separate eight-flop comparison against a fixed pattern, `u451 & u449 & u460 & !u459 & !u461 & !(u453 | u447 | u454)`.
+- And the whole thing ORs with `u28.Q`, which is the self-loop: once high, `success` stays high.
+- Eleven of one thing, eleven of another, one eight-bit thing, everything compared against two.
+- The same treatment applied to any of the 23 counter pairs expands into megabytes of repeated subexpression, because a counter's cone reaches the same nets by many different paths and a printed tree has no way to share them.
+- So decompiling works for the control logic and fails completely for the counters, which is why the counters get probed instead, in section 24.
+
+----
+
+## 22. Where the counters sit on the die: easter egg 8
+
+- The blog post says the circuit is physically arranged to hint at what it does, so look closely at the layout.
+- Looking at the layout directly gives nothing: 9,875 placements, none of them labelled.
+- But my extractor numbers instances `uNNN` by their position in the GDS reference list, so **once the counters are identified by name, `uNNN` back to (x, y) is a lookup rather than a search.**
+- That is why this egg comes now and not in section 9.
+- The layout does hint at the function, but only to someone who already has the netlist.
+
+| what | how many | where |
+|---|---|---|
+| identical 2-bit slices, stacked vertically | 11 | y = 185.0 to 285.6 |
+| a conspicuous empty gap | | y = 146.9 to 185.0 |
+| more identical slices, same stack | 11 | y = 49.0 to 146.9 |
+| one slice alone, off to the side | 1 | x = 80.5, y = 103.4 |
+
+- The whole checker is a single vertical column at x = 114.8 to 126.3 um on a die 200 um wide: eleven, a gap, eleven, plus one off to the side.
+- Twenty-three, which is the number the SCC analysis gave, arranged in a way that says the twenty-three are not interchangeable.
+- That arrangement also explains why there are 23 counters and not 33.
+- Eleven rows plus eleven columns plus eleven of whatever the third family is would be 33.
+- The missing ten are the rows: the grid streams in one cell per clock, row-major, so only one row is ever in flight, and a single counter cleared at each row boundary serves all eleven rows.
+- Columns and the third family are interleaved across the whole frame, so each one needs its own counter that persists for the entire 121 cycles.
+- So the floorplan gives the input format as well as the shape of the rule set, and it says there is a third constraint family I have not identified.
+
+----
+
+## 23. The first hypothesis, and why it was wrong
+
+- At this point the gates have said the following, with no interpretation on my part:
+
+| the gates say | from |
+|---|---|
+| the frame is 121 bits, arriving row-major, one per clock | sections 11 and 14 |
+| eleven counters watch something spread across the whole frame | section 22 |
+| eleven more counters watch something else, also spread across the frame | section 22 |
+| one shared counter watches something that resets every 11 cells | section 22 |
+| `success` requires all 23 to equal exactly **two** | section 21 |
+| a separate eight-bit comparison against a fixed pattern must also hold | section 21 |
+
+- Two of something per row and two per column, on an 11 x 11 grid of bits, is a description of a well known family of pencil puzzles: **Star Battle**, also called **Two Not Touch**.
+- That family adds a rule the counters cannot express: no two of the marked cells may touch, not even diagonally.
+- So the working hypothesis was the whole family at once: **two stars per row, two per column, and no two adjacent including diagonally.**
+- A note on the word "star", because nothing in the gates says it.
+- The gates say "exactly two ones per row".
+- The word comes from the two easter eggs already in hand: the input frames of the sample waveform spell `The night sky awaits`, and the Morse bar code under the die spells `PER ARENAM AD ASTRA`, to the stars.
+- That is a naming convention and not a constraint, and nothing that follows depends on it being right.
+- **Stage P6.** The hypothesis is tested rather than assumed: z3 is asked for 25 grids that satisfy it perfectly, and all 25 are fed into the extracted netlist through the bit-parallel simulator.
+
+```
+25 grids satisfying two per row, two per column, no touching
+accepted by the netlist: 0
+what the chip said instead: {'TRY AGAIN': 25}
+```
+
+- Twenty-five generated, zero accepted, and the chip answered the same way to all of them.
+- Two conclusions follow.
+- There is a constraint I have not found, almost certainly the third family of eleven counters.
+- And reading gate cones will not find it, because section 21 already showed the counter cones are unreadable.
+
+----
+
+## 24. Probing one grid cell at a time
+
+- The eleven unidentified counters each watch some set of grid cells.
+- Their logic is unreadable, so they get measured instead.
+- **Stage P7.** The experiment is the simplest one available:
+
+> For each of the 121 grid positions in turn, run the chip with a one at that position and zeros everywhere else, and record which counters increment.
+
+- If counter 4 ticks when the only one in the frame is at cell (3, 7), then cell (3, 7) belongs to whatever counter 4 is watching.
+- That is 121 separate runs of a 121-cycle frame, and it takes 0.04 seconds, because the pipeline's simulator packs one trial per bit of a Python integer and runs all 121 in a single pass.
+
+```
+column counters 11   irregular groups 11   shared row counters 1
+```
+
+- The rows come back as zero, which is what the 23-versus-33 argument in section 22 predicted, and **the way they come back as zero confirms the input format**.
+- The row counter is cleared at every row boundary, so at the end of the frame it always reads zero no matter what went in.
+- Sampling it in the cycle each one arrives instead, it moves in **110** of 121 trials, and the 11 it misses are exactly cells
+
+```
+10  21  32  43  54  65  76  87  98  109  120
+```
+
+- which is column 10 of every row: the last cell of a row, where the counter is bumped and cleared on the same edge. 110 = 121 - 11.
+- A single shared row counter only works if the grid arrives row-major at one cell per clock, so that measurement is a direct confirmation of the protocol read off the waveform in section 19.
+- And the eleven mystery counters watch eleven irregular contiguous blobs whose sizes sum to exactly 121.
+- They tile the grid:
+
+```
+     0  1  2  3  4  5  6  7  8  9 10
+  0  A  A  A  A  A  B  B  C  D  D  E
+  1  A  A  F  A  A  B  C  C  D  D  E
+  2  A  A  F  B  B  B  B  C  C  D  E
+  3  A  A  F  B  G  G  G  E  C  C  E
+  4  F  A  F  B  G  E  E  E  E  E  E
+  5  F  F  F  B  G  G  G  E  H  H  H
+  6  B  B  B  B  B  B  G  E  H  I  I
+  7  B  J  J  J  G  G  G  E  H  I  I
+  8  B  J  J  K  E  E  E  E  H  I  I
+  9  B  B  J  K  K  E  E  E  H  H  H
+ 10  B  J  J  K  E  E  E  E  E  E  E
+
+region sizes  A=14 B=21 C=7 D=5 E=28 F=8 G=11 H=9 I=6 J=8 K=4   sum = 121
+```
+
+- Irregular regions that tile the board, two per region, two per row, two per column, no touching.
+- That is Star Battle exactly, and the missing constraint was the regions.
+- The 25 grids of section 23 all failed because none of them respected regions, which I did not know existed.
+- Output: [`puzzle-solution/06_region_map.txt`](puzzle-solution/06_region_map.txt).
+
+----
+
+## 25. Finding the 121 bits
+
+- This is the largest stage in the pipeline, and the whole result rests on it.
+- **Stage P8**, and everything in it runs on the extracted netlist plus the Liberty functions, with no knowledge of what the puzzle is.
+
+### 25.1 What is actually being asked
+- Let the frame be a vector of 121 boolean variables,
+
+```
+x = (x_0, x_1, ..., x_120),   x_i in {0, 1}
+```
+
+- where `x_i` is the bit presented on `I` at the `i+1`-th enabled rising edge.
+- Row-major, so `x_i` is grid cell (row `i div 11`, column `i mod 11`), from the protocol measured in section 19 and confirmed in section 24.
+- The chip is a deterministic finite state machine.
+- Write `s_t` for the contents of its 92 flip-flops after `t` clock edges, `s_0` for the state reset leaves behind, and `d` for the one-edge transition the gates implement:
+
+```
+s_(t+1) = d(s_t, x_t)
+```
+
+- `success` is one bit of `s_t`, so define
+
+```
+F(x) = the value of success in s_122
+```
+
+- which is `d` composed with itself 122 times, starting from `s_0`, driven by the 121 bits of `x` and then by whatever `I` happens to be on the last edge.
+- Every part of `F` is known exactly: 728 gates whose behaviour came out of the Liberty file and which have already been checked against a recording of the real chip in section 20.
+- Two questions:
+
+```
+does there exist x* with F(x*) = 1?           and is x* the only one?
+```
+
+- Note what is not in that statement.
+- There is no hidden key, no unknown constant, no parameter being fitted.
+- The circuit is fully known; what is unknown is which of its 2^121 possible inputs it accepts.
+
+### 25.2 The size of the space, and two cheap outs I checked first
+```
+2^121 = 2,658,455,991,569,831,745,807,614,120,560,689,152
+      = 2.658 x 10^36
+```
+
+- At a billion frames per second a sweep takes 8.4 x 10^19 years, about six billion times the age of the universe.
+- A sweep is not a slow option, it is not an option.
+- Before reaching for a solver I checked whether the structure lets me cheat.
+- **Is `F` linear over GF(2)?** If it were, the chip would be an LFSR or a CRC, the whole 121-bit frame would be a linear map, and Gaussian elimination would invert it in about 121^3 = 1.8 million operations.
+- The definition of an affine map over GF(2) is
+
+```
+F(u xor v) = F(u) xor F(v) xor F(0)
+```
+
+- so it can be tested directly rather than argued about.
+- The pipeline runs random frames `u`, `v` and `u xor v` as three lanes of one bit-parallel pass and compares the predicted final state against the measured one across **all 92 flip-flops**, not just `success`:
+
+```
+20 of 20 predictions failed
+```
+
+- The state update is nonlinear.
+- That kills linear algebra, and it kills every correlation attack that depends on the same property.
+- The counters are the reason: a saturating counter is not an affine function of its inputs.
+- So: search, but not a blind one.
+
+### 25.3 Throwing away what cannot matter, the cone of influence
+- Not every net in the design can affect `success`.
+- Walk backwards from `success` through combinational logic and through flip-flops, collecting everything reachable, and stop when nothing new appears.
+
+```
+cone of influence of success: 471 of 738 nets
+```
+
+- The entire output generator falls outside it, which makes sense: `O[7:0]` depends on `success` and on the message pointer, and `success` does not depend on `O`.
+- That drops 267 nets and, once multiplied by 122 time steps, a great deal of formula.
+- This is sound rather than heuristic: a net outside the cone cannot change `success` under any assignment, so removing it cannot change whether the question is satisfiable.
+
+### 25.4 Making time into space, the unrolling
+- A SAT solver has no notion of "later", so time has to become more variables.
+- For each step `t` from 1 to K+1 and each net `n` in the cone there is a literal `L(t, n)`.
+- Three rules define them all.
+
+| | rule |
+|---|---|
+| **reset** | at `t = 1`, every flop output is its reset value. `dfrtp` has a `clear` and reads 0. `dfstp` has a `preset` and reads 1. `dfxtp` has neither, so its value is left as a free variable |
+| **combinational** | inside a step, a gate output is its Liberty function of its inputs *at the same step*: `L(t, n) = f(L(t, a), L(t, b), ...)` |
+| **capture** | across a step, a flop takes `L(t+1, q) = (not clr) and (pre or d)`, where `clr`, `pre` and `d` are all evaluated at step `t` |
+
+- So step `t` settles the combinational logic from the state step `t-1` left behind plus the inputs applied on edge `t`, and then the flops capture.
+- `L(t+1, n)` is what a probe would read after `t` clock edges, which is the convention that makes the depth arithmetic come out without an off-by-one.
+- The free variables are one per `(input, step)` for `I`, which is where the 121 bits live.
+- `rst_n`, `enable` and `clk` are pinned to 1 across the whole window, because the protocol says the frame is shifted in with reset released and enable high.
+- The important consequence: **the flops disappear.** After unrolling there is no state and no sequencing left, only a large combinational circuit and a lot of variables.
+- That is what bounded model checking is for.
+
+### 25.5 Why the encoder is hand written and not yosys
+
+- The first version of this pipeline used yosys. It returned the right answer.
+- It was replaced because of what it could not do, and that decides the shape of the rest of this section.
+
+#### The one question, and where 122 comes from
+- The chip takes a 121-bit frame, one bit per enabled rising edge, and settles `success` on the edge after the last cell arrives, which is the interface stated at the top of this page.
+- 121 cells in plus one verdict edge is a **122-edge window**, and that is the unroll depth.
+- bounded model checking unrolls a sequential circuit K edges deep into pure combinational logic, assert the property on the frame you care about, hand the result to a SAT solver, and read the inputs off the model.
+- yosys implements exactly that as `sat -seq K`, so it is where I started.
+
+#### What yosys is
+- yosys is an open-source synthesis framework.
+- Its day job is the forward direction: read Verilog, elaborate it into generic gates, optimise, and map onto a real cell library.
+- `sat -seq K` is its formal model checking feature: it unrolls the elaborated design K edges deep, encodes the result, and calls a SAT solver built into the binary.
+
+#### What I did with it
+- Roughly this, once per depth:
+
+```
+read_verilog puzzle-solution/03_cell_models.v
+read_verilog puzzle-solution/02_extracted_netlist.v
+prep -top puzzle_extracted
+sat -seq 122 -set-def-inputs -set success 1 -show I
+```
+
+- Read the cell models, read the 728-cell netlist, elaborate, unroll 122 deep, constrain `success` to 1, print the input trace.
+
+#### How it went
+- It worked, and it gave the right answer.
+- What it could not do was amortise, and what it could not express was a second solution.
+
+| | |
+|---|---|
+| Time for one depth | about **40 seconds** |
+| Of which, actual CDCL search | a small fraction. The rest is re-reading and re-elaborating the same 728 cells and 66 cell models |
+| Solver calls this design needs | **17** |
+| of which, the depth bound | 2: `success` asserted at edge 121 (must be UNSAT) and at edge 122 (must be SAT) |
+| of which, uniqueness | 1: the same formula plus one clause forbidding the frame just found |
+| of which, the output ROM | 14: enumerate every value `O[7:0]` can take on edge 122, then every value it can take on edge 123 given the first |
+| Total, in practice | several minutes for one circuit and 17 solver calls |
+
+- The 17 calls differ from each other only in which literals are asserted.
+- The formula is the same object every time.
+- A command-line invocation cannot keep that object: each run re-parses, re-elaborates and re-encodes before it can assert anything.
+- The uniqueness proof and the ROM enumeration are worse than slow, they are inexpressible.
+- `sat` returns one satisfying assignment and has no interface for "now give me a different one", so blocking a model means writing out a new design with that frame excluded and elaborating the whole thing again.
+
+| yosys is the right tool when | why it is the wrong one here |
+|---|---|
+| you have RTL and want a mapped gate netlist | I already have the gate netlist; the missing thing is an input assignment |
+| you want one bounded property checked and do not want to write an encoder | I want 17 checks on one formula, and 16 of them are cheap only if the first leaves the solver loaded |
+| you want equivalence between two RTL descriptions, through `equiv_*` or `miter` + `sat` | my equivalence check is gates against behavioural RTL over 564 stimulus vectors, which is one iverilog simulation |
+| the design is big enough that a hand-written encoder would be the bottleneck | 728 cells is not. The `CNF` class is 61 lines and the unroller is 55, and the two together encode this design in 0.10 s |
+
+- The decision to move to a Tseitin encoder came out of a question I asked on Mathematics Stack Exchange
+- So I wrote the encoder.
+
+### 25.6 What a Tseitin encoder is
+- A SAT solver accepts one input form: **conjunctive normal form**, a conjunction of clauses, each clause a disjunction of literals.
+- A netlist is not in that form, so something has to translate it.
+- The naive translation is substitution: replace `success` by its gate's expression, replace each operand by its own, and recurse until only input variables are left.
+- Substitution is exponential.
+- Distributing `|` over `&` duplicates both operands, so depth `d` costs O(2^d) terms, and 122 copies of this circuit is thousands of levels deep.
+- The formula is unwritable long before it is unsolvable.
+- **Tseitin's encoding is linear.** Mint one fresh variable per gate output and write down only the local equivalence between that variable and its own inputs.
+- Nothing is substituted and nothing is expanded.
+
+| gate | new variables | clauses | what the clauses say |
+|---|---|---|---|
+| `w = a & b` | 1 | `(!a \| !b \| w)`, `(a \| !w)`, `(b \| !w)` | `a & b -> w`, then `w -> a` and `w -> b` |
+| `w = a \| b` | 1 | `(a \| b \| !w)`, `(!a \| w)`, `(!b \| w)` | `w -> a \| b`, then `a -> w` and `b -> w` |
+| `w = a ^ b` | 1 | `(!a \| !b \| !w)`, `(a \| b \| !w)`, `(a \| !b \| w)`, `(!a \| b \| w)` | one clause per forbidden row of the truth table |
+
+- Each bundle permits exactly the rows of that gate's truth table and forbids the rest, so the variable is pinned to the gate's output under every satisfying assignment.
+- **Inversion is free.** `!x` is the literal `x` with its sign flipped, so an inverter mints no variable and writes no clause.
+- Once the Liberty `function` strings are parsed every cell in the library reduces to AND, OR and XOR over signed literals, which is why the encoder has three shapes and no more.
+- The whole circuit is the conjunction of every gate's bundle.
+- Cost is 3 or 4 clauses and 1 variable per gate, independent of depth.
+- Asking a question is one more clause: the unit clause `(success)` pins the output high, and the solver either returns a model or proves there is none.
+- **The encoding is not equivalent to the circuit, it is equisatisfiable.** It carries auxiliary variables the circuit does not have, so the two formulas are not the same function.
+- What holds is a bijection: every behaviour of the circuit extends to exactly one model of the CNF, and every model restricts to exactly one behaviour.
+- That bijection is load-bearing twice over.
+- A blocking clause built over the 121 input literals removes exactly one frame and nothing else, which is what makes the uniqueness proof sound; and the same trick over the output bus is what enumerates the ROM.
+- **Time becomes space by unrolling.** Copy the combinational logic once per clock edge, give copy `t` its own variables, and define copy `t+1`'s flop outputs from copy `t`'s flop inputs.
+- A 122-edge question is then a single combinational formula with no sequencing left in it.
+
+### 25.7 Why Tseitin fits this problem
+| | yosys `sat -seq K` | encode once, ask many times |
+|---|---|---|
+| First query | parse, elaborate, unroll, encode, solve | encode, solve |
+| Second query | all of it again | one more `solve()` on the solver that already holds the formula |
+| A different depth | a separate invocation | the same formula, target literal asserted one frame earlier, as an assumption |
+| "is that the only answer" | not expressible | add a clause forbidding the frame just found, solve again |
+| "list everything reachable" | not expressible | the same in a loop until UNSAT |
+| Measured here | about 40 s per depth | 43,111 clauses over 14,498 variables, encoded in 0.10 s; both depths and the uniqueness proof answered inside one 0.16 s stage |
+
+### 25.8 What else could encode this, and why I did not use it
+| alternative | what it buys | why not here |
+|---|---|---|
+| **Circuit-SAT solvers that never build CNF** | Search the gate graph directly and exploit the fact that a settled output does not need its cone justified | No maintained one with a Python interface. Modern CDCL is fast because of watched literals, clause learning and restart policies, all of which a circuit solver has to reimplement to compete |
+| **BDDs** | Canonical, so uniqueness and model counting are free instead of costing another query | Size depends brutally on variable order, and a 122-deep unrolling of 92 flops with 121 free inputs is the shape that blows up. The counters here are adders in disguise, and adders are the textbook BDD explosion |
+| **SMT over bit-vectors, which is what z3 is** | Lets a constraint be stated in words rather than bits | The netlist is already bits. z3 would bit-blast it straight back down to the same CNF with a translation layer on top. z3 does earn its place, on the other side of the pipeline: it is handed the region map and the Star Battle rules, where the problem genuinely is word-level, and it never sees the netlist. That is what makes the two solves independent |
+| **Unbounded model checking, IC3/PDR or interpolation** | Proves a property at every depth rather than up to K | It answers a stronger question than I have. The protocol fixes the frame at 121 cells, so the depth is not open. Paying for an unbounded proof to answer a bounded question is the wrong way round |
+
+- **OpenROAD is not needed either.** I ran it on the warm-up source early on, to see how much information the forward flow removes before trying to reverse it.
+
+### 25.9 Making the circuit into clauses, and why the translation is honest
+- Section (VI) covers what Tseitin encoding is and why substitution does not work.
+- What matters here is the exact statement, because the two results below depend on it being exactly true rather than approximately.
+- Write `Def(g, t)` for the three or four clauses that define gate `g` at step `t`, and let
+
+```
+PHI_K  =  reset clauses
+          AND  Def(g, t)  for every gate g in the cone and every step t <= K+1
+          AND  L(K+1, success)
+```
+
+- **Soundness.** Take any assignment satisfying `PHI_K`.
+- Each wire variable is pinned by its own clauses to the value its gate produces from its inputs, so reading the assignment off in step order reproduces a genuine simulation of the circuit.
+- The last clause forces `success` high at step K+1.
+- Therefore the 121 values assigned to the `I` variables are a real frame that really unlocks the chip.
+- **Completeness.** Take any frame that unlocks the chip.
+- Simulate it, and write every net's value at every step into the corresponding variable.
+- Every `Def(g, t)` is satisfied because the gate really does compute that, and the goal clause is satisfied because `success` really is high.
+- So the assignment satisfies `PHI_K`.
+- The two directions together mean `PHI_K` is satisfiable **exactly when** a K-edge unlocking frame exists.
+- That is what makes UNSAT a proof rather than a failure, and it is why the encoder folds and shares gates but does nothing that would change the set of solutions.
+
+### 25.10 How big the formula is, and what the encoder does to shrink it
+- Written out naively, one fresh variable and three or four clauses per gate per step:
+
+| | naive Tseitin | as the pipeline emits it |
+|---|---|---|
+| variables | 130,385 | **14,498** |
+| clauses | 390,772 | **43,111** |
+| time to encode | 0.23 s | **0.10 s** |
+
+- The difference is two rules applied while the clauses are being written, both of which preserve the encoded function exactly.
+
+| rule | what it does | how often it fires here |
+|---|---|---|
+| **constant folding** | A gate whose inputs are already known constants, or are the same literal, or are exact opposites, is replaced by the literal it equals. No variable is minted and no clause is written | **113,959 times** |
+| **structural sharing** | A gate whose operator and input literals have been written before returns the variable that was minted then | **1,928 times** |
+
+- Folding fires that often for a specific reason.
+- `rst_n`, `enable` and `clk` are constants across the whole window, so every gate that depends only on them collapses.
+- Every flop's capture expression is `(not clr) and (pre or d)`, and for the 84 `dfrtp_2` the preset is a constant 0 while for the 4 `dfstp_2` the clear is, so both of those gates fold away at every one of the 122 steps before anything interesting happens.
+- And immediately after reset most of the design is holding a known value, so the folding propagates forward through several steps of real logic before it runs out.
+- A ninefold smaller formula is not just faster to solve.
+- It is faster to build, and building it was the larger cost.
+
+### 25.11 The depth question, and why one encoding answers both halves
+- I want the smallest K for which `PHI_K` is satisfiable, because that number is the protocol.
+- `PHI_K` is a **prefix** of `PHI_(K+1)`: the extra clauses all define fresh variables belonging to the extra step, and definitional clauses over fresh variables can always be satisfied whatever the prefix assigns.
+- So asking the K-edge question inside the larger formula gives the same answer as asking it in the smaller one.
+- In practice the pipeline encodes once at the largest depth it needs and asks the shorter question by asserting the goal literal one step earlier, as an assumption rather than as a clause.
+
+```
+one unrolling to 122 edges   14498 variables   43111 clauses
+
+K = 121 edges   UNSAT
+K = 122 edges   SAT
+```
+
+- **121 edges is provably impossible.** Not "I could not find one".
+- So 121 cells in and the verdict on the next edge is exactly the protocol, and it agrees with the edge count read off the sample waveform in section 19 without ever having looked at it.
+
+### 25.12 Uniqueness
+- The solver returns one satisfying assignment.
+- That does not by itself say there is not another.
+- Take the 121 input literals from the answer, negate each one, and add their disjunction as a single clause.
+- That clause says "not this exact frame" and says nothing about anything else, which is why it is built over exactly those 121 literals and not over the auxiliary variables: two different assignments to the auxiliaries would be the same frame.
+- Re-solve.
+
+```
+blocking that assignment and re-solving: UNSAT  ->  the key is unique
+```
+
+- There is exactly one 121-bit frame that unlocks this chip, established at the gate level, without assuming anything about what the puzzle is.
+
+### 25.13 Why the solver finds it in milliseconds and a sweep never would
+- A CDCL solver never enumerates candidates.
+- It runs a loop of four things.
+
+| step | what happens |
+|---|---|
+| **unit propagation** | Any clause with all but one literal already false forces the remaining one. Applied until nothing more follows. On a Tseitin encoding this is exactly circuit simulation, and it runs in both directions |
+| **decision** | When nothing more propagates, pick an unassigned variable and guess a value. The heuristic prefers variables recently involved in conflicts |
+| **conflict analysis** | If a clause ends up all false, work out the *reason*: the small subset of decisions actually responsible. Record it as a new clause |
+| **backjump** | Undo not one decision but every decision back to the point that reason was created, and carry the learned clause forward permanently |
+
+- The learned clause is the part that matters.
+- It does not remove one candidate, it removes every assignment sharing the responsible pattern, which is typically an enormous region of the space, and it prevents the solver from ever making that class of mistake again.
+- For this instance there is a second reason it is easy, and it comes from the shape of the goal.
+- `success` is an AND of 23 two-bit equality tests plus one eight-bit comparison.
+- Asserting `success = 1` therefore propagates **backwards** with no search at all: an AND can only be 1 if every input is 1, so all 23 counters are pinned to exactly two and the total is pinned to 22 before a single input bit has been decided.
+- The solver starts from an almost fully determined final state and works backwards through the counters to the frame, rather than starting from 121 free bits and working forwards.
+- That is why the two depth questions and the uniqueness proof together take 0.02 seconds of solving, inside a stage that spends most of its 0.16 seconds building and loading the formula.
+- Output: [`puzzle-solution/07_sat_proof.txt`](puzzle-solution/07_sat_proof.txt).
+
+### 25.14 The answer it returned
+- 121 = 11 x 11, so lay it out as a square:
+
+```
+. . . . . . . * . * .
+* . . . . * . . . . .
+. . . . . . . * . * .
+* . * . . . . . . . .
+. . . . * . * . . . .
+. . * . . . . . * . .
+. . . . * . . . . . *
+. * . . . . * . . . .
+. . . * . . . . . . *
+. . . . . * . . * . .
+. * . * . . . . . . .
+```
+
+- Exactly two in every row, exactly two in every column, two in each of the eleven regions from section 24, and no two touching, not even diagonally.
+
+----
+
+## 26. Solving it a second time, differently
+
+- Two independent confirmations are worth more than one careful one.
+- **Stage P9** solves the same puzzle again with nothing in common with P8.
+
+| | stage P8, bounded model checking | stage P9, constraint solving |
+|---|---|---|
+| tool | a CDCL SAT solver | z3, an SMT solver |
+| what it is given | the extracted gate netlist, unrolled | the region map from section 24, and the Star Battle rules stated explicitly |
+| does it know what the puzzle is | **nothing at all** | everything |
+| does it ever see the netlist | it sees nothing else | **never** |
+| what it returns | one 121-bit frame, proved unique | every grid satisfying the rules |
+
+```
+solutions to the probed constraint set: 1 (that is all of them)
+matches the SAT key: True
+```
+
+- Different tool, different encoding, different inputs, same 121 bits.
+- The first method never learns what the puzzle is; it searches the recovered netlist directly.
+- The second never learns what the netlist is.
+- They agree.
+
+----
+
+## 27. Every string the chip can print: easter egg 9
+
+- **Stage P10**, and this is the stage that could not be written with a command-line solver.
+- My first version of this was guesswork.
+- Once the chip was answering correctly I drove it with the four cases I could think of and read `O[7:0]` on each: nothing, everything, something wrong, and the answer.
+- Four messages.
+- I wrote that up.
+- Then I noticed that what I had was not a measurement of the ROM.
+- It was a list of the grids I happened to try, which is a different thing, and nothing said the list was complete.
+- So it was replaced with an enumeration.
+- Unroll the netlist from reset with all 121 input bits free, take the cone of `O[7:0]` and `success` together, and ask the solver to enumerate every value the output bus can take on the first output edge.
+- Four come back: `(`, `B`, `E`, `T`.
+- Then, for each of those, enumerate every value the bus can take on the second edge given the first.
+- `T` splits into `R` and `W`; the others do not split.
+- Two characters separate every message, so when the enumeration returns UNSAT the catalogue is closed and nothing else is reachable.
+- Five prefixes, fourteen SAT queries, the last one UNSAT.
+- Each prefix hands back the grid that produced it, and all five grids are then simulated in one bit-parallel pass to read the rest of each string.
+
+| message | success | what triggers it |
+|---|---|---|
+| `EMPTY SKY` | 0 | all 121 bits zero |
+| `BIG BANG` | 0 | all 121 bits one |
+| `TRY AGAIN` | 0 | any ordinary wrong grid |
+| **`TWO NOT TOUCH`** | 0 | every count correct, two stars per row **and** per column **and** per region, 22 stars, and at least one touching pair |
+| `(* TWO STARS *)` | 1 | the one grid that satisfies every rule |
+
+- The `T` split is where the fifth message came from.
+- One branch is `TRY AGAIN`.
+- The other returns a grid the gates answer with **`TWO NOT TOUCH`**, the other name of Star Battle, and the chip prints it only when that exact rule is the one broken.
+- To confirm the trigger rather than assume it, z3 was asked for 40 more grids in that class, all 40 driven through the netlist, plus 20 controls that are two per row and two per column and no-touch but wrong on regions:
+
+```
+40 of 40  counts correct and touching     ->  TWO NOT TOUCH,  success = 0
+20 of 20  counts correct except regions   ->  TRY AGAIN,      success = 0
+```
+
+- Exact condition: every count right, adjacency wrong.
+- It is not reachable by sweeping. 60 random 22-star grids and 60 grids constructed to have two stars in every row and every column all came back `TRY AGAIN`, because none of them also got the regions right.
+- Finding it also meant my recovered RTL was wrong.
+- It had four verdicts, and the 540-grid equivalence run had passed only because none of its grids reached the fifth case.
+- So the RTL got a fifth verdict, and 24 grids built by z3 to be counts-right-and-touching joined the vector set, which is where the 564 in the next section comes from.
+- An equivalence run is only as good as its vectors, and these vectors were extended by a solver result rather than by guesswork.
+- Output: [`puzzle-solution/10_message_catalogue.txt`](puzzle-solution/10_message_catalogue.txt).
+
+----
+
+## 28. Writing the RTL, and proving it matches the gates
+
+- Both solves confirm the answer.
+- Neither confirms that the circuit is **understood**, and that is what the challenge asks for.
+- **Stage P11** writes behavioural RTL for the whole chip from scratch, in terms of rows, columns, regions and stars, then proves it equivalent to the gates rather than asserting it.
+- The proof is a simulation: `iverilog` compiles the cell models, the extracted netlist, my RTL and one testbench together, and `vvp` drives both descriptions from the same reset with the same stimulus, comparing every cycle of `success` and every cycle of the full output byte.
+- Two independent descriptions, two independent simulators, one vector set:
+
+| class | grids |
+|---|---|
+| the unique solution | 1 |
+| degenerate: empty grid, full grid | 2 |
+| near misses: the solution with one star moved | 37 |
+| random sparse grids, 1 to 30 stars | 200 |
+| two stars in every row, columns and regions random | 200 |
+| two per row **and** two per column, random permutation pairs | 100 |
+| every count correct and two stars touching, built by z3 | 24 |
+
+```
+EQUIVALENCE: 0 success mismatches, 0 O mismatches over 564 grids
+```
+
+- The gates are simulated by iverilog, which has never seen my RTL, and the RTL is simulated by iverilog, which has never seen the geometry.
+- Outputs: [`puzzle-solution/08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) and [`puzzle-solution/09_equivalence.txt`](puzzle-solution/09_equivalence.txt).
 
 ### The RTL behind each block
 
-- The same nine blocks, in the order the table lists them, with the lines of [`08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) that implement each one.
+- The nine blocks of section 6, in the same order, with the lines of [`08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) that implement each one.
 
 #### 1. Scan position counter
 
@@ -276,1522 +1738,9 @@ sky130_fd_sc_hd__clkbuf_4 u0_clkbuf_4 (.A(net_505), .X(net_000));
 
 - Every one of the 92 clock pins traces back through these buffers to `clk` with no gating anywhere, which is what makes it safe to reason about the whole chip one rising edge at a time.
 
-
 ----
 
-## Summary of all Easter Eggs found
-
-| # | Easter Egg | Where it was | Write-up |
-|---|---|---|---|
-| 1 | The **Jane Street logo**, etched in metal 2. 1,366 floating polygons in a 17.1 um square | [puzzle.gds](puzzle/puzzle.gds), and the warm-up GDS too | [01](Easter-Eggs/01_easter_egg.txt) |
-| 2 | **"PER ARENAM AD ASTRA"** in Morse code, Latin for "through the sand, to the stars". 36 bars on a layer that is not a sky130 mask layer, below the die | [puzzle.gds](puzzle/puzzle.gds), layer 200/0 at y = -52.72 um | [02](Easter-Eggs/02_easter_egg.txt) |
-| 3 | **"Leave no stone unturned!"**, a note left for a human where a simulator would write its own name | [example_inputs.vcd](puzzle/example_inputs.vcd), the `$version` field | [03](Easter-Eggs/03_easter_egg.txt) |
-| 4 | **"Sat Dec 31 23:59:60 2016"** , a real leap second and the most recent one ever inserted into UTC | [example_inputs.vcd](puzzle/example_inputs.vcd), the `$date` field | [04](Easter-Eggs/04_easter_egg.txt) |
-| 5 | **Read the waveform as ASCII.** The instruction that unlocks the whole output side, hidden in plain sight as a passing link | the [puzzle blog post](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/) | [05](Easter-Eggs/05_easter_egg.txt) |
-| 6 | **"The night sky awaits"**, in the *inputs*. 11 rows of 7 bits, because standard ASCII needs 7 | [example_inputs.vcd](puzzle/example_inputs.vcd), the `I` input, both frames | [06](Easter-Eggs/06_easter_egg.txt) |
-| 7 | **496 is the third perfect number**, `1+2+4+8+16+31+62+124+248`, and `A+B=496` has exactly 15 eight-bit solutions | [warmup/00_source.v](warmup/00_source.v) | [07](Easter-Eggs/07_easter_egg.txt) |
-| 8 | **11 + 11 + 1 drawn on the die.** Every counter in one narrow vertical column, in two stacks of eleven plus a loner | [puzzle.gds](puzzle/puzzle.gds), flip-flop placement at x 114.8 to 126.3 | [08](Easter-Eggs/08_easter_egg.txt) |
-| 9 | **Five messages, not four.** `EMPTY SKY`, `BIG BANG`, `TRY AGAIN`, **`TWO NOT TOUCH`** and `(* TWO STARS *)`, the last two being the puzzle's own name and its rule in OCaml comment syntax | the output ROM (see [10_message_catalogue.txt](puzzle-solution/10_message_catalogue.txt)) | [09](Easter-Eggs/09_easter_egg.txt) |
-| 10 | **Star Search** (matches the theme of this puzzle) | [December 2016 Jane Street Puzzle](https://www.janestreet.com/puzzles/star-search-index/)  | [10](Easter-Eggs/10_easter_egg.txt)  |
-| 11 | **A-brief-trip-through-spacetime** (matches the theme of this puzzle) | [January 2017 Jane Street Blog](https://blog.janestreet.com/a-brief-trip-through-spacetime/)  | [11](Easter-Eggs/11_easter_egg.txt)  |
-
-
-#### Note : 
-
-- In Easter Egg (3), I ran a sample RTL to see how iverilog produces a normal VCD file :
-
-    iverilog -g2012 -o sim.out counter.v tb_counter.v
-    vvp sim.out
-    less counter.vcd          # or: cat counter.vcd
-
-- To which is comes up as :
-
-```
-$date
-	Tue Aug 18 04:49:16 2026
-$end
-$version
-	Icarus Verilog
-$end
-$timescale
-	1ps
-$end
-```
-
-- you can see it prints the name of the tool and not a human message.
-
-----
-
-#### Note : 
-
-- A perfect number is a positive whole number that equals the sum of its positive proper divisors, leaving out the number itself;
-
-    496 (1 + 2 + 4 + 8 + 16 + 31 + 62 + 124 + 248)
-
-#### Note* : 
-
-- A total of 9 Easter Eggs = number of positive proper divisors of 496 (PLEASE TAKE THIS AS A JOKE)
-
-##### *Revision : The above statement was true till I found the 11th Easter Egg :(
-    
-----
-
-## Documentation (25 min read)
-
-- I have documented my entire solution's implementation is this single readme file, below table is a glimpse of what follows;
-
-#### Sections (I) through (VII) discuss the core findings (5 min read)
-
-#### Sections (VIII) discusses the complete implementation details (20 min read) (start here if needed)
-
-| Title | What it is about |
-|---|---|
-| (I) What were the files provided for the puzzle | You can have a look into the puzzle's provided input files |
-| (II) The first breakthrough moment  | Discusses my first breakthrough while inspecting the puzzle's waveform file |
-| (III) What I did  | A summary of what I did |
-| (IV) What the puzzle turned out to be  | A summary of what the solution of this puzzle is |
-| (V) Success Waveform  | The puzzle's main solution/deliverable component |
-| (VI) How to run | Quick start / Installations |
-| (VII) Directory Layout  | Solution's File layout |
-| (VIII) Full Picture  | Complete breakdown of the solution |
-
-----
-
-## (I) What were the files provided for the puzzle
-
-- The puzzle provided the two sets of files :
-
-#### Set I (Main Puzzle) 
-
-| File | What it is about | 
-|---|---|
-| [GDS file](https://github.com/janestreet/asic-puzzle-2026/blob/master/puzzle.gds) (1.4MB) | contains metal, routing, and active transistor layers, with the cell names, net names and hierarchy stripped out |
-| [Layout image](https://github.com/janestreet/asic-puzzle-2026/blob/master/layout.png) (136KB)| an image of the GDS file with the I/O's labelled for reference |
-| [Example Inputs VCD](https://github.com/janestreet/asic-puzzle-2026/blob/master/example_inputs.vcd) (8.4KB)|  driven by incorrect inputs, with a "success" flag that stays low (we need to drive it high, after providing the circuit with correct inputs). |
-
-#### Set II (Warmup) 
-
-| File | What it is about | 
-|---|---|
-| [RTL source file](warmup/00_source.v) (1.2KB) | The original Verilog source code of the example design |
-| [Netlist file](warmup/01_netlist.v) (19KB)| Synthesized netlist comprising of a list of standard cells and connections |
-| [Netlist file (with power rails)](warmup/02_netlist_with_power_rails.v) (30KB)| Netlist with VDD and GND rails added |
-| [post_pnr DEF file](warmup/03_post_place_and_route.def) (112KB) | Physical layout of cells and routing connections, corresponding to cell and net names. |
-|[GDS file](warmup/04_final.gds) (306KB)| The final manufacturable layout file, with many internal names removed |
-
-- The warmup puzzle is a small example design and was run through the same RTL to GDS flow, to obtain the GDS file (similar to main puzzle GDS).
-- The example design consists of two shift registers, an adder, and a comparator, outputting success if A + B == 496.
-- The whole flow was carried out using SkyWater's 130 nm PDK, see [more](https://skywater-pdk.readthedocs.io/en/main/).
-
------
-
-#### Note : The Layout image provided reveals the following I/O,
-
-| I/O | What it is about | 
-|---|---|
-| clk (input) | drives all sequential elements (d-flop based counters) |
-| rst_n (input) | active low resets to all sequential elements |
-| enable (input) | active high enable to all sequential elements |
-| I (input) | serial 1 bit input wire (we drive the puzzle cells serially through this) |
-| O[7:0] (output) | 8 bit output vector displaying status of puzzle's state |
-| success (output) | driven high when a valid/solved puzzle was driven in |
-
-----
-
-##### Note : 
-
-- I ran the three puzzle files through exiftool for a preliminary check and found nothing interesting.
--
------
-
-- The waveform (of the puzzle's VCD file) looks like :
-- Notice the "success" flag remains low throughout.
-
-![Surfer showing waveform of example inputs VCD file](Images/example_inputs_waveform.png)
-
-----
-
-## (II) My first breakthrough moment 
-
-- Switching to ASCII (I rarely use ASCII and prefer staying in Decimal/Hexadecimal/unsigned Integer) was the first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on :
-
-![Blog Site highlighted](Images/switching-to-ascii-moment.png)
-
-----
-
-- It was at this point while viewing the waveform when I decided to switch to viewing the VCD file in ASCII.
-- Which revealed the following message "TRY AGAIN" (at 1255000 ps marker):
-
-![Surfer showing waveform displaying "TRY AGAIN"](Images/try_again_message.png)
-
-
-----
-
-## (III) What I did (in 3 lines)
-
-- Extracted a netlist from the raw geometry present in the puzzle GDS file.
-- Proved the extractor pipeline exact against the warm-up's golden files, then validated it against the real chip's recorded outputs. 
-- Recovered the register structure, read the design's hidden data out of the silicon by probing it 121 times, solved the resulting puzzle two independent ways, and proved a behavioural model cycle-equivalent to the gates.
-
-----
-
-## (IV) What the puzzle turned out to be
-
-- An "11x11 Star Battle (Two Not Touch) Validator". (pass in a solved puzzle and it tells you if it is right)
-- Two stars per row, per column and per region, no two touching.
-- Exactly one grid works.
-- Drive in a solved 11x11 Two Not Touch Puzzle grid serially and the chip prints:
-
-```
-(* TWO STARS *)
-```
-
-## (V) Success Waveform 
-
-- It was found that to drive "success" flag high, the following input sequence was needed :
-
-    0000000101010000100000000000010101010000000000001010000001000001000000100000101000010000000100000010000010010001010000000
-
-![Surfer showing success high and O[7:0] spelling the verdict](Images/success-waveform.png)
-
-
-##### Note :
-
-- Star Battle is also referred to as Two Not Touch
-- One can read about how the puzzle works [here](https://krazydad.com/twonottouch/intro_tutorial/)
-
-##### Want to try the puzzle from this challenge? 
-
-- Play [here](https://notcleo.github.io/GDS-to-RTL/TwoNotTouch-Interactive-Puzzle/), read [here](TwoNotTouch-Interactive-Puzzle/)
-
-
-##### Want to try the puzzle?
-
-- Check out this sample [interactive Two Not Touch Puzzle](https://krazydad.com/play/starbattle/?kind=10x10&volumeNumber=2&bookNumber=1&puzzleNumber=24)
-
-----
-
-## (VI) How to run 
-
-- The pipeline is one Python file.
-
-| Name | Type | Why it was used |
-|---|---|---|
-| **gdstk** | Python package | GDSII parsing and hierarchy flattening: the front end of the extractor |
-| **shapely** | Python package | Polygon building, overlap testing and STRtree spatial indexing: the core of net extraction. **Requires 2.0 or newer.** 1.x has no `predicate=` keyword and returns geometries instead of integer indices, which silently builds the wrong netlist |
-| **numpy** | Python package | Every coordinate transform, every bulk polygon build and every same-layer distance test in the extractor is one array operation over all shapes at once rather than one call per shape |
-| **python-sat** | Python package | The SAT back end. It bundles several solvers behind one API; the one this pipeline loads was picked by timing them all on this design's own two workloads, and the table is in section (VIII). It solves the unrolled gate netlist: the 121-bit key, the minimum-depth bound, the uniqueness proof, and the enumeration of every string the output ROM holds |
-| **z3-solver** | Python package | The independent constraint solve of the recovered puzzle, and generating the grid classes used to falsify hypotheses and to stress the equivalence run |
-| **iverilog + vvp** | CLI tool | Used exactly twice, as an independent second opinion: golden versus extracted on the warm-up, and gates versus recovered RTL on the puzzle |
-| **KLayout** | GUI tool | Layout viewer, for spot-checking a coordinate |
-| **Surfer** | GUI tool | Waveform viewer. Switching a bus to ASCII is a right click, which is what easter egg 5 needs |
-| **GDS3D** | GUI tool | 3D rendering of the layer stack, separating power grid from routing and isolating poly over diffusion to see the transistors |
-| **Tiny Tapeout GDS Viewer** | Web tool | Zero-install browser view of the layout for a first look. Where I found the logo |
-| **sky130_fd_sc_hd Liberty (`.lib`)** | PDK data | Cell pin directions, the boolean `function` of every combinational output, and the `ff` group of every flop. Every truth table in this flow comes from here, none are hand written |
-| **sky130_fd_sc_hd merged LEF** | PDK data | The complete pin landing geometry, `PIN / PORT / RECT`. Reading pins from GDS text labels instead loses every pin rectangle the label does not tag |
-| **argparse, collections, contextlib, json, math, os, re, subprocess, sys** | Stdlib | Argument handling, grouping and counting, stage timing, interchange, coordinate arithmetic, Liberty and Verilog parsing, and launching the simulator shards |
-
-----
-
-### Update: yosys is not used any more, and this is why
-
-- The earlier version of this pipeline used **yosys** for SAT.
-- It does not any more.
-- More about earlier use of yosys below : 
-
-#### The one question, and where 122 comes from
-
-- The chip takes a 121-bit frame, one bit per enabled rising edge, and settles `success` on the edge after the last cell arrives, which is the interface stated at the top of this page.
-- 121 cells in plus one verdict edge is a **122-edge window**, and that is the unroll depth.
-- bounded model checking unrolls a sequential circuit K edges deep into pure combinational logic, assert the property on the frame you care about, hand the result to a SAT solver, and read the inputs off the model.
-- yosys implements exactly that as `sat -seq K`, so it is where I started.
-
-#### What yosys is
-
-- yosys is an open-source synthesis framework.
-- Its day job is the forward direction: read Verilog, elaborate it into generic gates, optimise, and map onto a real cell library.
-- `sat -seq K` is its formal model checking feature: it unrolls the elaborated design K edges deep, encodes the result, and calls a SAT solver built into the binary.
-
-#### What I did with it
-
-- Roughly this, once per depth:
-
-```
-read_verilog puzzle-solution/03_cell_models.v
-read_verilog puzzle-solution/02_extracted_netlist.v
-prep -top puzzle_extracted
-sat -seq 122 -set-def-inputs -set success 1 -show I
-```
-
-- Read the cell models, read the 728-cell netlist, elaborate, unroll 122 deep, constrain `success` to 1, print the input trace.
-
-#### How it went
-
-- It worked, and it gave the right answer.
-- What it could not do was amortise, and what it could not express was a second solution.
-
-| | |
-|---|---|
-| Time for one depth | about **40 seconds** |
-| Of which, actual CDCL search | a small fraction. The rest is re-reading and re-elaborating the same 728 cells and 66 cell models |
-| Solver calls this design needs | **17** |
-| of which, the depth bound | 2: `success` asserted at edge 121 (must be UNSAT) and at edge 122 (must be SAT) |
-| of which, uniqueness | 1: the same formula plus one clause forbidding the frame just found |
-| of which, the output ROM | 14: enumerate every value `O[7:0]` can take on edge 122, then every value it can take on edge 123 given the first |
-| Total, in practice | several minutes for one circuit and 17 solver calls |
-
-- The 17 calls differ from each other only in which literals are asserted.
-- The formula is the same object every time.
-- A command-line invocation cannot keep that object: each run re-parses, re-elaborates and re-encodes before it can assert anything.
-- The uniqueness proof and the ROM enumeration are worse than slow, they are inexpressible.
-- `sat` returns one satisfying assignment and has no interface for "now give me a different one", so blocking a model means writing out a new design with that frame excluded and elaborating the whole thing again.
-
-| yosys is the right tool when | why it is the wrong one here |
-|---|---|
-| you have RTL and want a mapped gate netlist | I already have the gate netlist; the missing thing is an input assignment |
-| you want one bounded property checked and do not want to write an encoder | I want 17 checks on one formula, and 16 of them are cheap only if the first leaves the solver loaded |
-| you want equivalence between two RTL descriptions, through `equiv_*` or `miter` + `sat` | my equivalence check is gates against behavioural RTL over 564 stimulus vectors, which is one iverilog simulation |
-| the design is big enough that a hand-written encoder would be the bottleneck | 728 cells is not. The `CNF` class is 61 lines and the unroller is 55, and the two together encode this design in 0.10 s |
-
-- The decision to move to a Tseitin encoder came out of a question I asked on Mathematics Stack Exchange
-- So I wrote the encoder.
-
-#### What a Tseitin encoder is
-
-- A SAT solver accepts one input form: **conjunctive normal form**, a conjunction of clauses, each clause a disjunction of literals.
-- A netlist is not in that form, so something has to translate it.
-- The naive translation is substitution: replace `success` by its gate's expression, replace each operand by its own, and recurse until only input variables are left.
-- Substitution is exponential.
-- Distributing `|` over `&` duplicates both operands, so depth `d` costs O(2^d) terms, and 122 copies of this circuit is thousands of levels deep.
-- The formula is unwritable long before it is unsolvable.
-- **Tseitin's encoding is linear.** Mint one fresh variable per gate output and write down only the local equivalence between that variable and its own inputs.
-- Nothing is substituted and nothing is expanded.
-
-| gate | new variables | clauses | what the clauses say |
-|---|---|---|---|
-| `w = a & b` | 1 | `(!a \| !b \| w)`, `(a \| !w)`, `(b \| !w)` | `a & b -> w`, then `w -> a` and `w -> b` |
-| `w = a \| b` | 1 | `(a \| b \| !w)`, `(!a \| w)`, `(!b \| w)` | `w -> a \| b`, then `a -> w` and `b -> w` |
-| `w = a ^ b` | 1 | `(!a \| !b \| !w)`, `(a \| b \| !w)`, `(a \| !b \| w)`, `(!a \| b \| w)` | one clause per forbidden row of the truth table |
-
-- Each bundle permits exactly the rows of that gate's truth table and forbids the rest, so the variable is pinned to the gate's output under every satisfying assignment.
-- **Inversion is free.** `!x` is the literal `x` with its sign flipped, so an inverter mints no variable and writes no clause.
-- Once the Liberty `function` strings are parsed every cell in the library reduces to AND, OR and XOR over signed literals, which is why the encoder has three shapes and no more.
-- The whole circuit is the conjunction of every gate's bundle.
-- Cost is 3 or 4 clauses and 1 variable per gate, independent of depth.
-- Asking a question is one more clause: the unit clause `(success)` pins the output high, and the solver either returns a model or proves there is none.
-- **The encoding is not equivalent to the circuit, it is equisatisfiable.** It carries auxiliary variables the circuit does not have, so the two formulas are not the same function.
-- What holds is a bijection: every behaviour of the circuit extends to exactly one model of the CNF, and every model restricts to exactly one behaviour.
-- That bijection is load-bearing twice over.
-- A blocking clause built over the 121 input literals removes exactly one frame and nothing else, which is what makes the uniqueness proof sound; and the same trick over the output bus is what enumerates the ROM.
-- **Time becomes space by unrolling.** Copy the combinational logic once per clock edge, give copy `t` its own variables, and define copy `t+1`'s flop outputs from copy `t`'s flop inputs.
-- A 122-edge question is then a single combinational formula with no sequencing left in it.
-
-#### Why that fits this problem
-
-| | yosys `sat -seq K` | encode once, ask many times |
-|---|---|---|
-| First query | parse, elaborate, unroll, encode, solve | encode, solve |
-| Second query | all of it again | one more `solve()` on the solver that already holds the formula |
-| A different depth | a separate invocation | the same formula, target literal asserted one frame earlier, as an assumption |
-| "is that the only answer" | not expressible | add a clause forbidding the frame just found, solve again |
-| "list everything reachable" | not expressible | the same in a loop until UNSAT |
-| Measured here | about 40 s per depth | 43,111 clauses over 14,498 variables, encoded in 0.10 s; both depths and the uniqueness proof answered inside one 0.16 s stage |
-
-#### Is there anything better than Tseitin, and why am I not using it
-
-| alternative | what it buys | why not here |
-|---|---|---|
-| **Circuit-SAT solvers that never build CNF** | Search the gate graph directly and exploit the fact that a settled output does not need its cone justified | No maintained one with a Python interface. Modern CDCL is fast because of watched literals, clause learning and restart policies, all of which a circuit solver has to reimplement to compete |
-| **BDDs** | Canonical, so uniqueness and model counting are free instead of costing another query | Size depends brutally on variable order, and a 122-deep unrolling of 92 flops with 121 free inputs is the shape that blows up. The counters here are adders in disguise, and adders are the textbook BDD explosion |
-| **SMT over bit-vectors, which is what z3 is** | Lets a constraint be stated in words rather than bits | The netlist is already bits. z3 would bit-blast it straight back down to the same CNF with a translation layer on top. z3 does earn its place, on the other side of the pipeline: it is handed the region map and the Star Battle rules, where the problem genuinely is word-level, and it never sees the netlist. That is what makes the two solves independent |
-| **Unbounded model checking, IC3/PDR or interpolation** | Proves a property at every depth rather than up to K | It answers a stronger question than I have. The protocol fixes the frame at 121 cells, so the depth is not open. Paying for an unbounded proof to answer a bounded question is the wrong way round |
-
-- **OpenROAD is not needed either.** I ran it on the warm-up source early on, to see how much information the forward flow removes before trying to reverse it.
-
-----
-
-### Complete installation
-
-- `RUN.sh` creates `.venv` and installs `requirements.txt` on first run, so on every platform the install is: get python, get iverilog, run the script.
-- It takes about **3 seconds** end to end and rebuilds `warmup-solution/` and `puzzle-solution/` from scratch every time.
-
-#### Ubuntu / Debian
-    
-    git clone https://github.com/NotCleo/GDS-to-RTL.git
-    cd GDS-to-RTL
-    sudo apt install iverilog python3-venv python3-tk tree -y
-    bash RUN.sh
-
-
-- I do not own a Mac/Windows machine, so I made Opus 5 write this below two sections (please open an issue if it fails)
-
-#### macOS
-
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    brew install python icarus-verilog git tree python-tk
-    git clone https://github.com/NotCleo/GDS-to-RTL.git
-    cd GDS-to-RTL
-    bash RUN.sh
-
-#### Windows
-
-    wsl --install -d Ubuntu
-
-- Then open the Ubuntu shell and follow the Ubuntu block above.
-
-----
-
-### Running it
-
-    bash RUN.sh                   the warm-up, which validates the toolchain, then the puzzle
-    bash RUN.sh --only warmup     just the warm-up
-    bash RUN.sh --only puzzle     just the puzzle
-    bash RUN.sh --no-iverilog     skip the two independent-simulator checks
-
-#### To view the results
-
-    tree puzzle-solution warmup-solution
-
-- Every file in those two directories is listed and explained at the end of section (VIII).
-- The captured output of a full run is in [`RUN.log`](RUN.log), the pipeline's own stage-by-stage log is in [`GDS-to-RTL/run.log`](GDS-to-RTL/run.log), and every stage is described with its numbers in [`GDS-to-RTL/summary.md`](GDS-to-RTL/summary.md).
-- Neither viewer below is needed to reproduce anything.
-
-#### Optional, only if you want to look at the waveforms by hand
-
-    mkdir -p ~/surfer_install && cd ~/surfer_install
-    wget "https://gitlab.com/api/v4/projects/42073614/jobs/artifacts/main/raw/surfer_linux.zip?job=linux_build" -O surfer_linux.zip
-    unzip surfer_linux.zip
-    chmod +x surfer
-    mkdir -p ~/.local/bin
-    mv surfer ~/.local/bin/
-    export PATH="$HOME/.local/bin:$PATH"
-    surfer puzzle-solution/14_success_inputs.vcd
-
-- Open `O[7:0]` and set its format to ASCII.
-
-----
-
-### If you have your own GDS
-
-- The extractor is not specific to this puzzle, so it is also packaged on its own, in [`General-GDS-to-RTL/`](General-GDS-to-RTL/).
-- Point it at any sky130 layout:
-		  
-		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds
-		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds -o out/
-		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds --def mychip.def --golden golden.v
-		python3 General-GDS-to-RTL/gds_to_netlist.py mychip.gds --lef other.lef --lib other.lib
-		python3 General-GDS-to-RTL/gds_to_netlist.py --show-layers
-
-- The main pipeline is untouched and does not know it exists.
-
-| you get | what is in it |
-|---|---|
-| `<stem>_01_inventory.txt` | every placement, orientation, label and layer |
-| `<stem>_02_netlist.v` | structural Verilog, recovered from polygon overlap alone |
-| `<stem>_03_cell_models.v` | simulation models for the cell types used, generated from the Liberty |
-| `<stem>_04_structure.txt` | register graph, feedback groups, clock roots, and what each output depends on |
-| `<stem>_05_recovered_rtl.v` | behavioural RTL: boolean equations for the logic, clocked blocks for the registers |
-| `<stem>_06_function.txt` | what the circuit computes, and for a combinational design the exact function of every output plus its full truth table |
-| `<stem>_07_equivalence.txt` | the recovered RTL run against the recovered gates in `iverilog`, with the mismatch count |
-| `<stem>_08_crosscheck.txt` | with `--def` and `--golden`: placement matching and the net-partition comparison |
-
-- Every cell's function comes out of the Liberty file, so a netlist of known functions is already a system of boolean equations, one per net.
-- Substituting each equation into its consumer would expand a cone into an expression exponential in its depth, which is why fully expanding a counter produces megabytes, so a net keeps its own line when more than one thing reads it, when it is a port, when it holds state, or when folding it in would pass sixteen terms, and is folded in otherwise.
-- The result is then run against the gates: exhaustively for a combinational design small enough to enumerate, over two thousand clocked cycles otherwise.
-- Synthesis is not reversible!
-- It flattens the hierarchy, deletes every name the layout did not keep as a label, and many different sources compile to the same gates, so nothing gets the original `always` blocks back.
-- The RTL in [`puzzle-solution/08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) was written by hand from an understanding of the gates and then *proved* cycle-equivalent to them.
-- Both are equivalent to the gates.
-- Only the hand-written one says the circuit is an 11x11 Star Battle validator.
-- What the structure report does is tell you where to look, and [`General-GDS-to-RTL/README.md`](General-GDS-to-RTL/README.md) says how to read it.
-- For a PDK that is not sky130, `--show-layers` prints the layer table in the shape that `--layers` accepts, and you pass that PDK's own `--lef` and `--lib`.
-
-----
-## (VII) Layout
-
-```
-├── CHALLENGE.md         # The main challenge 
-├── RUN.log              # The complete run log
-├── RUN.sh               # Main Orchestrating bash
-├── README.md            # This file
-├── requirements.txt     # Python dependencies 
-├── GDS-to-RTL           # Reverse Recovery scripts
-├── General-GDS-to-RTL   # The same extractor, for any sky130 GDS you have
-├── puzzle               # Provided Puzzle files
-├── warmup               # Provided warmup files
-├── puzzle-solution      # Puzzle solution files
-├── warmup-solution      # warmup solution files
-├── TwoNotTouch-Interactive-Puzzle    # Interactive Two Not Touch Puzzle, browser and desktop (TRY THIS!)
-├── Easter-Eggs          # List of easter eggs
-├── Images               # Images of waveforms, layouts, schematics
-├── pdk                  # SKY130 PDK
-└── Personal-Notes       # Ignore this
-```
-
-----
-
-## (VIII) Full Picture 
-
-- This is the whole thing, in the order it happened: what I had, what I ran it through, and what came back.
-- Every number here is printed by `GDS-to-RTL/gds_to_rtl.py` on a fresh run, and the run that produced them is in [`RUN.log`](RUN.log).
-
-| | |
-|---|---|
-| The whole flow | one file, [`GDS-to-RTL/gds_to_rtl.py`](GDS-to-RTL/gds_to_rtl.py) |
-| Runtime | about 3 seconds |
-| Stage by stage | [`GDS-to-RTL/summary.md`](GDS-to-RTL/summary.md) |
-| Full terminal log | [`GDS-to-RTL/run.log`](GDS-to-RTL/run.log) |
-
-----
-
-### 1. What is in a GDS file, and what the viewer showed
-
-- I started with `puzzle/puzzle.gds`, 1.4 MB.
-- A GDS is a geometry file and nothing else.
-- It stores polygons, each tagged with a layer number and a datatype, plus cell definitions that can be placed at a position with a rotation and an optional mirror.
-- There is no wire, no gate, no pin and no connection anywhere in the format.
-- Two pieces of metal are connected if and only if they physically overlap, and the file never records that they do.
-- It has to be computed from coordinates.
-
-| what a GDS keeps | what it does not have |
-|---|---|
-| polygons, with a layer and a datatype | any notion of a net |
-| cell definitions, and placements of them | any notion of a pin, beyond a text label someone chose to leave |
-| text labels, if the flow did not strip them | signal names, module boundaries, hierarchy above the cell |
-| a hierarchy of references, with rotation and mirror | anything at all about intent |
-
-- One thing survived, and it mattered enormously: **the standard cells are still named**.
-- `sky130_fd_sc_hd__nand3_2` says exactly what that cell does, because the PDK that defines it is public.
-- What the flow stripped is everything above the cell: which instance is which, what the nets were called, and how the design was organised.
-- Before writing any code I opened it in the **Tiny Tapeout online GDS viewer**, which needs no install and renders every layer at once.
-- Staring at it explained nothing about the circuit. 9,875 placements with no labels look like 9,875 placements with no labels.
-- It did show one thing, in the default view, without turning a single layer off: a pale rectangular block low on the die that does not look like routing.
-- I switched to **GDS3D** to isolate it, because GDS3D can hide the power grid and separate the metal stack, and the block is on met2 with nothing under it.
-
-#### Easter egg 1: the logo in metal 2
-
-- Routing on a metal layer is long power straps and short jogs between vias.
-- This was neither.
-- **1,366 sub-micron polygons packed into a 17.10 x 17.10 um square, connected to nothing at all**, over a piece of die with no cells beneath it.
-- It is the Jane Street logo, drawn in real mask geometry, and the warm-up GDS carries it too at a different corner.
-- Details and the rasterised version: [`Easter-Eggs/01_easter_egg.txt`](Easter-Eggs/01_easter_egg.txt).
-- That is everything looking at the layout produced.
-- Everything after this is computed.
-
-----
-
-### 2. Deciding what to build first, and against what
-
-- The challenge asks for a netlist extractor, so one has to be written.
-- The problem that comes with it: suppose I write it, point it at `puzzle.gds`, and it emits a netlist.
-- **How would I know that netlist is right?**
-- A netlist can parse cleanly, have every pin connected, have exactly one driver per net, and still describe a different circuit, because one missed overlap splits one net into two and nothing anywhere reports an error.
-- The puzzle ships a warm-up, and the warm-up ships golden references, which is the only ground truth available anywhere in this exercise.
-
-| `warmup/` contains | which is |
-|---|---|
-| `00_source.v` | the Verilog someone wrote |
-| `01_netlist.v` | the gate netlist synthesis produced from it |
-| `03_post_place_and_route.def` | where every one of those gates was placed |
-| `04_final.gds` | the geometry, which is the only thing the puzzle gives me for the real chip |
-
-| order | what it buys |
-|---|---|
-| build the extractor against the warm-up first | its output can be compared to the golden netlist net by net, and to the DEF placement by placement |
-| only then point the same code at the puzzle | any disagreement after that is about the puzzle, not about my pipeline |
-
-----
-
-### 3. Inventory, before any connectivity work
-
-- **Stage W1 and P1.** `gdstk` reads the GDS into a cell hierarchy; the code walks `top.references`, buckets each placement by its cell name, and dumps every label with its layer and coordinate.
-- No geometry is interpreted here and nothing is connected.
-- It is counting, so that I know what is in the file before deciding what to do with it.
-- Output: `01_gds_inventory.txt` in each solution directory.
-
-| | puzzle | warm-up |
-|---|---|---|
-| structures in the file | 81 | 27 |
-| bounding box | (0, -52.72) .. (200, 300) um | (0, 0) .. (100, 100) um |
-| total placements | 9,875 | 1,099 |
-| logic cells | **728** | **79** |
-| distinct logic cell types | 66 | 16 |
-| flip-flops | **92** | 16 |
-| vias | 8,221 | 869 |
-| well taps and decoupling caps | 880 | 151 |
-| antenna diodes | 10 | 0 |
-| structures that are not standard cells | **36** | 0 |
-| pin labels inside cell definitions | 876 | 186 |
-| top-level text labels | 17 | 10 |
-
-- The warm-up is 79 logic cells: two shift registers, an adder, a comparator and three clock buffers, which is small enough to read by hand.
-- That is the point of it.
-- The 17 top-level labels on the puzzle are the ports, and they are the last real names left anywhere in the file:
-
-```
-'I'        on layer 70/5 at (  0.30,  79.22)
-'clk'      on layer 70/5 at (  0.30, 238.34)
-'rst_n'    on layer 70/5 at (  0.30, 185.30)
-'enable'   on layer 70/5 at (  0.30, 132.26)
-'O[0]'     on layer 70/5 at (199.70, 204.34)   ... through O[7]
-'success'  on layer 70/5 at (199.70, 285.94)
-```
-
-- Inputs down the left edge, outputs down the right, exactly as the hint image in section (I) draws them.
-
-----
-
-### 4. Turning polygons into a netlist
-
-- **Stage W2 and P2.** The tools are `gdstk` for the hierarchy, `shapely` for polygons and its `STRtree` R-tree index for spatial lookup, `numpy` for the coordinate arithmetic, and a union-find over integer node ids.
-- The algorithm is four steps.
-
-| step | what happens | what does it |
-|---|---|---|
-| 1 | Flatten every placement: apply each reference's rotation, mirror and translation to every polygon in the cell it places | one numpy affine pass over all 31,844 polygon coordinate arrays at once |
-| 2 | On each conducting layer, join any two polygons that touch. Each resulting group is one contiguous piece of conductor | one `STRtree` per layer, one bounding-box query, then one vectorised exact distance test, then union-find |
-| 3 | Walk the via layers. A cut touching conductor X below and conductor Y above means X and Y are the same electrical node | one interior point per cut, looked up in the tree of the layer below and the layer above |
-| 4 | For each placed cell, look up which conductor covers each of its pin rectangles, group pins by conductor, emit Verilog | pin geometry from the PDK LEF, one tree query per layer |
-
-- Step 2 is the whole cost: it is an all-pairs proximity question over 35,531 polygons, and without a spatial index it is quadratic and unusable.
-- Two polygons on the same layer are treated as one conductor if they come within **60 nm** of each other.
-- Section 21 shows the recovered partition does not depend on that number.
-- Output: `02_extracted_netlist.v`.
-
-> **Note on shapely.** 2.0 changed `STRtree.query` to take a `predicate` argument and to return integer indices rather than geometries. On shapely 1.8 that call signature does not exist, and the code silently builds a different netlist rather than failing. **2.0 is a hard floor**, and `requirements.txt` pins it.
-
-----
-
-### 5. Three bugs, each of which produced a clean netlist of the wrong circuit
-
-- None of the three crashed.
-- All three produced a netlist that parsed, had no dangling pins, had exactly one driver per net, and described a circuit that is not on the die.
-- Each was caught by the warm-up comparison in section 6 and by nothing else.
-
-| bug | what I did wrong | why it broke silently | the fix |
-|---|---|---|---|
-| **Pin geometry** | Used the GDS text labels to decide which polygon is which pin | A label tags exactly one polygon. A real pin is often several polygons in different places in the cell, and the router may land on any of them. Pins went missing, and nets that should have been joined stayed separate | Read the pin rectangles out of the PDK's LEF. `PIN ... PORT ... RECT` is the authoritative geometry and lists every rectangle belonging to each pin |
-| **Antenna diodes** | Treated `diode_2` as an inert protection device and skipped it | The router uses a diode as a convenient place to jump layers and lands on it twice. Skipping it tears one real net into two halves that never reconnect | Treat it as an electrical bridge: its two connections are the same net |
-| **Cell outlines** | Matched my placements to the DEF using each cell's geometric bounding box | The nwell implant overhangs the cell outline, so every box was consistently too big and every lower-left corner was wrong by the same small amount. **0 of 79** placements matched | sky130 draws the real abutment box on its own layer, **81/4**. Reading that instead gave **79 of 79** immediately |
-
-- The pin one is not a rare edge case.
-- Among the 66 cell types the puzzle uses, 172 of 285 signal pins are a single rectangle, so the naive reading works most of the time and fails exactly where it hurts.
-
-| cell | pin | rectangles in LEF |
-|---|---|---|
-| `clkbuf_16` | `X` | **20** |
-| `clkbuf_8` | `X` | 11 |
-| `a2111oi_2` | `Y` | 11 |
-| `dfrtp_2` | `RESET_B` | 9 |
-
-- `clkbuf_16` is the root of the entire clock tree, and its output pin is 20 separate rectangles.
-- The diode one only surfaces with ground truth.
-- The netlist without diode bridging had the right cell count, no dangling pins and no visible defect anywhere.
-- It just described a different circuit.
-
-----
-
-### 6. Proving the extractor exact
-
-- **Stage W3 and W5.** W3 compares my extraction against the shipped DEF and golden netlist directly; W5 compiles the golden netlist and my extracted netlist together with `iverilog` and simulates them side by side under `vvp`.
-- Outputs: `04_golden_crosscheck.txt` and `05_equivalence.txt`.
-
-| check | what it proves | result |
-|---|---|---|
-| Every net has exactly one driver | No shorts, no floating outputs, no gate driving into another gate's output | 84 nets, **0 violations** |
-| Every GDS placement matches a DEF component on cell type, corner and orientation | The coordinate transforms are right | **79 of 79** |
-| Net partition matches the golden netlist | The two are literally the same circuit | **84 exact matches, 0 mismatches** |
-| Simulate both netlists side by side, 3,000 random cycles, then 200 byte pairs | They behave identically, and `S` really is `A+B==496` | **0 mismatches**, 200 of 200 |
-
-- The third row is what settles it, and it is worth saying why it works.
-- **Two netlists are the same circuit exactly when they cut the same set of pins into the same groups, with the same ports attached to the same groups.**
-- That is a statement about set partitions, and names play no part in it.
-- So the extraction can be proved exact while every instance in it is still called `u17` and every net `net_412`.
-- The DEF match is not part of that proof.
-- It is there to put the names back afterwards, which is what `07_name_map.json` holds.
-- At this point the extractor is finished and validated, and the warm-up has one job left.
-
-----
-
-### 7. Solving the warm-up from its gates alone
-
-- **Stage W6.** The extractor has been proved exact, but nothing yet says what the circuit *does*, and working that out from gates is the part that has to carry over to the puzzle.
-- `warmup/00_source.v` is sitting there with the answer in it.
-- This is the one chance to try a technique on a problem whose answer can be checked afterwards, so that file is not opened.
-- The question: **is there an input sequence that drives `S` high, and what is the shortest one?**
-
-#### Why a solver
-
-| approach | how it works | how it fits |
-|---|---|---|
-| **Exhaustive search** | Simulate every input sequence up to length K and look for one that works | Works here: `A` and `B` are eight bits each, so 65,536 pairs. It is exponential in the number of free input bits, and the real design is nine times the cell count, so it does not carry over |
-| **Invert it algebraically** | If the state update were affine over GF(2) the circuit is an LFSR or a CRC, and Gaussian elimination inverts it in milliseconds | Worth testing rather than assuming. The pipeline tests it on the real design in section 17 |
-| **Ask a solver for a witness** | State the circuit and the goal as constraints, and let a CDCL search engine find an assignment or prove none exists | This is the one that scales, and the "or prove none exists" half is what turns a shortest-sequence guess into a bound |
-
-- The third also answers something the other two cannot.
-- **UNSAT is a proof.** "No input of K edges works" is not "I did not find one", it is "there is not one".
-
-#### What kind of SAT this is
-
-- Not plain combinational SAT.
-- The warm-up has 16 flip-flops and the puzzle has 92, so what the circuit does depends on what it has already been shown.
-- The technique is **bounded model checking**, and section (VI) covers the encoding it rests on.
-
-| | |
-|---|---|
-| Take the circuit | a netlist of gates and flops |
-| Unroll it over K clock edges | K copies of the combinational logic, with copy `t`'s flop outputs wired into copy `t+1`'s inputs |
-| Encode every gate in every copy | Tseitin, one variable per gate output, 3 or 4 clauses each |
-| Add the goal | the unit clause `S = 1` at step K |
-| Ask | SAT means a K-edge input sequence exists and the solver hands it over; UNSAT means one provably does not |
-| Sweep K upward | the smallest K that is SAT is the minimum depth |
-
-- Two things make the sweep cheap rather than expensive.
-- The formula for depth K is a **prefix** of the formula for K+1, so the pipeline encodes once at the largest depth it needs and asks the shorter questions by asserting the goal literal one step earlier, as an assumption.
-- The encoder folds any gate whose inputs are already constant, and after reset most of the design is constant for the first several steps.
-
-#### Which solver
-
-- `python-sat` bundles several CDCL solvers behind one interface.
-- Rather than pick one on reputation I timed all of them on this design's own two workloads, the depth question and the fourteen incremental enumeration queries of section 19, and took the fastest total.
-- Same formula, same machine, best of three.
-
-| back end | depth question | enumeration | total |
-|---|---|---|---|
-| **CaDiCaL 3.0** | 0.031 s | **0.419 s** | **0.449 s** |
-| CaDiCaL 1.5.3 | 0.021 s | 0.630 s | 0.651 s |
-| MiniSat 2.2 | 0.019 s | 0.642 s | 0.661 s |
-| MiniSat-GH | 0.021 s | 0.650 s | 0.672 s |
-| CaDiCaL 1.9.5 | 0.026 s | 0.658 s | 0.683 s |
-| Glucose 4.2 | 0.022 s | 0.695 s | 0.717 s |
-| Mergesat 3 | 0.028 s | 1.872 s | 1.900 s |
-| Lingeling | 0.050 s | 2.046 s | 2.096 s |
-| MapleCM | 0.218 s | 3.148 s | 3.366 s |
-
-- The depth question is small enough that every one of them is inside a rounding error of the others.
-- The enumeration separates them, because it is fourteen incremental queries against a solver that has to keep and reuse what it learned between them, and that is where CDCL implementations differ.
-- CaDiCaL 3.0 wins, so that is what `SAT_BACKEND` names in the pipeline, and it is the only line that has to change to swap it.
-
-#### What came back
-
-- Unroll the extracted warm-up gates, encode, ask, sweep K:
-
-```
-one unrolling to 11 edges: 362 variables, 1012 clauses
-
-K =  6 edges   UNSAT
-K =  7 edges   UNSAT
-K =  8 edges   SAT
-A = 11111000 = 248
-B = 11111000 = 248
-A + B = 496
-```
-
-- Eight edges, because the warm-up shifts in eight bits.
-- No gate was traced by hand and `00_source.v` was never opened.
-- Output: [`warmup-solution/06_sat_solve.txt`](warmup-solution/06_sat_solve.txt).
-
-#### Easter egg 7, which is the constant it came back with
-
-- The warm-up raises `success` when `A + B == 496`, and 496 is not arbitrary.
-- It is the **third perfect number**, equal to the sum of its own proper divisors:
-
-```
-496 = 1 + 2 + 4 + 8 + 16 + 31 + 62 + 124 + 248
-```
-
-- It is also `2^4 x (2^5 - 1) = 16 x 31`, which is Euclid's form `2^(p-1) x (2^p - 1)` with `p = 5`.
-- And it is a well chosen constant for an eight-bit adder: `A + B` ranges over 0 to 510, and `A + B = 496` has exactly **15** solutions, `A` from 241 to 255, out of 65,536 input pairs.
-- The solver returned `A = B = 248`, the largest proper divisor of 496 and the middle of those 15.
-- Any of the 15 would have been correct, and an earlier run of this pipeline returned 242 and 254, so the specific pair is the solver's choice and not a property of the circuit.
-- That is the one number on this page that is allowed to move between runs.
-
-----
-
-### 8. Back to the puzzle: the inventory oddities, and easter egg 2
-
-- Same extractor, no changes, pointed at `puzzle.gds`.
-- Three rows of the inventory table in section 3 do not belong in a standard-cell design, and all three point at the same place.
-- **The bounding box came back as `(0.00, -52.72) ..
-- (200.00, 300.00)`.** The placement rows of a standard cell design start at y = 0, so something is drawn 52.72 um below the chip.
-- **The placement histogram buckets anything that is neither a standard cell nor a via, and on the puzzle that bucket is not empty:**
-
-```
-21 x INTERNAL_3
-15 x INTERNAL_7
-```
-
-- 36 placements of two structures with no pins, no transistors, and names no PDK uses.
-- **The layer histogram, checked against the sky130 layer map, flagged one layer the map does not know: 200/0**, carrying two polygons, one inside each of those two structures.
-- Diffing the puzzle's layer set against the warm-up's narrows it further, since both went through the same flow.
-- Three layers appear in the puzzle and not the warm-up.
-- Two are boring: 66/15 and 81/23 live only inside standard cells, so they are present because the puzzle instantiates `conb_1` and `diode_2` and the warm-up has neither.
-- Only 200/0 is drawn outside every cell, so only 200/0 was added by hand.
-- 36 bars, two widths, 1.38 um and 4.14 um, exactly 1:3, all at y = -52.72, spanning x = 1.33 to 198.67.
-- Dividing the gaps by the narrow width, every gap is 1, 3 or 7:
-
-```
-widths : . - - . . . - . . - . - . . - . . - - - . - - . . . - . . . - . - . . -
-gaps   : 1 1 1 3 3 1 1 7 1 3 1 1 3 3 1 3 1 3 1 7 1 3 1 1 7 1 3 1 1 3 3 1 1 3 1
-```
-
-- Short mark, long mark at 3, gap 1 inside a letter, 3 between letters, 7 between words.
-- That is International Morse timing exactly, and it decodes with no ambiguity to:
-
-```
-PER ARENAM AD ASTRA
-```
-
-- Latin, roughly "through the sand, to the stars", a play on *per aspera ad astra*.
-- Full decode: [`Easter-Eggs/02_easter_egg.txt`](Easter-Eggs/02_easter_egg.txt).
-
-----
-
-### 9. The layer map, the via census, and the puzzle netlist
-
-- **Stage P2.** The four-step algorithm in section 4 needs one thing before it can run: which GDS layers are conductors, which are cuts, and which are neither. sky130's layer map answers that.
-
-| layer | GDS | what it is | how the extractor uses it |
-|---|---|---|---|
-| li1 | 67/20 | local interconnect, inside and between cells | conductor |
-| met1 | 68/20 | first routing metal | conductor |
-| met2 | 69/20 | second routing metal | conductor |
-| met3 | 70/20 | third routing metal, also carries the port labels on 70/5 | conductor |
-| met4 | 71/20 | fourth routing metal, power straps | conductor |
-| met5 | 72/20 | fifth routing metal, power straps | conductor |
-| mcon | 67/44 | cut, li1 to met1 | bridge |
-| via | 68/44 | cut, met1 to met2 | bridge |
-| via2 | 69/44 | cut, met2 to met3 | bridge |
-| via3 | 70/44 | cut, met3 to met4 | bridge |
-| via4 | 71/44 | cut, met4 to met5 | bridge |
-| nwell, diff, poly, licon1, nsdm, psdm, npc, hvtp | 64, 65, 66, 93, 94, 95, 78 | transistors and implants | ignored, they carry no inter-cell signal |
-| areaid.standardc | 81/4 | the real cell abutment box | used to match placements to the DEF |
-
-- Grouping the overlapping shapes per conductor layer on the puzzle:
-
-| conductor | shapes in | conductors out |
-|---|---|---|
-| li1 | 10,819 | 5,472 |
-| met1 | 12,606 | 3,001 |
-| met2 | 8,517 | 2,060 |
-| met3 | 2,560 | 811 |
-| met4 | 867 | 45 |
-| met5 | 162 | 18 |
-
-- **Checking the coordinate transforms without an answer key.** Every via cut has to land on metal on **both** sides.
-- If a rotation or a mirror were applied wrongly, cuts would sit with metal on one side only.
-- This check needs no golden file, so unlike section 6 it works on the puzzle too:
-
-```
-cut mcon   li1  -> met1 : 17188/17188 bridged
-cut via    met1 -> met2 :  3779/3779  bridged
-cut via2   met2 -> met3 :   951/951   bridged
-cut via3   met3 -> met4 :   687/687   bridged
-cut via4   met4 -> met5 :   108/108   bridged
-```
-
-- **22,713 of 22,713** cuts bridged, none floating.
-- The design that came out:
-
-| | |
-|---|---|
-| logic cells | 728, in 66 types |
-| nets | **738** |
-| flip-flops | 92, being 84 `dfrtp_2`, 4 `dfstp_2`, 4 `dfxtp_2` |
-| nets with a driver count other than one | **0** |
-| nets with no driver at all | **0** |
-| combinational loops | **0** |
-| clock roots | one, `clk` |
-
-- Zero shorts, zero floating outputs and zero undriven nets on both designs.
-- That last row matters because a single unrecovered connection splits one net into two, and the circuit becomes a different circuit with no error reported anywhere.
-- The result is a plain structural Verilog netlist, [`puzzle-solution/02_extracted_netlist.v`](puzzle-solution/02_extracted_netlist.v):
-
-```verilog
-// Recovered from puzzle/puzzle.gds by geometry alone.
-// No netlist, DEF or source file was read to produce this.
-// 728 logic cells, 738 nets, 0 nets with a driver count other than one.
-module puzzle_extracted (I, clk, enable, rst_n, success, O);
-  input  I;
-  ...
-  sky130_fd_sc_hd__xor2_2  u12_xor2_2  (.A(net_268), .B(net_256), .X(net_260));
-  sky130_fd_sc_hd__a21oi_2 u13_a21oi_2 (.A1(net_244), .A2(net_245), .B1(net_240), .Y(net_246));
-  sky130_fd_sc_hd__nand2_2 u14_nand2_2 (.A(net_200), .B(net_649), .Y(net_255));
-  sky130_fd_sc_hd__a22o_2  u15_a22o_2  (.A1(net_051), .A2(net_653), .B1(net_272), .B2(net_296), .X(net_276));
-  ...
-  sky130_fd_sc_hd__and3_2  u23_and3_2  (.A(net_139), .B(net_140), .C(net_135), .X(O[0]));
-endmodule
-```
-
-- 728 instances and 738 nets, with no meaningful names in it, which is exactly as far as geometry can take anyone.
-
-----
-
-### 10. Cell semantics, and what the PDK gets wrong
-
-- **Stage W4 and P3.** A netlist of cell names is useless without knowing what the cells do.
-- That comes from the sky130 Liberty file, which is the same file the synthesiser read when it built this design in the first place.
-- The pipeline parses it and generates simulation models: `03_cell_models.v`.
-- For combinational cells, each output pin carries a boolean `function`:
-
-```
-cell ("sky130_fd_sc_hd__xor2_2") {
-    pin ("X") { direction : "output";  function : "(A&!B) | (!A&B)"; }
-}
-```
-
-- For sequential cells, an `ff` group names the state pair, its clock, its next state, and its level-sensitive clear or preset:
-
-```
-cell ("sky130_fd_sc_hd__dfstp_2") {
-    ff ("IQ","IQ_N") { clocked_on : "CLK";  next_state : "D";  preset : "!SET_B"; }
-    pin ("Q") { direction : "output";  function : "IQ"; }
-}
-```
-
-- That is enough to derive every cell, so **no truth table is written by hand anywhere in this repository**.
-- The same parsed functions are used by the simulator and by the SAT encoder, which keeps the simulated circuit and the solved circuit literally the same object rather than two descriptions that have to agree.
-- It also settles reset polarity, and that one is load-bearing: `dfrtp` has a `clear` and resets **low**, `dfstp` has a `preset` and resets **high**.
-- This design has four `dfstp_2`, so any tool option that zeroes every flop at reset turns it into a circuit with no solution at all.
-- Four things in the PDK are worth flagging, because each has a reading that parses cleanly and is wrong.
-
-| what | what it looks like | what goes wrong if you miss it |
-|---|---|---|
-| **The output pin name depends on inversion** | Among the 66 cell types here, 36 call their output `X`, **26 call it `Y`**, three flops call it `Q`, and `conb_1` calls its two outputs `HI` and `LO` | The rule is that an inverting cell's output is `Y`. A reader that looks for `X` silently drops every NAND, NOR, inverter and AOI in the design, which is 26 of the 66 types here. The pipeline takes the output set from Liberty's `direction : "output"` rather than from a list of names it hoped was complete |
-| **One pin, two layers** | `dfrtp_2.RESET_B`, `dfstp_2.SET_B` and `xor2_2.B` each have rectangles on **both li1 and met1** | If you index pin geometry per layer and only look on the layer you expected, the router lands on the other one and the pin binds to nothing. The extractor looks up every rectangle on whatever layer it was declared on |
-| **`conb_1` has no inputs at all** | Its entire pin list is two outputs, `HI` with `function : "1"` and `LO` with `function : "0"` | It is how the synthesiser ties a net to a constant. Code that assumes every cell has at least one input, or that every output is a function of inputs, falls over on it. It is also one of the two cells the warm-up does not contain, which is how it turned up in the layer diff in section 8 |
-| **The file uses three operator dialects** | `function` is written with `&` and `\|`. `state_function` on the clock-gate cells uses `*` for AND. `power_down_function` uses `+` for OR and refers to the power rails by name | An expression parser pointed at every attribute ending in `_function`, which is the obvious thing to write, reads `power_down_function` in the wrong dialect and then treats `VPWR` and `VGND` as ordinary signals. The output of the cell becomes a function of the power rails and the netlist becomes nonsense. The parser here reads `function`, `next_state`, `clear` and `preset`, and nothing else |
-
-- A secondary one, less interesting but worth knowing: the human-readable equations in the comment headers of the PDK's own Verilog models do not always agree with the cell they sit above.
-- The machine-generated Liberty `function` strings are consistent, so those are what I parse, and I never read the comments.
-- Generated models: [`puzzle-solution/03_cell_models.v`](puzzle-solution/03_cell_models.v).
-
-----
-### 11. The sample waveform: easter eggs 3, 4, 5 and 6
-
-- With a netlist and no description of its behaviour, I went back to the one file I had been ignoring: `puzzle/example_inputs.vcd`.
-- First in a text editor, which I had not done.
-- The first nine lines hold two easter eggs.
-- **Easter egg 3**, the `$version` field:
-
-```
-Leave no stone unturned! But for this file, consider looking at it in a
-waveform viewer instead.
-```
-
-- No simulator writes that. iverilog writes "Icarus Verilog", so the line was put there by hand.
-- **Easter egg 4**, two lines above it, the `$date` field:
-
-```
-Sat Dec 31 23:59:60 2016
-```
-
-- A second numbered 60, which most date parsers reject because most date libraries assume a minute has 60 seconds numbered 0 to 59.
-- It is a leap second, and a real one: 2016-12-31 23:59:60 UTC is the most recent leap second inserted, so that minute had 61 seconds.
-- It was a Saturday.
-- Then the same file in **Surfer**, which gave nothing useful.
-- `success` is low for the whole trace.
-- `O[7:0]` sits at zero, changes nine times in a burst near the end, and goes back to zero.
-- As hex that burst is `54 52 59 20 41 47 41 49 4e`, which says nothing as a number.
-- I read it in decimal, hex and binary, got nothing, and moved on.
-- **Easter egg 5** is what fixed that, and it is not in any file.
-- Re-reading the puzzle statement, the blog post links in passing to [another Jane Street post about using ASCII waveforms to test hardware designs](https://blog.janestreet.com/using-ascii-waveforms-to-test-hardware-designs/).
-- Read as a curiosity it is a curiosity.
-- Read as an instruction it is what makes the output side readable.
-- I do not normally display a bus as ASCII.
-- One right click later, those same nine bytes read:
-
-```
-T R Y   A G A I N
-```
-
-- So the chip does not return a status code, it returns text.
-- The block the hint image says to ignore is a ROM of English sentences, and the sample waveform is a recording of a wrong grid being rejected.
-- That pointed the same question at the input side, and the input side is **easter egg 6**.
-- Two counts point at it before any decoding: both frames of the sample contain exactly **38** ones, identical rather than similar, and in both frames columns 7 through 10 are empty in **every** row, a perfectly rectangular block of 44 dead cells.
-- Eleven rows, seven usable columns each.
-- Standard ASCII needs seven bits.
-- So group the bits in sevens, one row per character, least significant bit first:
-
-```
-. . 1 . 1 . 1 . . . .   0010101 ->  84 -> 'T'
-. . . 1 . 1 1 . . . .   0001011 -> 104 -> 'h'
-1 . 1 . . 1 1 . . . .   1010011 -> 101 -> 'e'
-```
-
-- Frame 0 gives `The night s`, frame 1 gives `ky awaits  `.
-
-```
-The night sky awaits
-```
-
-- The file I had written off on day one carries the theme in its inputs.
-- Full decode, all 22 rows: [`Easter-Eggs/06_easter_egg.txt`](Easter-Eggs/06_easter_egg.txt).
-
-#### The interface, measured rather than assumed
-
-- The same file settles the protocol, which up to here I had been guessing at.
-- The method is counting rising edges of `clk` in the recorded trace and reading what each signal does on each one.
-
-| edges | what happens |
-|---|---|
-| 1 to 3 | `rst_n` = 0, reset |
-| 4 | `rst_n` = 1 |
-| 5 to 125 | `enable` = 1, **121 bits shifted in on `I`** |
-| 126 | `enable` = 0, and `O` becomes `'T'` on the same edge: the message starts immediately |
-| 126 to 134 | `T R Y space A G A I N` |
-| 135 | `O` back to 0 |
-| 157 to 159 | `rst_n` = 0 again, second frame |
-| 161 to 281 | another 121 bits |
-| 282 | `'T'` again |
-
-- **121 = 11 x 11.** So it is a fixed 121-cell frame, not a free-running stream, and the verdict begins on the edge immediately after the frame ends.
-- That is where the 121-bit frame and the 122-edge window come from, and both get proved from the gates in section 17 rather than left as a reading of one trace.
-
-----
-
-### 12. Checking the netlist against the recorded silicon
-
-- The sample waveform is a recording of the real chip: known inputs, known outputs.
-- That makes it a test the extracted netlist has to pass, and one that could not have been fitted to, because the trace existed before my extractor did.
-- **Stage P4.** The pipeline's own bit-parallel simulator replays the recorded inputs into the extracted netlist and compares every output at every rising edge:
-
-```
-312 rising edges replayed, 624 outputs compared, 0 mismatches
-```
-
-- A netlist built from polygon coordinates alone reproduces the recorded silicon at every edge.
-- From here on, wherever the netlist and a hypothesis disagree, the netlist is taken as correct.
-- If P4 ever reports a mismatch the pipeline stops, because every later stage would be interpreting a circuit that does not exist.
-- Output: [`puzzle-solution/04_vcd_replay.txt`](puzzle-solution/04_vcd_replay.txt).
-- The same stage checks the clock tree, which would otherwise be an assumption.
-- There are 32 clock buffers in three levels, one `clkbuf_16` feeding 16 `clkbuf_8` feeding 15 `clkbuf_4`, and every one of the 92 flip-flop clock pins traces back through them to the single primary input `clk`.
-- There is no gated clock anywhere in this design, so the whole thing can be reasoned about one rising edge at a time, which every later stage relies on.
-
-----
-
-### 13. Register-level structure, and why the flip-flops are the thing to look at
-
-- 728 anonymous cells, known correct, and not understood at all.
-- Reading them gate by gate does not work, for a specific reason rather than a vague one.
-- Combinational logic does not survive synthesis in any recognisable form.
-- The optimiser is free to rewrite any acyclic block of gates into any other block with the same truth table, and it does, so the shape on the die is the shape the optimiser preferred, not the shape anyone wrote.
-- Net `net_412` corresponds to nothing in anybody's source file.
-- **Flip-flops are different.** A flop is a physical cell with a name in the library, it holds a value across a clock edge, and no optimiser can make it not do that.
-- So the flops are real objects, and the useful question is not what each gate does but **which flops feed which**.
-
-#### The graph
-
-- **Stage P5.** Build a directed graph with one node per flip-flop, and an edge from `a` to `b` when `a`'s output reaches `b`'s data, clear or preset input **through combinational logic only**, not through some third flop.
-- Constructing it means walking backwards from each flop's `D` through the gate cone and stopping the moment a flop output or a primary input is reached.
-- 92 nodes.
-- Cheap to build, and it throws away exactly the part that was not meaningful.
-
-#### Why cycles are the thing to look for
-
-- A cycle in that graph means a flop's next value depends on its own current value.
-- That is precisely the difference between **state that accumulates** and **state that merely delays**.
-- A shift register is a chain, so it is a path and has no cycle.
-- A counter has to look at its own value to know what to count to next, so it has one.
-- Same for accumulators, and for any state machine whose next state depends on its current state.
-- The reason this is worth building a graph for, rather than being a preference, is that **a synthesiser cannot remove a cycle**.
-- It can retime a loop, re-encode it, or merge flops inside it, but it cannot turn it into a directed acyclic graph, because a DAG has a bounded memory of the past and a loop does not.
-- Feedback is a behavioural property, not a syntactic one.
-- So the cycles in the register graph are the one structural feature of the original design guaranteed to still be there after everything else was optimised away.
-
-#### Why Tarjan
-
-- What I want is not "is there a cycle" but "what are the maximal groups of flops that can all reach each other".
-- That is the definition of a **strongly connected component**, and Tarjan's algorithm computes all of them in a single depth-first traversal, in time linear in nodes plus edges.
-
-| alternative | why not |
-|---|---|
-| Test every pair for mutual reachability | 92 nodes is small enough that this finishes, but it is quadratic in the number of nodes for no benefit |
-| Kosaraju's algorithm | Correct and simpler to explain, but it needs two full passes and the reverse graph |
-| Just look for self-loops | Finds a flop that feeds itself and nothing else. Misses every counter of two bits or more, which is 26 of the 26 groups here |
-
-- Tarjan gives the answer in one pass and the implementation is 30 lines.
-- Output: [`puzzle-solution/05_register_structure.txt`](puzzle-solution/05_register_structure.txt).
-
-#### What came back
-
-| | |
-|---|---|
-| flip-flops | 92 |
-| feedback groups of size 2 or more | 26 |
-| of size 2 | **23** |
-| of size 9 | 1, external inputs `enable` and `rst_n` |
-| of size 8 | 1, external inputs `I`, `enable` and `rst_n` |
-| of size 4 | 1, no external inputs at all |
-
-- **Twenty-three groups of exactly two flops.** Two bits of state that update together and look at each other, which is a two-bit counter, twenty-three times over.
-- Simulating them later confirms it, and confirms something a little unusual: they saturate at 3 rather than wrapping, so each one counts up to two and then records that it overflowed instead of rolling back to zero.
-- That is why there is no magnitude comparator anywhere on this die.
-- Counting to exactly two and comparing for equality is cheaper than counting properly and comparing for greater-than.
-- **One group of nine, whose external inputs are `enable` and `rst_n` but not `I`.** Nine bits of feedback state that never look at the data, so something that tracks where you are in the frame rather than what is in it.
-- **One group of eight, whose external inputs include `I`.** Eight bits driven by the data, so a byte-wide accumulator of some sort.
-- **One group of four with no external inputs whatsoever.** Four flops that talk only to each other and to nothing outside, so something that free-runs once started.
-- Those four are also the four `dfxtp_2`, the only flops in the design with no reset at all, which is why section 22 has to prove their power-up state does not matter.
-
-#### The one thing worth decompiling
-
-- `success` is a single flip-flop, `u28_dfrtp_2`, and it is not in the list above because its feedback group has size one: it feeds only itself.
-- Its set condition is a wide AND tree, and unlike the counters that tree is worth expanding through the combinational logic and printing, stopping at flop outputs and ports:
-
-```
-D = (((!u390.Q & (!u419.Q & (((u451.Q & u449.Q) & u460.Q) & ((!u459.Q & !u461.Q)
-  & !(((u453.Q | u447.Q) | u454.Q)))))) & (((!u26.Q & u350.Q) & ((((((
-  !u622.Q & u600.Q) & (u596.Q & !u614.Q)) & (!u232.Q & u601.Q)) & (!u625.Q
-  & u597.Q)) & ((((u647.Q & !u651.Q) & (!u661.Q & u595.Q)) & (!u603.Q &
-  u634.Q)) & (u635.Q & !u602.Q))) & (((!u215.Q & u197.Q) & (u233.Q &
-  !u231.Q)) & (!u226.Q & u198.Q)))) & ((((((!u106.Q & u178.Q) & (u107.Q &
-  !u179.Q)) & (!u121.Q & u153.Q)) & (!u108.Q & u180.Q)) & ((((u190.Q &
-  !u118.Q) & (!u194.Q & u209.Q)) & (!u126.Q & u188.Q)) & (u117.Q & !u189.Q
-  ))) & (((!u122.Q & u141.Q) & (u142.Q & !u124.Q)) & (!u123.Q & u143.Q))))
-  ) | (u28.Q & (u26.Q | !u350.Q)))
-```
-
-- Read for structure rather than detail, there is one group of **eleven** near-identical two-bit comparisons, `(!u622.Q & u600.Q)`, `(u596.Q & !u614.Q)` and so on.
-- Then a second group of **eleven** more of exactly the same form.
-- Then one separate eight-flop comparison against a fixed pattern, `u451 & u449 & u460 & !u459 & !u461 & !(u453 | u447 | u454)`.
-- And the whole thing ORs with `u28.Q`, which is the self-loop: once high, `success` stays high.
-- Eleven of one thing, eleven of another, one eight-bit thing, everything compared against two.
-- The same treatment applied to any of the 23 counter pairs expands into megabytes of repeated subexpression, because a counter's cone reaches the same nets by many different paths and a printed tree has no way to share them.
-- So decompiling works for the control logic and fails completely for the counters, which is why the counters get probed instead, in section 16.
-
-----
-
-### 14. Where the counters are on the die: easter egg 8
-
-- The blog post says the circuit is physically arranged to hint at what it does, so look closely at the layout.
-- Looking at the layout directly gives nothing: 9,875 placements, none of them labelled.
-- But my extractor numbers instances `uNNN` by their position in the GDS reference list, so **once the counters are identified by name, `uNNN` back to (x, y) is a lookup rather than a search.**
-- That is why this egg comes now and not in section 1.
-- The layout does hint at the function, but only to someone who already has the netlist.
-
-| what | how many | where |
-|---|---|---|
-| identical 2-bit slices, stacked vertically | 11 | y = 185.0 to 285.6 |
-| a conspicuous empty gap | | y = 146.9 to 185.0 |
-| more identical slices, same stack | 11 | y = 49.0 to 146.9 |
-| one slice alone, off to the side | 1 | x = 80.5, y = 103.4 |
-
-- The whole checker is a single vertical column at x = 114.8 to 126.3 um on a die 200 um wide: eleven, a gap, eleven, plus one off to the side.
-- Twenty-three, which is the number the SCC analysis gave, arranged in a way that says the twenty-three are not interchangeable.
-- That arrangement also explains why there are 23 counters and not 33.
-- Eleven rows plus eleven columns plus eleven of whatever the third family is would be 33.
-- The missing ten are the rows: the grid streams in one cell per clock, row-major, so only one row is ever in flight, and a single counter cleared at each row boundary serves all eleven rows.
-- Columns and the third family are interleaved across the whole frame, so each one needs its own counter that persists for the entire 121 cycles.
-- So the floorplan gives the input format as well as the shape of the rule set, and it says there is a third constraint family I have not identified.
-
-----
-
-### 15. The first hypothesis, and why it was wrong
-
-- At this point the gates have said the following, with no interpretation on my part:
-
-| the gates say | from |
-|---|---|
-| the frame is 121 bits, arriving row-major, one per clock | sections 11 and 14 |
-| eleven counters watch something spread across the whole frame | section 14 |
-| eleven more counters watch something else, also spread across the frame | section 14 |
-| one shared counter watches something that resets every 11 cells | section 14 |
-| `success` requires all 23 to equal exactly **two** | section 13 |
-| a separate eight-bit comparison against a fixed pattern must also hold | section 13 |
-
-- Two of something per row and two per column, on an 11 x 11 grid of bits, is a description of a well known family of pencil puzzles: **Star Battle**, also called **Two Not Touch**.
-- That family adds a rule the counters cannot express: no two of the marked cells may touch, not even diagonally.
-- So the working hypothesis was the whole family at once: **two stars per row, two per column, and no two adjacent including diagonally.**
-- A note on the word "star", because nothing in the gates says it.
-- The gates say "exactly two ones per row".
-- The word comes from the two easter eggs already in hand: the input frames of the sample waveform spell `The night sky awaits`, and the Morse bar code under the die spells `PER ARENAM AD ASTRA`, to the stars.
-- That is a naming convention and not a constraint, and nothing that follows depends on it being right.
-- **Stage P6.** The hypothesis is tested rather than assumed: z3 is asked for 25 grids that satisfy it perfectly, and all 25 are fed into the extracted netlist through the bit-parallel simulator.
-
-```
-25 grids satisfying two per row, two per column, no touching
-accepted by the netlist: 0
-what the chip said instead: {'TRY AGAIN': 25}
-```
-
-- Twenty-five generated, zero accepted, and the chip answered the same way to all of them.
-- Two conclusions follow.
-- There is a constraint I have not found, almost certainly the third family of eleven counters.
-- And reading gate cones will not find it, because section 13 already showed the counter cones are unreadable.
-
-----
-
-### 16. Probing one grid cell at a time
-
-- The eleven unidentified counters each watch some set of grid cells.
-- Their logic is unreadable, so they get measured instead.
-- **Stage P7.** The experiment is the simplest one available:
-
-> For each of the 121 grid positions in turn, run the chip with a one at that position and zeros everywhere else, and record which counters increment.
-
-- If counter 4 ticks when the only one in the frame is at cell (3, 7), then cell (3, 7) belongs to whatever counter 4 is watching.
-- That is 121 separate runs of a 121-cycle frame, and it takes 0.04 seconds, because the pipeline's simulator packs one trial per bit of a Python integer and runs all 121 in a single pass.
-
-```
-column counters 11   irregular groups 11   shared row counters 1
-```
-
-- The rows come back as zero, which is what the 23-versus-33 argument in section 14 predicted, and **the way they come back as zero confirms the input format**.
-- The row counter is cleared at every row boundary, so at the end of the frame it always reads zero no matter what went in.
-- Sampling it in the cycle each one arrives instead, it moves in **110** of 121 trials, and the 11 it misses are exactly cells
-
-```
-10  21  32  43  54  65  76  87  98  109  120
-```
-
-- which is column 10 of every row: the last cell of a row, where the counter is bumped and cleared on the same edge. 110 = 121 - 11.
-- A single shared row counter only works if the grid arrives row-major at one cell per clock, so that measurement is a direct confirmation of the protocol read off the waveform in section 11.
-- And the eleven mystery counters watch eleven irregular contiguous blobs whose sizes sum to exactly 121.
-- They tile the grid:
-
-```
-     0  1  2  3  4  5  6  7  8  9 10
-  0  A  A  A  A  A  B  B  C  D  D  E
-  1  A  A  F  A  A  B  C  C  D  D  E
-  2  A  A  F  B  B  B  B  C  C  D  E
-  3  A  A  F  B  G  G  G  E  C  C  E
-  4  F  A  F  B  G  E  E  E  E  E  E
-  5  F  F  F  B  G  G  G  E  H  H  H
-  6  B  B  B  B  B  B  G  E  H  I  I
-  7  B  J  J  J  G  G  G  E  H  I  I
-  8  B  J  J  K  E  E  E  E  H  I  I
-  9  B  B  J  K  K  E  E  E  H  H  H
- 10  B  J  J  K  E  E  E  E  E  E  E
-
-region sizes  A=14 B=21 C=7 D=5 E=28 F=8 G=11 H=9 I=6 J=8 K=4   sum = 121
-```
-
-- Irregular regions that tile the board, two per region, two per row, two per column, no touching.
-- That is Star Battle exactly, and the missing constraint was the regions.
-- The 25 grids of section 15 all failed because none of them respected regions, which I did not know existed.
-- Output: [`puzzle-solution/06_region_map.txt`](puzzle-solution/06_region_map.txt).
-
-----
-### 17. Finding the 121 bits
-
-- This is the hard part of the exercise, so it gets the most space.
-- **Stage P8**, and everything in it runs on the extracted netlist plus the Liberty functions, with no knowledge of what the puzzle is.
-
-#### 17.1 What is actually being asked
-
-- Let the frame be a vector of 121 boolean variables,
-
-```
-x = (x_0, x_1, ..., x_120),   x_i in {0, 1}
-```
-
-- where `x_i` is the bit presented on `I` at the `i+1`-th enabled rising edge.
-- Row-major, so `x_i` is grid cell (row `i div 11`, column `i mod 11`), from the protocol measured in section 11 and confirmed in section 16.
-- The chip is a deterministic finite state machine.
-- Write `s_t` for the contents of its 92 flip-flops after `t` clock edges, `s_0` for the state reset leaves behind, and `d` for the one-edge transition the gates implement:
-
-```
-s_(t+1) = d(s_t, x_t)
-```
-
-- `success` is one bit of `s_t`, so define
-
-```
-F(x) = the value of success in s_122
-```
-
-- which is `d` composed with itself 122 times, starting from `s_0`, driven by the 121 bits of `x` and then by whatever `I` happens to be on the last edge.
-- Every part of `F` is known exactly: 728 gates whose behaviour came out of the Liberty file and which have already been checked against a recording of the real chip in section 12.
-- Two questions:
-
-```
-does there exist x* with F(x*) = 1?           and is x* the only one?
-```
-
-- Note what is not in that statement.
-- There is no hidden key, no unknown constant, no parameter being fitted.
-- The circuit is fully known; what is unknown is which of its 2^121 possible inputs it accepts.
-
-#### 17.2 The size of the space, and two cheap outs I checked first
-
-```
-2^121 = 2,658,455,991,569,831,745,807,614,120,560,689,152
-      = 2.658 x 10^36
-```
-
-- At a billion frames per second a sweep takes 8.4 x 10^19 years, about six billion times the age of the universe.
-- A sweep is not a slow option, it is not an option.
-- Before reaching for a solver I checked whether the structure lets me cheat.
-- **Is `F` linear over GF(2)?** If it were, the chip would be an LFSR or a CRC, the whole 121-bit frame would be a linear map, and Gaussian elimination would invert it in about 121^3 = 1.8 million operations.
-- The definition of an affine map over GF(2) is
-
-```
-F(u xor v) = F(u) xor F(v) xor F(0)
-```
-
-- so it can be tested directly rather than argued about.
-- The pipeline runs random frames `u`, `v` and `u xor v` as three lanes of one bit-parallel pass and compares the predicted final state against the measured one across **all 92 flip-flops**, not just `success`:
-
-```
-20 of 20 predictions failed
-```
-
-- The state update is nonlinear.
-- That kills linear algebra, and it kills every correlation attack that depends on the same property.
-- The counters are the reason: a saturating counter is not an affine function of its inputs.
-- So: search, but not a blind one.
-
-#### 17.3 Throwing away what cannot matter, the cone of influence
-
-- Not every net in the design can affect `success`.
-- Walk backwards from `success` through combinational logic and through flip-flops, collecting everything reachable, and stop when nothing new appears.
-
-```
-cone of influence of success: 471 of 738 nets
-```
-
-- The entire output generator falls outside it, which makes sense: `O[7:0]` depends on `success` and on the message pointer, and `success` does not depend on `O`.
-- That drops 267 nets and, once multiplied by 122 time steps, a great deal of formula.
-- This is sound rather than heuristic: a net outside the cone cannot change `success` under any assignment, so removing it cannot change whether the question is satisfiable.
-
-#### 17.4 Making time into space, the unrolling
-
-- A SAT solver has no notion of "later", so time has to become more variables.
-- For each step `t` from 1 to K+1 and each net `n` in the cone there is a literal `L(t, n)`.
-- Three rules define them all.
-
-| | rule |
-|---|---|
-| **reset** | at `t = 1`, every flop output is its reset value. `dfrtp` has a `clear` and reads 0. `dfstp` has a `preset` and reads 1. `dfxtp` has neither, so its value is left as a free variable |
-| **combinational** | inside a step, a gate output is its Liberty function of its inputs *at the same step*: `L(t, n) = f(L(t, a), L(t, b), ...)` |
-| **capture** | across a step, a flop takes `L(t+1, q) = (not clr) and (pre or d)`, where `clr`, `pre` and `d` are all evaluated at step `t` |
-
-- So step `t` settles the combinational logic from the state step `t-1` left behind plus the inputs applied on edge `t`, and then the flops capture.
-- `L(t+1, n)` is what a probe would read after `t` clock edges, which is the convention that makes the depth arithmetic come out without an off-by-one.
-- The free variables are one per `(input, step)` for `I`, which is where the 121 bits live.
-- `rst_n`, `enable` and `clk` are pinned to 1 across the whole window, because the protocol says the frame is shifted in with reset released and enable high.
-- The important consequence: **the flops disappear.** After unrolling there is no state and no sequencing left, only a large combinational circuit and a lot of variables.
-- That is the whole point of bounded model checking.
-
-#### 17.5 Making the circuit into clauses, and why the translation is honest
-
-- Section (VI) covers what Tseitin encoding is and why substitution does not work.
-- What matters here is the exact statement, because the two results below depend on it being exactly true rather than approximately.
-- Write `Def(g, t)` for the three or four clauses that define gate `g` at step `t`, and let
-
-```
-PHI_K  =  reset clauses
-          AND  Def(g, t)  for every gate g in the cone and every step t <= K+1
-          AND  L(K+1, success)
-```
-
-- **Soundness.** Take any assignment satisfying `PHI_K`.
-- Each wire variable is pinned by its own clauses to the value its gate produces from its inputs, so reading the assignment off in step order reproduces a genuine simulation of the circuit.
-- The last clause forces `success` high at step K+1.
-- Therefore the 121 values assigned to the `I` variables are a real frame that really unlocks the chip.
-- **Completeness.** Take any frame that unlocks the chip.
-- Simulate it, and write every net's value at every step into the corresponding variable.
-- Every `Def(g, t)` is satisfied because the gate really does compute that, and the goal clause is satisfied because `success` really is high.
-- So the assignment satisfies `PHI_K`.
-- The two directions together mean `PHI_K` is satisfiable **exactly when** a K-edge unlocking frame exists.
-- That is what makes UNSAT a proof rather than a failure, and it is why the encoder folds and shares gates but does nothing that would change the set of solutions.
-
-#### 17.6 How big the formula is, and what the encoder does to shrink it
-
-- Written out naively, one fresh variable and three or four clauses per gate per step:
-
-| | naive Tseitin | as the pipeline emits it |
-|---|---|---|
-| variables | 130,385 | **14,498** |
-| clauses | 390,772 | **43,111** |
-| time to encode | 0.23 s | **0.10 s** |
-
-- The difference is two rules applied while the clauses are being written, both of which preserve the encoded function exactly.
-
-| rule | what it does | how often it fires here |
-|---|---|---|
-| **constant folding** | A gate whose inputs are already known constants, or are the same literal, or are exact opposites, is replaced by the literal it equals. No variable is minted and no clause is written | **113,959 times** |
-| **structural sharing** | A gate whose operator and input literals have been written before returns the variable that was minted then | **1,928 times** |
-
-- Folding fires that often for a specific reason.
-- `rst_n`, `enable` and `clk` are constants across the whole window, so every gate that depends only on them collapses.
-- Every flop's capture expression is `(not clr) and (pre or d)`, and for the 84 `dfrtp_2` the preset is a constant 0 while for the 4 `dfstp_2` the clear is, so both of those gates fold away at every one of the 122 steps before anything interesting happens.
-- And immediately after reset most of the design is holding a known value, so the folding propagates forward through several steps of real logic before it runs out.
-- A ninefold smaller formula is not just faster to solve.
-- It is faster to build, and building it was the larger cost.
-
-#### 17.7 The depth question, and why one encoding answers both halves
-
-- I want the smallest K for which `PHI_K` is satisfiable, because that number is the protocol.
-- `PHI_K` is a **prefix** of `PHI_(K+1)`: the extra clauses all define fresh variables belonging to the extra step, and definitional clauses over fresh variables can always be satisfied whatever the prefix assigns.
-- So asking the K-edge question inside the larger formula gives the same answer as asking it in the smaller one.
-- In practice the pipeline encodes once at the largest depth it needs and asks the shorter question by asserting the goal literal one step earlier, as an assumption rather than as a clause.
-
-```
-one unrolling to 122 edges   14498 variables   43111 clauses
-
-K = 121 edges   UNSAT
-K = 122 edges   SAT
-```
-
-- **121 edges is provably impossible.** Not "I could not find one".
-- So 121 cells in and the verdict on the next edge is exactly the protocol, and it agrees with the edge count read off the sample waveform in section 11 without ever having looked at it.
-
-#### 17.8 Uniqueness
-
-- The solver returns one satisfying assignment.
-- That does not by itself say there is not another.
-- Take the 121 input literals from the answer, negate each one, and add their disjunction as a single clause.
-- That clause says "not this exact frame" and says nothing about anything else, which is why it is built over exactly those 121 literals and not over the auxiliary variables: two different assignments to the auxiliaries would be the same frame.
-- Re-solve.
-
-```
-blocking that assignment and re-solving: UNSAT  ->  the key is unique
-```
-
-- There is exactly one 121-bit frame that unlocks this chip, established at the gate level, without assuming anything about what the puzzle is.
-
-#### 17.9 Why the solver finds it in milliseconds and a sweep never would
-
-- A CDCL solver never enumerates candidates.
-- It runs a loop of four things.
-
-| step | what happens |
-|---|---|
-| **unit propagation** | Any clause with all but one literal already false forces the remaining one. Applied until nothing more follows. On a Tseitin encoding this is exactly circuit simulation, and it runs in both directions |
-| **decision** | When nothing more propagates, pick an unassigned variable and guess a value. The heuristic prefers variables recently involved in conflicts |
-| **conflict analysis** | If a clause ends up all false, work out the *reason*: the small subset of decisions actually responsible. Record it as a new clause |
-| **backjump** | Undo not one decision but every decision back to the point that reason was created, and carry the learned clause forward permanently |
-
-- The learned clause is the part that matters.
-- It does not remove one candidate, it removes every assignment sharing the responsible pattern, which is typically an enormous region of the space, and it prevents the solver from ever making that class of mistake again.
-- For this instance there is a second reason it is easy, and it comes from the shape of the goal.
-- `success` is an AND of 23 two-bit equality tests plus one eight-bit comparison.
-- Asserting `success = 1` therefore propagates **backwards** with no search at all: an AND can only be 1 if every input is 1, so all 23 counters are pinned to exactly two and the total is pinned to 22 before a single input bit has been decided.
-- The solver starts from an almost fully determined final state and works backwards through the counters to the frame, rather than starting from 121 free bits and working forwards.
-- That is why the two depth questions and the uniqueness proof together take 0.02 seconds of solving, inside a stage that spends most of its 0.16 seconds building and loading the formula.
-- Output: [`puzzle-solution/07_sat_proof.txt`](puzzle-solution/07_sat_proof.txt).
-
-#### 17.10 The answer it returned
-
-- 121 = 11 x 11, so lay it out as a square:
-
-```
-. . . . . . . * . * .
-* . . . . * . . . . .
-. . . . . . . * . * .
-* . * . . . . . . . .
-. . . . * . * . . . .
-. . * . . . . . * . .
-. . . . * . . . . . *
-. * . . . . * . . . .
-. . . * . . . . . . *
-. . . . . * . . * . .
-. * . * . . . . . . .
-```
-
-- Exactly two in every row, exactly two in every column, two in each of the eleven regions from section 16, and no two touching, not even diagonally.
-
-----
-
-### 18. Solving it a second time, deliberately differently
-
-- Two independent confirmations are worth more than one careful one.
-- **Stage P9** solves the same puzzle again with nothing in common with P8.
-
-| | stage P8, bounded model checking | stage P9, constraint solving |
-|---|---|---|
-| tool | a CDCL SAT solver | z3, an SMT solver |
-| what it is given | the extracted gate netlist, unrolled | the region map from section 16, and the Star Battle rules stated explicitly |
-| does it know what the puzzle is | **nothing at all** | everything |
-| does it ever see the netlist | it sees nothing else | **never** |
-| what it returns | one 121-bit frame, proved unique | every grid satisfying the rules |
-
-```
-solutions to the probed constraint set: 1 (that is all of them)
-matches the SAT key: True
-```
-
-- Different tool, different encoding, different inputs, same 121 bits.
-- The first method never learns what the puzzle is; it searches the recovered netlist directly.
-- The second never learns what the netlist is.
-- They agree.
-
-----
-### 19. Every string the chip can print: easter egg 9
-
-- **Stage P10**, and this is the stage that could not be written with a command-line solver.
-- My first version of this was guesswork.
-- Once the chip was answering correctly I drove it with the four cases I could think of and read `O[7:0]` on each: nothing, everything, something wrong, and the answer.
-- Four messages.
-- I wrote that up.
-- Then I noticed that what I had was not a measurement of the ROM.
-- It was a list of the grids I happened to try, which is a different thing, and nothing said the list was complete.
-- So it was replaced with an enumeration.
-- Unroll the netlist from reset with all 121 input bits free, take the cone of `O[7:0]` and `success` together, and ask the solver to enumerate every value the output bus can take on the first output edge.
-- Four come back: `(`, `B`, `E`, `T`.
-- Then, for each of those, enumerate every value the bus can take on the second edge given the first.
-- `T` splits into `R` and `W`; the others do not split.
-- Two characters separate every message, so when the enumeration returns UNSAT the catalogue is closed and nothing else is reachable.
-- Five prefixes, fourteen SAT queries, the last one UNSAT.
-- Each prefix hands back the grid that produced it, and all five grids are then simulated in one bit-parallel pass to read the rest of each string.
-
-| message | success | what triggers it |
-|---|---|---|
-| `EMPTY SKY` | 0 | all 121 bits zero |
-| `BIG BANG` | 0 | all 121 bits one |
-| `TRY AGAIN` | 0 | any ordinary wrong grid |
-| **`TWO NOT TOUCH`** | 0 | every count correct, two stars per row **and** per column **and** per region, 22 stars, and at least one touching pair |
-| `(* TWO STARS *)` | 1 | the one grid that satisfies every rule |
-
-- The `T` split is where the fifth message came from.
-- One branch is `TRY AGAIN`.
-- The other returns a grid the gates answer with **`TWO NOT TOUCH`**, the other name of Star Battle, and the chip prints it only when that exact rule is the one broken.
-- To confirm the trigger rather than assume it, z3 was asked for 40 more grids in that class, all 40 driven through the netlist, plus 20 controls that are two per row and two per column and no-touch but wrong on regions:
-
-```
-40 of 40  counts correct and touching     ->  TWO NOT TOUCH,  success = 0
-20 of 20  counts correct except regions   ->  TRY AGAIN,      success = 0
-```
-
-- Exact condition: every count right, adjacency wrong.
-- It is not reachable by sweeping. 60 random 22-star grids and 60 grids constructed to have two stars in every row and every column all came back `TRY AGAIN`, because none of them also got the regions right.
-- Finding it also meant my recovered RTL was wrong.
-- It had four verdicts, and the 540-grid equivalence run had passed only because none of its grids reached the fifth case.
-- So the RTL got a fifth verdict, and 24 grids built by z3 to be counts-right-and-touching joined the vector set, which is where the 564 in the next section comes from.
-- An equivalence run is only as good as its vectors, and these vectors were extended by a solver result rather than by guesswork.
-- Output: [`puzzle-solution/10_message_catalogue.txt`](puzzle-solution/10_message_catalogue.txt).
-
-----
-
-### 20. Writing the RTL, and proving it is the same circuit
-
-- Both solves confirm the answer.
-- Neither confirms that the circuit is **understood**, and that is what the challenge asks for.
-- **Stage P11** writes behavioural RTL for the whole chip from scratch, in terms of rows, columns, regions and stars, then proves it equivalent to the gates rather than asserting it.
-- The proof is a simulation: `iverilog` compiles the cell models, the extracted netlist, my RTL and one testbench together, and `vvp` drives both descriptions from the same reset with the same stimulus, comparing every cycle of `success` and every cycle of the full output byte.
-- Two independent descriptions, two independent simulators, one vector set:
-
-| class | grids |
-|---|---|
-| the unique solution | 1 |
-| degenerate: empty grid, full grid | 2 |
-| near misses: the solution with one star moved | 37 |
-| random sparse grids, 1 to 30 stars | 200 |
-| two stars in every row, columns and regions random | 200 |
-| two per row **and** two per column, random permutation pairs | 100 |
-| every count correct and two stars touching, built by z3 | 24 |
-
-```
-EQUIVALENCE: 0 success mismatches, 0 O mismatches over 564 grids
-```
-
-- The gates are simulated by iverilog, which has never seen my RTL, and the RTL is simulated by iverilog, which has never seen the geometry.
-- Outputs: [`puzzle-solution/08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) and [`puzzle-solution/09_equivalence.txt`](puzzle-solution/09_equivalence.txt).
-
-----
-
-### 21. The answer
+## 29. The answer
 
 - **Stage P12 and P13.** Drive the recovered key in and read `O[7:0]` cycle by cycle:
 
@@ -1825,7 +1774,7 @@ edge 136   0x29  ')'
 
 ----
 
-### 22. Everything the pipeline checks rather than assumes
+## 30. What the pipeline checks rather than assumes
 
 - Each of these could quietly be wrong, so each is measured on every run rather than argued about once.
 
@@ -1846,7 +1795,8 @@ edge 136   0x29  ')'
 - Neither is a result, and neither changes if the back end does not.
 
 ----
-### 23. Making it fast, and what actually cost the time
+
+## 31. Making it fast
 
 - The first working version was twenty numbered Python scripts shelling out to `yosys` and `iverilog` for every question, and it took about **four minutes**.
 - Almost all of that was process startup and Verilog elaboration, repeated hundreds of times to ask hundreds of nearly identical questions.
@@ -1863,7 +1813,7 @@ edge 136   0x29  ')'
 - Every one of those changes was checked the same way: run the pipeline, then diff every file in `puzzle-solution/` and `warmup-solution/` against the previous version.
 - **Both directories are byte-identical before and after all of it.** Nothing below trades a result for a second.
 
-#### The first round
+### The first round
 
 | stage | before | after | what changed |
 |---|---|---|---|
@@ -1923,7 +1873,7 @@ one numpy pass over all of them  0.09 s
 - Same algorithm, same path compression, no hashing and no tuple allocation on a loop that runs 120,000 times.
 - This one has a visible side effect worth being straight about.
 - Net names are assigned by sorting on the union-find root, so changing what a root *is* renumbered the internal nets.
-- The circuit did not change: the two netlists were compared as partitions of pins into nets, with ports attached, and they are **identical on both designs**, 738 nets and 84 nets, which is the same test section 6 uses to prove the extraction correct in the first place.
+- The circuit did not change: the two netlists were compared as partitions of pins into nets, with ports attached, and they are **identical on both designs**, 738 nets and 84 nets, which is the same test section 14 uses to prove the extraction correct in the first place.
 - Only the arbitrary `net_NNN` labels moved.
 
 **Encoding once and asking many times.**
@@ -1948,7 +1898,7 @@ one numpy pass over all of them  0.09 s
 - The pipeline compiles once and launches one `vvp` per core.
 - Determinism survives, deliberately: the shards are collected in shard order rather than completion order, and the shard count itself never appears in the output, so the transcript is identical on a machine with two cores and one with sixteen.
 
-#### The second round
+### The second round
 
 | stage | before | after | what changed |
 |---|---|---|---|
@@ -2017,7 +1967,7 @@ per-cell definition work   0.26 s  ->  0.03 s
 
 - Linux publishes the sibling map under `/sys/devices/system/cpu/*/topology`, so the shard count comes from that where it exists and falls back to the logical count everywhere else.
 
-#### The third round
+### The third round
 
 - The second round left extraction dominated by two Python loops that walked hit tables one entry at a time.
 
@@ -2047,7 +1997,7 @@ per-cell definition work   0.26 s  ->  0.03 s
 - It renumbered the anonymous nets once. The partition was verified identical net for net, 738 of 738 and 84 of 84, before and after, by comparing each net's set of `(instance, pin)` connections.
 - The union-find rewrite that made this possible was worth **nothing** measurable, about 0.02 s. It was kept for the stable numbering, not for the clock.
 
-#### What I tried and did not keep
+### What I tried and did not keep
 
 | | |
 |---|---|
@@ -2055,7 +2005,7 @@ per-cell definition work   0.26 s  ->  0.03 s
 | Sharing one encoding between P8 and P10 | P8's cone is 471 nets and P10's is 699, and P8's is a subset, so one encoding at the larger cone and depth would answer both and save about 0.1 s. It would also mean the depth question is asked against a formula half again bigger than the question needs, and the two stages could no longer be read independently. Not worth 0.1 s |
 | `scipy.sparse.csgraph.connected_components` for the components | It would move the component labelling into C. It is now a handful of numpy passes at no dependency cost, and it was inside the noise even before that, about 0.02 s of a 0.47 s stage, so scipy buys nothing and would add a 40 MB dependency to a repository whose install is "clone it and run one script" |
 
-#### What I did not do, and why
+### What I did not do, and why
 
 | | |
 |---|---|
@@ -2074,7 +2024,172 @@ per-cell definition work   0.26 s  ->  0.03 s
 
 ----
 
-### 24. Files the run produces
+## 32. Solving it in hardware
+
+- Once [`08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) came out of the gates the chip stopped being unknown: it is an 11 x 11 Star Battle validator with one region map wired into it. The puzzle still has to be solved, and the pipeline does that with a SAT solver in Python.
+- Which raises the obvious follow-up. **Does the solving half have to be software?**
+- [`full-solver/`](full-solver/) is the answer. `solver.v` is told the region map and produces the 121-bit frame. `validator.v` is the recovered chip. A sequencer between them holds the chip in reset while the search runs, then drives it through exactly the protocol the die already has. Nothing in the loop is software.
+- It is deliberately kept to one side. `RUN.sh` does not touch it, the main pipeline does not depend on it, and deleting the folder changes nothing else in this repository.
+
+![The full solver pipeline](Images/rtl-full-solver.png)
+
+### How the solver searches
+
+- A Star Battle row holds two stars that cannot touch, so a row is one of the 45 column pairs `(a,b)` with `b >= a+2`.
+- All 45 are judged in one combinational block, so a clock either descends a level or backs up one. It never merely tries a candidate, and the serial version of the same search would be about 45 times slower.
+- The pruning is where the cost actually is:
+
+| pruning | clocks to the answer |
+|---|---|
+| bounds only, nothing over two per column or per region | 1,203,649 |
+| plus region availability | 10,129 |
+| **plus column feasibility against the rows remaining** | **10,125** |
+
+- The one that matters asks whether a region can still be finished. If region `g` needs *n* more stars and has fewer than *n* cells left in the rows below, the branch is already dead. Two orders of magnitude out of one test.
+- Column feasibility is worth four clocks in ten thousand. It is in there because it costs two mask compares, not because it earns its keep.
+- It is applied without looping over candidates. A region that needs at least one star from this row is short by one, a region that needs two is short by two, so two mask compares shared by all 45 candidates decide it. Columns use the same trick against the rows remaining.
+- Sharpening availability to exclude the cells the row above already blocks would reach 6,941 clocks, at the price of eleven population counts per candidate. That is not a trade worth making here.
+
+### Clock by clock, all three designs
+
+| design | phase | clocks | edge at the end |
+|---|---|---|---|
+| **warm-up**, `adder_demo` | `A` and `B` shift in, eight bits each, in parallel | 8 | 8 |
+| | `S` is combinational off the two registers, so it is already high | 0 | 8 |
+| | **total** | **8** | |
+| **puzzle**, `puzzle_recovered` | the grid arrives on `I`, one cell per enabled edge | 121 | 121 |
+| | `success` latches on the verdict edge and `O[7:0]` starts the message | 1 | 122 |
+| | **total** | **122** | |
+| **full-solver**, `full_solver` | the region map arrives on `region_in[3:0]`, one cell per edge | 121 | 121 |
+| | one clock to set the search up | 1 | 122 |
+| | depth first search, one push or one pop per clock | 10,125 | 10,247 |
+| | handover, `rst_n` released and `enable` raised, the chip does not move | 1 | 10,248 |
+| | the solved frame goes into the chip on `I` | 121 | 10,369 |
+| | `success` latches | 1 | 10,370 |
+| | **total** | **10,370** | |
+
+- The warm-up's 8 and the puzzle's 122 are both *minimum* depths, proved by the same SAT pass returning UNSAT one edge shorter.
+- The full-solver's 10,370 is `244 + x`, where `x` is whatever the search costs. The 244 is fixed: two 121-cell frames, one handover clock and one verdict clock. Only `x` depends on the puzzle, and an easier region map solves in a few hundred.
+
+### Does it work
+
+```
+edge 121      region map loaded, 121 cells
+edge 10247    solved, x = 10126 clocks (1 to set up, 10125 to search)
+edge 10370    success high, O reads "(* TWO STARS *)"
+```
+
+- The frame the solver builds is bit for bit the 121-bit key that SAT pulled out of the netlist, and the chip prints `(* TWO STARS *)`.
+- The testbench never sees the answer. It knows the region map, and it checks the frame that comes back against the rules of Star Battle itself: two per row, two per column, two per region, nothing touching.
+- `validator.v` is [`08_recovered_rtl.v`](puzzle-solution/08_recovered_rtl.v) split into the seven blocks it is made of, one per rule. The split is only worth anything if it changed nothing, so it is run against the gate netlist over the same 564 grids the main pipeline uses:
+
+```
+grids compared         564
+success mismatches     0
+O[7:0] mismatches      0
+```
+
+### Running it
+
+```bash
+bash full-solver/run.sh                # the pipeline, then the equivalence proof
+bash full-solver/run.sh --only pipe    # just the pipeline, which is what writes the VCD
+```
+
+- Only `iverilog` is needed for the pipeline. The equivalence run also reads `puzzle-solution/02_extracted_netlist.v` and `03_cell_models.v`, so `bash RUN.sh` at the top has to have run once.
+- The transcript is in [`full-solver/run.log`](full-solver/run.log) and the waveform in `full-solver/full_solver.vcd`.
+
+| file | what it is |
+|---|---|
+| [`full-solver/solver.v`](full-solver/solver.v) | `region_loader`, `row_candidates`, `search_stack`, and the `solver` that wires them |
+| [`full-solver/validator.v`](full-solver/validator.v) | the recovered chip, split into its seven rule blocks |
+| [`full-solver/full_solver.v`](full-solver/full_solver.v) | the handover sequencer and the two instances |
+| [`full-solver/tb_full_solver.v`](full-solver/tb_full_solver.v) | the pipeline testbench, and what writes the VCD |
+
+----
+
+## 33. Easter eggs, collected
+
+| # | Easter Egg | Where it was | Write-up |
+|---|---|---|---|
+| 1 | The **Jane Street logo**, etched in metal 2. 1,366 floating polygons in a 17.1 um square | [puzzle.gds](puzzle/puzzle.gds), and the warm-up GDS too | [01](Easter-Eggs/01_easter_egg.txt) |
+| 2 | **"PER ARENAM AD ASTRA"** in Morse code, Latin for "through the sand, to the stars". 36 bars on a layer that is not a sky130 mask layer, below the die | [puzzle.gds](puzzle/puzzle.gds), layer 200/0 at y = -52.72 um | [02](Easter-Eggs/02_easter_egg.txt) |
+| 3 | **"Leave no stone unturned!"**, a note left for a human where a simulator would write its own name | [example_inputs.vcd](puzzle/example_inputs.vcd), the `$version` field | [03](Easter-Eggs/03_easter_egg.txt) |
+| 4 | **"Sat Dec 31 23:59:60 2016"** , a real leap second and the most recent one ever inserted into UTC | [example_inputs.vcd](puzzle/example_inputs.vcd), the `$date` field | [04](Easter-Eggs/04_easter_egg.txt) |
+| 5 | **Read the waveform as ASCII.** The instruction that unlocks the whole output side, hidden in plain sight as a passing link | the [puzzle blog post](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/) | [05](Easter-Eggs/05_easter_egg.txt) |
+| 6 | **"The night sky awaits"**, in the *inputs*. 11 rows of 7 bits, because standard ASCII needs 7 | [example_inputs.vcd](puzzle/example_inputs.vcd), the `I` input, both frames | [06](Easter-Eggs/06_easter_egg.txt) |
+| 7 | **496 is the third perfect number**, `1+2+4+8+16+31+62+124+248`, and `A+B=496` has exactly 15 eight-bit solutions | [warmup/00_source.v](warmup/00_source.v) | [07](Easter-Eggs/07_easter_egg.txt) |
+| 8 | **11 + 11 + 1 drawn on the die.** Every counter in one narrow vertical column, in two stacks of eleven plus a loner | [puzzle.gds](puzzle/puzzle.gds), flip-flop placement at x 114.8 to 126.3 | [08](Easter-Eggs/08_easter_egg.txt) |
+| 9 | **Five messages, not four.** `EMPTY SKY`, `BIG BANG`, `TRY AGAIN`, **`TWO NOT TOUCH`** and `(* TWO STARS *)`, the last two being the puzzle's own name and its rule in OCaml comment syntax | the output ROM (see [10_message_catalogue.txt](puzzle-solution/10_message_catalogue.txt)) | [09](Easter-Eggs/09_easter_egg.txt) |
+| 10 | **Star Search** (matches the theme of this puzzle) | [December 2016 Jane Street Puzzle](https://www.janestreet.com/puzzles/star-search-index/)  | [10](Easter-Eggs/10_easter_egg.txt)  |
+| 11 | **A-brief-trip-through-spacetime** (matches the theme of this puzzle) | [January 2017 Jane Street Blog](https://blog.janestreet.com/a-brief-trip-through-spacetime/)  | [11](Easter-Eggs/11_easter_egg.txt)  |
+
+
+### Note : 
+
+- In Easter Egg (3), I ran a sample RTL to see how iverilog produces a normal VCD file :
+
+    iverilog -g2012 -o sim.out counter.v tb_counter.v
+    vvp sim.out
+    less counter.vcd          # or: cat counter.vcd
+
+- To which is comes up as :
+
+```
+$date
+	Tue Aug 18 04:49:16 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+```
+
+- you can see it prints the name of the tool and not a human message.
+
+----
+
+### Note : 
+
+- A perfect number is a positive whole number that equals the sum of its positive proper divisors, leaving out the number itself;
+
+    496 (1 + 2 + 4 + 8 + 16 + 31 + 62 + 124 + 248)
+
+### Note* : 
+
+- A total of 9 Easter Eggs = number of positive proper divisors of 496 (PLEASE TAKE THIS AS A JOKE)
+
+#### *Revision : The above statement was true till I found the 11th Easter Egg :(
+
+----
+
+## 34. Directory layout
+
+```
+├── CHALLENGE.md         # The main challenge 
+├── RUN.log              # The complete run log
+├── RUN.sh               # Main Orchestrating bash
+├── README.md            # This file
+├── requirements.txt     # Python dependencies 
+├── GDS-to-RTL           # Reverse Recovery scripts
+├── General-GDS-to-RTL   # The same extractor, for any sky130 GDS you have
+├── puzzle               # Provided Puzzle files
+├── warmup               # Provided warmup files
+├── puzzle-solution      # Puzzle solution files
+├── warmup-solution      # warmup solution files
+├── full-solver          # An RTL solver that drives the recovered chip, kept separate
+├── TwoNotTouch-Interactive-Puzzle    # Interactive Two Not Touch Puzzle, browser and desktop (TRY THIS!)
+├── Easter-Eggs          # List of easter eggs
+├── Images               # Images of waveforms, layouts, schematics
+├── pdk                  # SKY130 PDK
+└── Personal-Notes       # Ignore this
+```
+
+----
+
+## 35. Files the run produces
 
 | file | what it is |
 |---|---|
@@ -2093,3 +2208,5 @@ per-cell definition work   0.26 s  ->  0.03 s
 | [`puzzle-solution/13_output_string.txt`](puzzle-solution/13_output_string.txt) | The answer, cycle by cycle |
 | [`puzzle-solution/14_success_inputs.vcd`](puzzle-solution/14_success_inputs.vcd) | The waveform with `success` high, shaped like the sample so the two open side by side |
 | [`warmup-solution/`](warmup-solution/) | The same, for the warm-up, plus the golden cross-check and the recovered names |
+
+----
