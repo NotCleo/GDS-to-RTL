@@ -3,7 +3,7 @@
 - This repository contains my solution at solving [ASIC Reverse-Engineering Puzzle 2026](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/) hosted by Jane Street.
 - I decided to call my submission "GDS-to-RTL", contrary to "RTL-to-GDS" :)
 - The "ASIC Reverse-engineering" involves recovering a circuit from a layout file, working out what the circuit perorms, and then solving it.
-- Check out [ReGDS: A Reverse Engineering Framework from GDSII to Gate-level Netlist](https://ieeexplore.ieee.org/document/9300272/),
+- Check out [ReGDS: A Reverse Engineering Framework from GDSII to Gate-level Netlist](https://ieeexplore.ieee.org/document/9300272/), and [ASIC Reverse Engineering](https://www.vlsi.kr/en/asic-reverse-engineering-gds-netlist-rtl-intent-en/)
   
 ----
 
