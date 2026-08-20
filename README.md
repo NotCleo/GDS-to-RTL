@@ -181,6 +181,70 @@
 
 ----
 
+### 4.1 The full file set a real RTL to GDS flow produces
+
+- A puzzle GDS is the tail end of a much longer pipeline.
+- Below is every file an open source flow, Yosys, OpenROAD, Magic, Netgen, the tools behind OpenLane, touches on the way from RTL to a tapeout ready GDS.
+- Skipped: behavioural simulation and functional verification (UVM, assertions). Both check that the RTL is correct, neither produces a file that carries into physical design, so the table below picks up with a netlist already synthesised and already through DFT.
+
+| # | Stage | Tool (open source) | Consumes | Produces |
+|---|---|---|---|---|
+| 1 | RTL entry | hand written | | `design.v` |
+| 2 | Logic synthesis | Yosys + ABC | `design.v`, `.lib`, `.sdc` | `netlist.v` |
+| 3 | DFT insertion (scan stitching, ATPG) | scan compiler | `netlist.v` | `netlist_dft.v`, `.stil` (scan patterns) |
+| 4 | Floorplanning | OpenROAD `init_fp` | `netlist_dft.v`, `.lef` | `floorplan.def` |
+| 5 | Power planning (PDN) | OpenROAD `pdngen` | `floorplan.def`, `.lef`, `.upf` | `floorplan.def`, now with a power grid |
+| 6 | Placement | OpenROAD, RePlAce + OpenDP | `floorplan.def`, `.lib`, `.sdc` | `placed.def` |
+| 7 | Clock tree synthesis | OpenROAD TritonCTS | `placed.def`, `.sdc`, `.lib` | `cts.def`, `netlist_cts.v` |
+| 8 | Routing, global then detailed | OpenROAD FastRoute + TritonRoute | `cts.def`, `.lef` | `routed.def` |
+| 9 | Parasitic extraction | OpenROAD OpenRCX | `routed.def`, `.lef` | `.spef` |
+| 10 | Static timing signoff | OpenSTA | `netlist_cts.v`, `.spef`, `.sdc`, `.lib` | timing `.rpt`, `.sdf` |
+| 11 | Power signoff | OpenSTA / OpenROAD | `.lib`, `.upf`, switching activity (`.vcd`/`.saif`) | power `.rpt` |
+| 12 | GDSII streamout | Magic / KLayout | `routed.def`, `.lef` | `.gds` |
+| 13 | DRC | Magic / KLayout | `.gds`, `.lef` (tech design rules) | DRC report |
+| 14 | LVS | Netgen | `.cdl` (extracted from the GDS), `netlist_cts.v` | LVS report |
+| 15 | Antenna / ERC | Magic | `.gds`, `.lef` | antenna report |
+| 16 | Tapeout / macro handoff | | `.gds`, `.lef` view, `.lib`/`.db` view, `.spef`, all signoff reports | the package a downstream integrator receives |
+
+- Six formats do essentially all the work across those sixteen stages: `.v` (logic, at whichever stage), `.lib` (what a cell computes and how fast), `.sdc` (the clock period and I/O timing the design has to hit), `.lef` (a cell's physical footprint and routing rules), `.def` (where cells sit and how nets are routed), `.gds` (the shapes actually sent to the fab).
+- `.upf`, `.spef`, `.sdf`, `.cdl` and every signoff report sit downstream of one of those six. They describe timing, power or manufacturing correctness. None of them describe logic.
+
+### 4.2 What we were actually given
+
+| File type | Puzzle | Warm-up |
+|---|---|---|
+| RTL source (`.v`) | not provided | `00_source.v` |
+| Synthesised netlist (`.v`) | not provided | `01_netlist.v`, `02_netlist_with_power_rails.v` |
+| DFT / scan netlist | no scan cells in this design | no scan cells in this design |
+| Liberty (`.lib`) | one corner, shared: `pdk/sky130_fd_sc_hd__tt_025C_1v80.lib` | same file |
+| Timing constraints (`.sdc`) | not provided | not provided |
+| LEF (`.lef`) | one merged file, shared: `pdk/sky130_fd_sc_hd_merged.lef` | same file |
+| Floorplan / placement / CTS `.def` | not provided | not provided |
+| Power intent (`.upf`) | not provided | not provided |
+| Post route `.def` | not provided | `03_post_place_and_route.def` |
+| Parasitics (`.spef`) | not provided | not provided |
+| Timing / power reports, `.sdf` | not provided | not provided |
+| LVS netlist (`.cdl`), DRC / LVS reports | not provided | not provided |
+| Final GDSII | `puzzle.gds` | `04_final.gds` |
+| Extras | `example_inputs.vcd`, wrong answer, shows the input format; `layout.png`, I/O hints | none |
+
+- `.lib` and `.lef` are the only two files shared across both puzzles, and both are given once for the whole PDK rather than per design: one voltage and temperature corner, no fast or slow corner, no multi corner set at all.
+- The warm-up hands over four of the sixteen stages' outputs directly (source, netlist, netlist with power rails, post route DEF), so its GDS could be checked against something, not solved from nothing.
+- The puzzle hands over exactly one, the GDS itself, stage 12 of 16, with cell and net names stripped out. That is the entire reason section 12's extraction algorithm was needed at all.
+
+### 4.3 Did the missing files matter
+
+- No.
+- `.sdc` bounds clock period and I/O delay for timing signoff. It says nothing about what a cell or a net does, so dropping it costs nothing when the goal is function, not frequency.
+- `.upf` only matters once a design crosses power domains or needs level shifters and isolation cells. `02_netlist_with_power_rails.v` shows one VPWR and one VGND net feeding every cell, one domain, so there was never anything for a UPF to describe.
+- The intermediate `.def` files, floorplan, placement, CTS, only show how the place and route tools converged on a layout. The final DEF or the GDS already contains where every cell ended up, which is the only fact the extraction in section 12 needs. The intermediate steps would have shown the tool's working, not new information.
+- `.spef`, timing reports and `.sdf` describe delay. Every stage of this recovery, extraction, the equivalence proof, the SAT solve, runs on the netlist's logic, not its speed. Gate level simulation against the Liberty function tables (section 18) is exact regardless of delay.
+- `.cdl` and the DRC/LVS reports confirm the layout matches its own netlist and obeys the fab's manufacturing rules. Questions about whether this one chip is manufacturable, not about what it computes.
+- The one gap that was ever felt was a second `.lib` corner, and only as a sanity check: the function tables in section 18 fix what a cell does, and function does not change across corners, so even that gap cost nothing.
+- The file that would have helped is the one the puzzle deliberately withholds: the RTL source. Every other file in the section 4.1 table is a restatement of the same logic in a different form, and none of those restatements is the logic itself.
+
+----
+
 ## 5. The first breakthrough
 
 - Switching to ASCII (I rarely use ASCII and prefer staying in Decimal/Hexadecimal/unsigned Integer) was the first breakthrough, I was on the [blog site](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/), and my eyes fell on :
