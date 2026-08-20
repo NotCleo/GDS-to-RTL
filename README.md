@@ -4,12 +4,12 @@
 - I decided to call my submission "GDS-to-RTL", contrary to "RTL-to-GDS" :)
 - The "ASIC Reverse-engineering" involves recovering a circuit from a layout file, working out what the circuit perorms, and then solving it.
 - Check out [ReGDS: A Reverse Engineering Framework from GDSII to Gate-level Netlist](https://ieeexplore.ieee.org/document/9300272/),
-- 
+  
 ----
 
 ## Contents
 
-**Start here.** The result, what was provided, and how to run it.
+**Start here.** 
 
 | # | Section | What it covers |
 |---|---|---|
@@ -171,7 +171,7 @@
 #### Note : 
 
 - I ran the three puzzle files through exiftool for a preliminary check and found nothing interesting.
--
+
 -----
 
 - The waveform (of the puzzle's VCD file) looks like :
@@ -327,7 +327,7 @@
 
 ### Running it
 
-bash RUN.sh                   the warm-up, which validates the toolchain, then the puzzle
+	bash RUN.sh                   the warm-up, which validates the toolchain, then the puzzle
     bash RUN.sh --only warmup     just the warm-up
     bash RUN.sh --only puzzle     just the puzzle
     bash RUN.sh --no-iverilog     skip the two independent-simulator checks
