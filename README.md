@@ -15,7 +15,7 @@
 |---|---|---|
 | 1 | [Timeline](#1-timeline) | The four weeks, day by day |
 | 2 | [What the puzzle turned out to be](#2-what-the-puzzle-turned-out-to-be) | What the chip is, the 121 bits that satisfy it, and the string it prints |
-| 3 | [What I did, in three lines](#3-what-i-did-in-three-lines) | Extract, prove, recover, solve |
+| 3 | [What I did](#3-what-i-did-in-three-lines) | Extract, prove, recover, solve |
 | 4 | [The files provided](#4-the-files-provided) | Both sets of provided files, and what the warm-up design is |
 | 5 | [The first breakthrough](#5-the-first-breakthrough) | Reading the sample waveform as ASCII |
 | 6 | [What the circuit turned out to be](#6-what-the-circuit-turned-out-to-be) | The nine blocks, and where each sits on the die |
@@ -115,7 +115,7 @@
 
 ----
 
-## 3. What I did, in three lines
+## 3. What I did
 
 - Extracted a netlist from the raw geometry present in the puzzle GDS file.
 - Proved the extractor pipeline exact against the warm-up's golden files, then validated it against the real chip's recorded outputs. 
